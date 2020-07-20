@@ -185,8 +185,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             BTConnect();
         });
         SwPage.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, HomePage.class);
-            startActivity(intent);
+           // Intent intent = new Intent(MainActivity.this, HomePage.class);
+            //startActivity(intent);
         });
         btLaser.setOnClickListener(v -> {
             BTMsg(4, 5, "T", "J", LasFlag);
@@ -279,11 +279,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.nav_message:
+            case R.id.nav_home:
                 Intent intent = new Intent(MainActivity.this, MainActivity.class);
                 startActivity(intent);
                 break;
-            case R.id.nav_chat:
+            case R.id.nav_map:
                 Intent intent2 = new Intent(MainActivity.this, MainActivity2.class);
                 startActivity(intent2);
                 break;

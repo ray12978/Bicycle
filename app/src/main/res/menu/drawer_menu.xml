@@ -3,12 +3,12 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_message"
-            android:icon="@drawable/ic_message"
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_home"
             android:title="首頁" />
         <item
-            android:id="@+id/nav_chat"
-            android:icon="@drawable/ic_chat"
+            android:id="@+id/nav_map"
+            android:icon="@drawable/ic_map"
             android:title="地圖" />
         <item
             android:id="@+id/nav_profile"

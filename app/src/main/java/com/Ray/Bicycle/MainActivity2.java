@@ -39,11 +39,11 @@ public class MainActivity2 extends AppCompatActivity implements NavigationView.O
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.nav_message:
+            case R.id.nav_home:
                 Intent intent = new Intent(MainActivity2.this, MainActivity.class);
                 startActivity(intent);
                 break;
-            case R.id.nav_chat:
+            case R.id.nav_map:
                 Intent intent2 = new Intent(MainActivity2.this, MainActivity2.class);
                 startActivity(intent2);
                 break;
