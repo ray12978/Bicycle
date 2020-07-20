@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Button
+    android:id="@+id/BTOpen"
+    android:layout_width="0dp"
+    android:drawableTop="@drawable/ic_baseline_bluetooth_24"
+    android:layout_height="wrap_content"
+    android:background="@color/colorOff"
+    android:text="開啟藍芽"
+    android:textColor="?attr/colorControlNormal"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toLeftOf="@id/btBTDiscont"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btBTDiscont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="中斷連線"
+        android:drawableTop="@drawable/ic_baseline_bluetooth_disabled_24"
+        android:background="@color/colorOff"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/BTOpen"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button_POST"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorOff"
+        android:text="傳送post"
+        android:textColor="?attr/colorControlNormal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guideline"
+        app:layout_constraintHorizontal_bias="0.37"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline4"
+        app:layout_constraintVertical_bias="0.424" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.8523316" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="386dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/btnline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="562dp" />
+
+    <TextView
+        android:id="@+id/textContent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/edit_SpeedLimit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/id2" />
+
+    <TextView
+        android:id="@+id/text_Respond"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="10dp"
+
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintBottom_toTopOf="@+id/btDisplay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/BTOpen"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <EditText
+        android:id="@+id/id"
+        android:layout_width="201dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="傳送id"
+        android:inputType="number"
+        app:layout_constraintBottom_toTopOf="@+id/guideline3"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/id2"
+        android:layout_width="201dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="傳送BT"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline3" />
+
+    <Button
+        android:id="@+id/SpLit_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@color/colorOff"
+        android:drawableTop="@drawable/ic_speed"
+        android:text="速度限制"
+
+        android:textColor="?attr/colorControlNormal"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnline"
+        app:layout_constraintVertical_bias="0.551" />
+
+    <EditText
+        android:id="@+id/edit_SpeedLimit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:ems="10"
+        android:hint="速度限制(時速)"
+        android:inputType="number"
+        android:maxLength="2"
+        app:layout_constraintBottom_toTopOf="@+id/btnline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/lck_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:background="@color/colorOff"
+        android:drawableTop="@drawable/ic_baseline_lock_open_24"
+        android:ems="0"
+        android:text="上鎖模式"
+        android:textColor="?attr/colorControlNormal"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnline"
+        app:layout_constraintVertical_bias="0.551" />
+
+    <Button
+        android:id="@+id/las_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:background="@color/colorOff"
+        android:drawableTop="@drawable/ic_bike_icon_off_black"
+        android:ems="0"
+        android:text="自動煞車"
+        android:textColor="?attr/colorControlNormal"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintStart_toEndOf="@+id/SpLit_btn"
+        app:layout_constraintTop_toTopOf="@+id/btnline"
+        app:layout_constraintVertical_bias="0.551" />
+
+    <Button
+        android:id="@+id/buzz_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:background="@color/colorOff"
+        android:drawableTop="@drawable/ic_baseline_volume_up_24"
+        android:ems="0"
+        android:text="蜂鳴器"
+        android:textColor="?attr/colorControlNormal"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintEnd_toStartOf="@+id/lck_btn"
+        app:layout_constraintTop_toTopOf="@+id/btnline"
+        app:layout_constraintVertical_bias="0.551" />
+
+    <Button
+        android:id="@+id/btBTSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        app:layout_constraintBottom_toTopOf="@+id/id"
+        app:layout_constraintStart_toStartOf="@+id/id" />
+
+    <Button
+        android:id="@+id/btBTConct"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connect"
+        app:layout_constraintBottom_toTopOf="@+id/text_Respond"
+        app:layout_constraintEnd_toStartOf="@+id/btBTDiscont"
+        app:layout_constraintStart_toEndOf="@+id/BTOpen"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btClr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        app:layout_constraintBottom_toTopOf="@+id/id"
+        app:layout_constraintStart_toEndOf="@+id/btBTSend" />
+
+    <Button
+        android:id="@+id/btDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Display"
+        app:layout_constraintBottom_toTopOf="@+id/id"
+        app:layout_constraintStart_toEndOf="@+id/btClr" />
+
+    <Switch
+        android:id="@+id/SWPost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:text="資料上傳"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/button_POST" />
+
+    <NumberPicker
+        android:id="@+id/SpeedPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/guideline3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.833"
+        app:layout_constraintStart_toEndOf="@+id/btDisplay"
+        app:layout_constraintTop_toBottomOf="@+id/text_Respond"
+        app:layout_constraintVertical_bias="0.505" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="速度限制(時速)"
+        app:layout_constraintBottom_toTopOf="@+id/guideline3"
+        app:layout_constraintEnd_toStartOf="@+id/SpeedPicker" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.33" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.66" />
+
+    <Button
+        android:id="@+id/SwPage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Switch"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toEndOf="@+id/button_POST"
+        app:layout_constraintTop_toTopOf="@+id/guideline4"
+        app:layout_constraintVertical_bias="0.483" />
+</androidx.constraintlayout.widget.ConstraintLayout>
