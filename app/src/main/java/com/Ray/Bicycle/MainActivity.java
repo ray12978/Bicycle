@@ -1,6 +1,7 @@
 package com.Ray.Bicycle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -16,6 +17,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private TextView textContent;
     private Switch SWPost;
     boolean PostFlag;
+    private Button btBTConct;
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger";
@@ -123,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setTitle(String.format("%s (%s)", address, name));
         Button btBTSend = findViewById(R.id.btBTSend);
         Button btBTOpen = findViewById(R.id.BTOpen);
-        Button btBTConct = findViewById(R.id.btBTConct);
+        btBTConct = findViewById(R.id.btBTConct);
         Button btBTDiscont = findViewById(R.id.btBTDiscont);
         Button btClear = findViewById(R.id.btClr);
         Button btDisplay = findViewById(R.id.btDisplay);
@@ -326,30 +329,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onPause();
         readerStop = true;
         DanFlag.Flag = false;
+        loadingDialog.startLoadingDialog();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         reader.start();
+//        loadingDialog.dismissDialog();
         //Danger.start();
     }
 
     /***********************藍牙副程式*******************************/
     private void BTConnect() {
-        if(address == null)return;
+        if(address == null){
+            btBTConct.setText("未選擇裝置");
+            return;
+        }
         final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
         try {
-            loadingDialog.startLoadingDialog();
+
+            //loadingDialog.startLoadingDialog();
+            btBTConct.setText("連線中");
             socket = device.createRfcommSocketToServiceRecord(serialPortUUID);
             socket.connect();
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-            System.out.print("連線中");
-            loadingDialog.dismissDialog();
+            btBTConct.setText("已連線");
+
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.print("連線超時");
+            btBTConct.setText("連線超時");
         }
     }
 
@@ -361,6 +371,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             socket = null;
             inputStream = null;
             outputStream = null;
+            btBTConct.setText("未連線");
         } catch (IOException e) {
             e.printStackTrace();
         }

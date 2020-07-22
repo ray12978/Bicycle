@@ -203,9 +203,9 @@
 
         <Button
             android:id="@+id/btBTConct"
-            android:layout_width="94dp"
-            android:layout_height="67dp"
-            android:text="連線"
+            android:layout_width="0dp"
+            android:layout_height="70dp"
+            android:text="未連線"
             app:layout_constraintEnd_toStartOf="@+id/btBTDiscont"
             app:layout_constraintStart_toEndOf="@+id/BTOpen"
             app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
