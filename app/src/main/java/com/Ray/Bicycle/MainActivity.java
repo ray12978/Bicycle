@@ -120,8 +120,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     Danger_Str();
                     if(DanFlag.Flag)Danger();
-                    System.out.println("yolo");
-                    System.out.println(DanFlag.Flag);
                 }
                 Save_Val(BTValTmp);
                 //System.out.println(DanFlag.Flag);
