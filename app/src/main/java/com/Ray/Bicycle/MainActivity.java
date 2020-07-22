@@ -2,9 +2,16 @@ package com.Ray.Bicycle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ContentResolver;
+import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Handler;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -32,12 +39,14 @@ import android.content.DialogInterface;
 import android.view.View;
 import com.Ray.Bicycle.R;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.crashlytics.internal.common.Utils;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.UUID;
 
 import androidx.appcompat.widget.Toolbar;
@@ -71,16 +80,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private InputStream inputStream = null;
     private OutputStream outputStream = null;
     private TextView textContent;
-    private Switch SWPost;
     boolean PostFlag;
     private Button btBTConct;
+    private MediaPlayer mediaPlayer;
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String TEST_NOTIFY_ID = "Bicycle_Danger";
+    private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
     private static final int NOTYFI_REQUEST_ID = 300;
     public LoadingDialog loadingDialog;
     /*****************StringProcess******************/
     private int[] StrPosition = new int[4];
+    private int StrIndex = 0;
     /******************ButtonFlag********************/
     //FlagAddress MsgStaFlag = new FlagAddress(true);
     FlagAddress MsgBtFlag = new FlagAddress(true);
@@ -89,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress BuzFlag = new FlagAddress(true);
     FlagAddress SpdFlag = new FlagAddress(true);
     FlagAddress DanFlag = new FlagAddress(false);
+    FlagAddress StrFlag = new FlagAddress(false);
     /*******************Layout***********************/
 
     private DrawerLayout drawer;
@@ -98,20 +109,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void run() {
             readerStop = false;
 
-            while (!readerStop) {
+            while (!readerStop && !DanFlag.Flag) {
                 //read();
+                if (!LckFlag.Flag){
+                    Save_Val(BTValTmp);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    Danger_Str();
+                    if(DanFlag.Flag)Danger();
+                    System.out.println("yolo");
+                    System.out.println(DanFlag.Flag);
+                }
                 Save_Val(BTValTmp);
-                Danger();
-                try {
+                //System.out.println(DanFlag.Flag);
+                /*try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                }
+                }*/
             }
 
         }
     });
     private boolean readerStop;
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(aaa);
             System.out.println(SpdList[a]);
         });
+        mediaPlayer = MediaPlayer.create(this, R.raw.sound);
         /**********Layout***************/
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(String.format("%s (%s)", address, name));
@@ -194,14 +219,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
-            BTSend(BTSendMsg.toString());
+            //BTSend(BTSendMsg.toString());
+            BTSend("aaa");
+            //loadingDialog.startLoadingDialog();
+            try {
+
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            str_process();
+            sendPOST();
         });
         btBuzz.setOnClickListener(v -> {
             BTMsg(5, 6, "E", "N", BuzFlag);
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
-            BTSend(BTSendMsg.toString());
+            //BTSend(BTSendMsg.toString());
+            BTSend("bbb");
+            try {
+
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            str_process();
+            sendPOST();
         });
         btLck.setOnClickListener(v -> {
             BTMsg(0, 1, "L", "F", LckFlag);
@@ -209,12 +253,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
             BTSend(BTSendMsg.toString());
+            try {
+
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //str_process();
             if (!LckFlag.Flag) {
                 btBuzz.setEnabled(false);
                 btSpLit.setEnabled(false);
                 btLaser.setEnabled(false);
                 //setVibrate(1000);
-                Notify();
+                //Notify();
                 /*new AlertDialog.Builder(MainActivity.this)
                         .setIcon(R.drawable.ic_baseline_warning_48)
                         .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
@@ -236,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
             Button_exterior(btSpLit, Off, On, 3, 'N');
-            BTSend(BTSendMsg.toString());
+
         });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         btClear.setOnClickListener(v -> {
@@ -247,21 +298,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Toast toast = Toast.makeText(this, BTValTmp, Toast.LENGTH_LONG);
             toast.setGravity(Gravity.BOTTOM, 0, 200);
             toast.show();
-            str_process();
+            showNotification();
+
             System.out.println("BTTmp:");
             System.out.println(BTValTmp.toString());
             System.out.println("PostFlag:");
             System.out.println(PostFlag);
+            Log.d(BTValTmp.toString(), "Tmp");
+            Log.d(SVal, "S");
+            Log.d(MVal, "M");
+            Log.d(TVal, "T");
+            Log.d(PVal, "P");
+            System.out.println("LckFlag:");
+            System.out.println(LckFlag.Flag);
         });
         SWPost.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (buttonView.isChecked()) {
-                System.out.println('a');
-                PostFlag = true;
-                if (BuzFlag.Flag) System.out.println('G');
-            } else {
-                System.out.println('b');
-                PostFlag = false;
-            }
+            PostFlag = buttonView.isChecked();
         });
         /**HTTP按鈕動作**/
         /**傳送POST**/
@@ -310,8 +362,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             super.onBackPressed();
         }*/
         new AlertDialog.Builder(MainActivity.this)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("注意")
                 .setMessage("確定要退出嗎?")
                 .setPositiveButton("確定", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -329,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onPause();
         readerStop = true;
         DanFlag.Flag = false;
-        loadingDialog.startLoadingDialog();
+        //loadingDialog.startLoadingDialog();
     }
 
     @Override
@@ -409,12 +459,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void Save_Val(@NotNull StringBuffer StrBufTmp) {
         if (inputStream == null) return;
         try {
-            if (inputStream.available() <= 0) return;
+           // if (inputStream.available() <= 0)return;
             String a = new String(buffer, 0, inputStream.read(buffer));
-            Log.d(a, "read: ");
             StrBufTmp.append(a);
-            Thread.sleep(100);
-        } catch (IOException | InterruptedException e) {
+            StrFlag.Flag = false;
+            //Thread.sleep(100);
+        } catch (IOException /*| InterruptedException*/ e) {
             e.printStackTrace();
         }
     }
@@ -428,8 +478,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             for (int i = 0; i < BTValTmp.length(); i++) {
                 if (BTValTmp.toString().getBytes()[i] > 57) {
                     StrPosition[b] = i;
-                    System.out.println("a");
-                    System.out.println(StrPosition[b]);
                     b++;
                 }
             }
@@ -451,6 +499,56 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (DanFlag.Flag) Danger_Msg();
         }
     }
+    public void Danger_Str(){
+        int index=0;
+        if(BTValTmp.length() == 0)return;
+        while (BTValTmp.length() != 0) {
+            index++;
+            System.out.println(BTValTmp.toString());
+            if (BTValTmp.toString().charAt(index-1) == 'B' && BTValTmp.toString().charAt(index) == '1') {
+                BTValTmp.delete(0, BTValTmp.length());
+                DanFlag.Flag=true;
+
+                System.out.println("danger!!");
+            }
+
+        }
+    }
+    /*public void str_process() {
+        int b = 0,index=0;
+        //BTValTmp = new StringBuffer("S123M456T789P147"); //test
+        //BTValTmp = new StringBuffer("B1"); //test
+        if(BTValTmp.length() == 0)return;
+        while (BTValTmp.length() !=0) {
+            if (BTValTmp.toString().charAt(index) == 'S') {
+                for (int i = 0; i < BTValTmp.length(); i++) {
+                    if (BTValTmp.toString().getBytes()[i] > 57) {
+                        StrPosition[b] = i;
+                        System.out.println("a");
+                        System.out.println(StrPosition[b]);
+                        b++;
+                    }
+                }
+                SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
+                MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
+                TVal = BTValTmp.toString().substring(StrPosition[2] + 1, StrPosition[3]).trim();
+                PVal = BTValTmp.toString().substring(StrPosition[3] + 1).trim();
+                Log.d(BTValTmp.toString(), "Tmp");
+                Log.d(SVal, "S");
+                Log.d(MVal, "M");
+                Log.d(TVal, "T");
+                Log.d(PVal, "P");
+                BTValTmp.delete(0, BTValTmp.length());
+            } else if (BTValTmp.toString().charAt(index) == 'B') {
+                String Status = BTValTmp.toString().substring(index+1, index+2).trim();
+                BTValTmp.delete(0, BTValTmp.length());
+                DanFlag.Flag = Status.equals("1");
+                System.out.println(DanFlag.Flag);
+                if (DanFlag.Flag) Danger_Msg();
+            }
+            index++;
+        }
+    }*/
 
     private void BTMsg(int start, int end, String Msg1, String Msg2, FlagAddress SelectFlag) {
         MsgBtFlag.Flag = true;
@@ -479,11 +577,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             BTMsg(3, 4, "Y", "N", SpdFlag);
             System.out.println(BTSendMsg);
+            BTSend(BTSendMsg.toString());
+            try {
+
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            str_process();
+            sendPOST();
         } else {
             if (!SpdFlag.Flag) {
                 BTSendMsg.replace(3, 4, "N");
                 SpdFlag.Flag = true;
                 System.out.println(BTSendMsg);
+                BTSend(BTSendMsg.toString());
+                try {
+
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                str_process();
+                sendPOST();
             } else {
                 Toast toast = Toast.makeText(this, "請先設定時速", Toast.LENGTH_LONG);
                 toast.setGravity(Gravity.BOTTOM, 0, 200);
@@ -511,12 +627,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     void Danger() {
-        if (!DanFlag.Flag) return;
+        if(!DanFlag.Flag)return;
         setVibrate(1000);
         System.out.println("danger");
         //DanFlag.Flag = false;
-        //Notify();
         showNotification();
+        //mediaPlayer.start();
+//        Danger_Msg();
+        //loadingDialog.startLoadingDialog();
         DanFlag.Flag = false;
     }
 
@@ -576,15 +694,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     NOTYFI_REQUEST_ID,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
-
-            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            final Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ getApplicationContext().getPackageName() + "/" + R.raw.sound);
+            System.out.println(soundUri);
+            //final Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.sound);
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .build();
+            NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
             Notification.Builder builder = new Notification.Builder(this)
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle("您的腳踏車發生異常狀況")
                     .setContentText("請立即前往確認")
-
+                    .setLights(0xff00ff00, 300, 1000)
                     .setSmallIcon(R.drawable.ic_baseline_warning_48)
-                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
+                    .setDefaults(Notification.DEFAULT_VIBRATE)
+                    .setSound(soundUri,audioAttributes)
                     .setContentIntent(pendingIntent);
             NotificationChannel channel;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -594,20 +720,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 channel.enableLights(true);
                 channel.enableVibration(true);
                 channel.shouldShowLights();
+                channel.setLightColor(Color.GREEN);
+                channel.setSound(soundUri, audioAttributes);
+                channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                 builder.setChannelId(TEST_NOTIFY_ID);
+
                 manager.createNotificationChannel(channel);
             } else {
                 builder.setDefaults(Notification.DEFAULT_ALL)
                         .setVisibility(Notification.VISIBILITY_PUBLIC);
             }
-            int testNotifyId = 11;
+            int testNotifyId = 12;
             manager.notify(testNotifyId,
                     builder.build());
         } catch (Exception e) {
 
         }
     }
-
     /*****************************HTTP副程式******************************/
     private void sendGET() {
         TextView tvRes = findViewById(R.id.text_Respond);

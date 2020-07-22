@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="Speed_List">
-        <item>選擇時速</item>
+        <item>設定時速</item>
         <item>5</item>
         <item>10</item>
         <item>15</item>
