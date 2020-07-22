@@ -189,7 +189,7 @@ public class ConnectActivity extends AppCompatActivity {
             this.isPaired = isPaired;
 
             String name = this.device.getName();
-            if (name == null) name = "裝置名稱未顯示";
+            if (name == null) name = "尚未選擇裝置";
 
             icon.setImageResource(this.isPaired ? R.drawable.ic_bluetooth_black_24dp : R.drawable.ic_bluetooth_searching_black_24dp);
             textName.setText(name);

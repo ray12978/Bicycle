@@ -121,7 +121,7 @@
             android:id="@+id/SpLit_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="12dp"
             android:background="@color/colorOff"
             android:drawableTop="@drawable/ic_speed"
             android:text="速度限制"
@@ -150,7 +150,7 @@
             android:id="@+id/lck_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="12dp"
             android:background="@color/colorOff"
             android:drawableTop="@drawable/ic_baseline_lock_open_24"
             android:ems="0"
@@ -180,6 +180,7 @@
             android:id="@+id/buzz_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
             android:layout_marginEnd="12dp"
             android:background="@color/colorOff"
             android:drawableTop="@drawable/ic_baseline_volume_up_24"
@@ -188,6 +189,7 @@
             android:textColor="?attr/colorControlNormal"
             app:layout_constraintBottom_toTopOf="@+id/guideline4"
             app:layout_constraintEnd_toStartOf="@+id/lck_btn"
+            app:layout_constraintStart_toEndOf="@+id/las_btn"
             app:layout_constraintTop_toTopOf="@+id/btnline"
             app:layout_constraintVertical_bias="0.551" />
 
@@ -201,10 +203,9 @@
 
         <Button
             android:id="@+id/btBTConct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/colorOff"
-            android:text="Connect"
+            android:layout_width="94dp"
+            android:layout_height="67dp"
+            android:text="連線"
             app:layout_constraintEnd_toStartOf="@+id/btBTDiscont"
             app:layout_constraintStart_toEndOf="@+id/BTOpen"
             app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
@@ -241,22 +242,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_marginEnd="8dp"
             app:layout_constraintBottom_toTopOf="@+id/guideline3"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.833"
-            app:layout_constraintStart_toEndOf="@+id/btDisplay"
             app:layout_constraintTop_toBottomOf="@+id/text_Respond"
-            app:layout_constraintVertical_bias="0.505" />
+            app:layout_constraintVertical_bias="0.060000002" />
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="4dp"
             android:text="速度限制(時速)"
             app:layout_constraintBottom_toTopOf="@+id/guideline3"
-            app:layout_constraintEnd_toStartOf="@+id/SpeedPicker" />
+            app:layout_constraintEnd_toStartOf="@+id/SpeedPicker"
+            app:layout_constraintHorizontal_bias="0.6"
+            app:layout_constraintStart_toEndOf="@+id/id" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
@@ -272,17 +272,6 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.66" />
 
-        <Button
-            android:id="@+id/SwPage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Switch"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.502"
-            app:layout_constraintStart_toEndOf="@+id/button_POST"
-            app:layout_constraintTop_toTopOf="@+id/guideline4"
-            app:layout_constraintVertical_bias="0.483" />
     </androidx.constraintlayout.widget.ConstraintLayout>
     <include layout="@layout/nav_view"/>
 </androidx.drawerlayout.widget.DrawerLayout>

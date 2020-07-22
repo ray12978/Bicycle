@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "414612917485",
+    "firebase_url": "https://android-crashr.firebaseio.com",
+    "project_id": "android-crashr",
+    "storage_bucket": "android-crashr.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414612917485:android:4afeb244281ed74bd850e4",
+        "android_client_info": {
+          "package_name": "com.Ray.Bicycle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "414612917485-fenc9pi7b9nost9fbgo39t4han5mqhj1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3SOekKE_y5Ff7Keo4JfJzqexBZJEKMV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "414612917485-fenc9pi7b9nost9fbgo39t4han5mqhj1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

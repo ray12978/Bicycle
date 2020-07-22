@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger";
     private static final int NOTYFI_REQUEST_ID = 300;
-    private int testNotifyId = 11;
+    public LoadingDialog loadingDialog;
     /*****************StringProcess******************/
     private int[] StrPosition = new int[4];
     /******************ButtonFlag********************/
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final String deviceName = getIntent().getStringExtra("DeviceName");
         final String deviceAddress = getIntent().getStringExtra("DeviceAddress");
         text_Respond = findViewById(R.id.text_Respond);
-        String name = deviceName != null ? deviceName : "裝置名稱未顯示";
+        String name = deviceName != null ? deviceName : "尚未選擇裝置";
         address = deviceAddress;
         setTitle(String.format("%s (%s)", address, name));
         Button btBTSend = findViewById(R.id.btBTSend);
@@ -127,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btBTDiscont = findViewById(R.id.btBTDiscont);
         Button btClear = findViewById(R.id.btClr);
         Button btDisplay = findViewById(R.id.btDisplay);
-        Button SwPage = findViewById(R.id.SwPage);
         Switch SWPost = findViewById(R.id.SWPost);
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
@@ -135,7 +134,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         textContent = findViewById(R.id.textContent);
         NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
         final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
-
+        loadingDialog = new LoadingDialog(MainActivity.this);
+        //bluetoothAdapter.
         SpdPick.setMinValue(0);
         SpdPick.setMaxValue(SpdList.length - 1);
         SpdPick.setDisplayedValues(SpdList);
@@ -182,11 +182,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
         btBTConct.setOnClickListener(v -> {
+            //loadingDialog.startLoadingDialog();
             BTConnect();
-        });
-        SwPage.setOnClickListener(v -> {
-           // Intent intent = new Intent(MainActivity.this, HomePage.class);
-            //startActivity(intent);
+            //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
             BTMsg(4, 5, "T", "J", LasFlag);
@@ -300,8 +298,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         //drawer.closeDrawer(GravityCompat.START);
         return true;
-
-
     }
     @Override
     public void onBackPressed() {
@@ -341,15 +337,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     /***********************藍牙副程式*******************************/
     private void BTConnect() {
+        if(address == null)return;
         final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-
         try {
+            loadingDialog.startLoadingDialog();
             socket = device.createRfcommSocketToServiceRecord(serialPortUUID);
             socket.connect();
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
+            System.out.print("連線中");
+            loadingDialog.dismissDialog();
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.print("連線超時");
         }
     }
 
@@ -589,6 +589,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 builder.setDefaults(Notification.DEFAULT_ALL)
                         .setVisibility(Notification.VISIBILITY_PUBLIC);
             }
+            int testNotifyId = 11;
             manager.notify(testNotifyId,
                     builder.build());
         } catch (Exception e) {
