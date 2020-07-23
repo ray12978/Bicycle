@@ -24,6 +24,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
@@ -38,6 +39,9 @@ import android.os.Vibrator;
 import android.content.DialogInterface;
 import android.view.View;
 import com.Ray.Bicycle.R;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.crashlytics.internal.common.Utils;
 
@@ -46,6 +50,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,6 +60,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -67,12 +73,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private EditText BTM;
     private String SpeedLimit = "";
     private String address;
-    public String SVal;
-    public String MVal;
-    public String TVal;
-    public String PVal;
+    public String SVal,PVal,MVal,TVal,GetVal;
     public StringBuffer BTSendMsg = new StringBuffer("N00NNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer
-    public StringBuffer BTValTmp = new StringBuffer(16);
+    public StringBuffer BTValTmp = new StringBuffer();
     public byte[] buffer = new byte[256];
     public TextView text_Respond;
     private BluetoothAdapter bluetoothAdapter;
@@ -101,14 +104,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress DanFlag = new FlagAddress(false);
     FlagAddress StrFlag = new FlagAddress(false);
     /*******************Layout***********************/
-
     private DrawerLayout drawer;
+    /********************Runnable********************/
+    private Handler mUI_Handler=new Handler();
+    private Handler mThreadHandler;
+    private HandlerThread mThread;
 
     private Thread reader = new Thread(new Runnable() {
         @Override
         public void run() {
             readerStop = false;
-
             while (!readerStop && !DanFlag.Flag) {
                 //read();
                 if (!LckFlag.Flag){
@@ -122,18 +127,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(DanFlag.Flag)Danger();
                 }
                 Save_Val(BTValTmp);
-                //System.out.println(DanFlag.Flag);
-                /*try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }*/
             }
 
         }
     });
+
+    private Thread danger = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            readerStop = false;
+        }
+    });
+
     private boolean readerStop;
-    @RequiresApi(api = Build.VERSION_CODES.O)
+   // @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,7 +167,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
         final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
         loadingDialog = new LoadingDialog(MainActivity.this);
-        //bluetoothAdapter.
         SpdPick.setMinValue(0);
         SpdPick.setMaxValue(SpdList.length - 1);
         SpdPick.setDisplayedValues(SpdList);
@@ -186,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btLck = findViewById(R.id.lck_btn); //上鎖按鈕
         /**HTTP按鈕*/
         Button btPost = findViewById(R.id.button_POST);
+        Button btGET = findViewById(R.id.button_GET);
         Button btSpLit = findViewById(R.id.SpLit_btn);
 
         btBTDiscont.setOnClickListener(view -> disconnect());
@@ -217,8 +224,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
-            //BTSend(BTSendMsg.toString());
-            BTSend("aaa");
+            BTSend(BTSendMsg.toString());
+            //BTSend("aaa");
             //loadingDialog.startLoadingDialog();
             try {
 
@@ -234,8 +241,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
-            //BTSend(BTSendMsg.toString());
-            BTSend("bbb");
+            BTSend(BTSendMsg.toString());
+            //BTSend("bbb");
             try {
 
                 Thread.sleep(1000);
@@ -259,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             //str_process();
             if (!LckFlag.Flag) {
-                btBuzz.setEnabled(false);
+                btBuzz.setEnabled(true);
                 btSpLit.setEnabled(false);
                 btLaser.setEnabled(false);
                 //setVibrate(1000);
@@ -275,7 +282,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         })
                         .show();*/
             } else {
-                btBuzz.setEnabled(true);
+                btBuzz.setEnabled(false);
                 btSpLit.setEnabled(true);
                 btLaser.setEnabled(true);
             }
@@ -296,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Toast toast = Toast.makeText(this, BTValTmp, Toast.LENGTH_LONG);
             toast.setGravity(Gravity.BOTTOM, 0, 200);
             toast.show();
-            showNotification();
+           // showNotification();
 
             System.out.println("BTTmp:");
             System.out.println(BTValTmp.toString());
@@ -323,6 +330,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 toast.show();
             }
         });
+        btGET.setOnClickListener(v -> {
+            sendGET();
+        });
+
 
 
     }
@@ -429,9 +440,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (outputStream == null) return;
 
         try {
-            outputStream.write(BTMsg.getBytes());
-            outputStream.flush();
-            System.out.println("BT:");
+            for(int i =0;i<5;i++) {
+                outputStream.write(BTMsg.getBytes());
+                outputStream.flush();
+            }
+            System.out.print("BT:");
             System.out.print(BTMsg);
             System.out.print(",");
             System.out.print(BTMsg.getBytes());
@@ -489,27 +502,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.d(TVal, "T");
             Log.d(PVal, "P");
             BTValTmp.delete(0, BTValTmp.length());
-        } else if (BTValTmp.toString().charAt(0) == 'B') {
+        } /*else if (BTValTmp.toString().charAt(0) == 'B') {
             String Status = BTValTmp.toString().substring(1, 2).trim();
             BTValTmp.delete(0, BTValTmp.length());
             DanFlag.Flag = Status.equals("1");
             System.out.println(DanFlag.Flag);
-            if (DanFlag.Flag) Danger_Msg();
-        }
+            //if (DanFlag.Flag) Danger_Msg();
+        }*/
     }
     public void Danger_Str(){
         int index=0;
         if(BTValTmp.length() == 0)return;
         while (BTValTmp.length() != 0) {
-            index++;
+            if(index<BTValTmp.length()-1)index++;
             System.out.println(BTValTmp.toString());
-            if (BTValTmp.toString().charAt(index-1) == 'B' && BTValTmp.toString().charAt(index) == '1') {
+            if(BTValTmp.length()>=2) {
+                if (BTValTmp.toString().charAt(index - 1) == 'B' && BTValTmp.toString().charAt(index) == '1') {
+                    BTValTmp.delete(0, BTValTmp.length());
+                    DanFlag.Flag = true;
+                    BTValTmp.delete(0, BTValTmp.length());
+                    System.out.println("danger!!");
+                }
                 BTValTmp.delete(0, BTValTmp.length());
-                DanFlag.Flag=true;
 
-                System.out.println("danger!!");
             }
-
         }
     }
     /*public void str_process() {
@@ -627,11 +643,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     void Danger() {
         if(!DanFlag.Flag)return;
         setVibrate(1000);
-        System.out.println("danger");
         //DanFlag.Flag = false;
         showNotification();
         //mediaPlayer.start();
-//        Danger_Msg();
+        //if(Alert.Flag)Danger_Msg();
         //loadingDialog.startLoadingDialog();
         DanFlag.Flag = false;
     }
@@ -643,7 +658,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .setPositiveButton("確定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        DanFlag.Flag = false;
+
                     }
                 })
                 .show();
@@ -744,9 +759,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .build();
         /**設置傳送需求*/
         Request request = new Request.Builder()
-                // .url("https://jsonplaceholder.typicode.com/posts/1")
+                 .url("https://jsonplaceholder.typicode.com/posts/1")
                 //資料庫測試        .url("http://35.221.236.109:3000/api880509")
-                .url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=1")
+                //.url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=1")
 //                .header("Cookie","")//有Cookie需求的話則可用此發送
 //                .addHeader("","")//如果API有需要header的則可使用此發送
                 .build();
@@ -756,16 +771,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 /**如果傳送過程有發生錯誤*/
-                //tvRes.setText(e.getMessage());
+                tvRes.setText(e.getMessage());
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 /**取得回傳*/
-                tvRes.setText("GET回傳：\n" + response.body().string());
+               // GetVal = response.body().string();
+                GetVal = response.body().string();
+                tvRes.setText("GET回傳：\n" + GetVal);
+                //split();
+                System.out.print("Get:");
+                System.out.print(GetVal);
             }
         });
     }
+    public List<String> split(String jsonArray) throws Exception {
+        List<String> splittedJsonElements = new ArrayList<String>();
+        ObjectMapper jsonMapper = new ObjectMapper();
+        JsonNode jsonNode = jsonMapper.readTree(jsonArray);
+
+        if (jsonNode.isArray()) {
+            ArrayNode arrayNode = (ArrayNode) jsonNode;
+            for (int i = 0; i <arrayNode.size(); i++) {
+                JsonNode individualElement = arrayNode.get(i);
+                splittedJsonElements.add(individualElement.toString());
+            }
+        }
+        return splittedJsonElements;
+    }
+
+    private final OkHttpClient client = new OkHttpClient();
+        public void run() throws Exception {
+            Request request = new Request.Builder()
+                    .url("http://publicobject.com/helloworld.txt")
+                    .build();
+            Response response = client.newCall(request).execute();
+            if (!response.isSuccessful()) throw new IOException("Unexpected code "+response);
+            Headers responseHeaders = response.headers();
+            for (int i = 0; i < responseHeaders.size(); i ++) {
+                System.out.println(responseHeaders.name(i)+ ": " +responseHeaders.value(i));
+            }
+            System.out.println(response.body().string());
+        }
 
     private void sendPOST() {
         if (SVal == null || MVal == null || TVal == null || PVal == null) {
