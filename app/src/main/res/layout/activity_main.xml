@@ -91,7 +91,6 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="10dp"
-
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
             app:layout_constraintBottom_toTopOf="@+id/btDisplay"
             app:layout_constraintEnd_toEndOf="parent"
@@ -102,9 +101,10 @@
             android:id="@+id/id"
             android:layout_width="201dp"
             android:layout_height="wrap_content"
-            android:ems="10"
+            android:ems="16"
             android:hint="傳送id"
-            android:inputType="number"
+            android:inputType="textEmailAddress"
+            android:maxLength="16"
             app:layout_constraintBottom_toTopOf="@+id/guideline3"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -125,7 +125,6 @@
             android:background="@color/colorOff"
             android:drawableTop="@drawable/ic_speed"
             android:text="速度限制"
-
             android:textColor="?attr/colorControlNormal"
             app:layout_constraintBottom_toTopOf="@+id/guideline4"
             app:layout_constraintStart_toStartOf="parent"

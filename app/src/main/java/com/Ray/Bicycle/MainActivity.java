@@ -74,7 +74,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private String SpeedLimit = "";
     private String address;
     public String SVal,PVal,MVal,TVal,GetVal;
-    public StringBuffer BTSendMsg = new StringBuffer("N00NNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer
+    private String UserName;
+    public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer,[6]CloudMode
     public StringBuffer BTValTmp = new StringBuffer();
     public byte[] buffer = new byte[256];
     public TextView text_Respond;
@@ -83,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private InputStream inputStream = null;
     private OutputStream outputStream = null;
     private TextView textContent;
-    boolean PostFlag;
     private Button btBTConct;
     private MediaPlayer mediaPlayer;
     /*********************Notify*********************/
@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress SpdFlag = new FlagAddress(true);
     FlagAddress DanFlag = new FlagAddress(false);
     FlagAddress StrFlag = new FlagAddress(false);
+    FlagAddress PostFlag = new FlagAddress(false);
     /*******************Layout***********************/
     private DrawerLayout drawer;
     /********************Runnable********************/
@@ -194,9 +195,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btPost = findViewById(R.id.button_POST);
         Button btGET = findViewById(R.id.button_GET);
         Button btSpLit = findViewById(R.id.SpLit_btn);
-
         btBTDiscont.setOnClickListener(view -> disconnect());
-
+        btBuzz.setEnabled(false);
         id.setOnEditorActionListener((view, actionId, event) -> {
             BTSend(id.getText().toString());
             return false;
@@ -318,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(LckFlag.Flag);
         });
         SWPost.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            PostFlag = buttonView.isChecked();
+            PostFlag.Flag = buttonView.isChecked();
         });
         /**HTTP按鈕動作**/
         /**傳送POST**/
@@ -566,6 +566,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void BTMsg(int start, int end, String Msg1, String Msg2, FlagAddress SelectFlag) {
         MsgBtFlag.Flag = true;
+        if(id.length() == 0){
+            Toast toast = Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.BOTTOM, 0, 200);
+            toast.show();
+            return;
+        }
         if (SelectFlag.Flag && MsgBtFlag.Flag) {
             BTSendMsg.replace(start, end, Msg1);
             MsgBtFlag.Flag = false;
@@ -576,13 +582,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             MsgBtFlag.Flag = false;
             SelectFlag.Flag = true;
         }
+        if(PostFlag.Flag)BTSendMsg.replace(6, 7, "Y");
+        else BTSendMsg.replace(6, 7, "N");
+        UserName = id.getText().toString();
+        while (UserName.length()<16) UserName+='@';
+        if(BTSendMsg.length()>=8) {
+            BTSendMsg.replace(7,23, UserName);
+        }
+        else {
+            BTSendMsg.append(UserName);
+        }
         System.out.println(BTSendMsg);
     }
 
     void Speed_Limit() {
         //String SpeedLimit = "" ;
         if (SpeedLimit.length() != 0 && SpdFlag.Flag && SpeedLimit.length() < 3) {
-            String SpLtVal = SpeedLimit.toString();
+            String SpLtVal = SpeedLimit;
             if (SpeedLimit.length() == 1) {
                 BTSendMsg.replace(1, 2, "0");
                 BTSendMsg.replace(2, 3, SpLtVal);
@@ -625,6 +641,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     /*******************************其他**********************************/
     void Button_exterior(Button btn, int one, int two, int bit, char condi) {
+        if(id.length() == 0)return;
         btn.setCompoundDrawablesWithIntrinsicBounds(0, BTSendMsg.charAt(bit) == condi ?
                 one : two, 0, 0);
         btn.setBackgroundColor(BTSendMsg.charAt(bit) == condi ?
@@ -819,7 +836,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (SVal == null || MVal == null || TVal == null || PVal == null) {
             return;
         }
-        if (!PostFlag) return;
+        if (!PostFlag.Flag) return;
         TextView tvRes = findViewById(R.id.text_Respond);
         /**建立連線*/
         OkHttpClient client = new OkHttpClient().newBuilder()
