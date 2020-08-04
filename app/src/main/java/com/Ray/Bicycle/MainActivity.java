@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public LoadingDialog loadingDialog;
     /*****************StringProcess******************/
     private int[] StrPosition = new int[4];
-    private int StrIndex = 0;
     /******************ButtonFlag********************/
     //FlagAddress MsgStaFlag = new FlagAddress(true);
     FlagAddress MsgBtFlag = new FlagAddress(true);
