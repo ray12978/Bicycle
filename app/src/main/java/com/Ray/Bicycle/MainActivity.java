@@ -85,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private OutputStream outputStream = null;
     private TextView textContent;
     private Button btBTConct;
-    private MediaPlayer mediaPlayer;
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
@@ -181,7 +180,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(aaa);
             System.out.println(SpdList[a]);
         });
-        mediaPlayer = MediaPlayer.create(this, R.raw.sound);
         /**********Layout***************/
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(String.format("%s (%s)", address, name));
@@ -346,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
                 break;
             case R.id.nav_map:
-                Intent intent2 = new Intent(MainActivity.this, MainActivity2.class);
+                Intent intent2 = new Intent(MainActivity.this, MapsActivity.class);
                 startActivity(intent2);
                 break;
             case R.id.nav_profile:
