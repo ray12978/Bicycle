@@ -181,9 +181,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         /**********Layout***************/
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle(String.format("%s (%s)", address, name));
+        drawer = findViewById(R.id.drawer_layout);
+        setSupportActionBar(toolbar);
+        //toolbar.setTitle(String.format("%s (%s)", address, name));
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
         /**IO按鈕*/
         Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
