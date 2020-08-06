@@ -1,15 +1,12 @@
 package com.Ray.Bicycle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ContentResolver;
 import android.graphics.Color;
 import android.media.AudioAttributes;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.app.AlertDialog;
@@ -25,9 +22,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.HandlerThread;
-import android.os.IBinder;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,13 +32,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.os.Vibrator;
 import android.content.DialogInterface;
-import android.view.View;
-import com.Ray.Bicycle.R;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.crashlytics.internal.common.Utils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +48,6 @@ import java.util.List;
 import java.util.UUID;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -79,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public StringBuffer BTValTmp = new StringBuffer();
     public byte[] buffer = new byte[256];
     public TextView text_Respond;
+    /**Bluetooth**/
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket socket;
     private InputStream inputStream = null;
@@ -179,6 +172,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(aaa);
             System.out.println(SpdList[a]);
         });
+        /***********Other***************/
+        MyApp.appInstance.startTimer();
         /**********Layout***************/
         Toolbar toolbar = findViewById(R.id.toolbar);
         drawer = findViewById(R.id.drawer_layout);
@@ -263,8 +258,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Button_exterior(btLck, Off, On, 0, 'F');
             BTSend(BTSendMsg.toString());
             try {
-
                 Thread.sleep(1000);
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -304,10 +299,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             BTValTmp.delete(0, BTValTmp.length());
         });
         btDisplay.setOnClickListener(v -> {
-            Toast toast = Toast.makeText(this, BTValTmp, Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.BOTTOM, 0, 200);
-            toast.show();
-           // showNotification();
+            Toast.makeText(this, BTValTmp, Toast.LENGTH_LONG).show();
 
             System.out.println("BTTmp:");
             System.out.println(BTValTmp.toString());
@@ -329,9 +321,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btPost.setOnClickListener(v -> {
             if (id.length() != 0) sendPOST();
             else {
-                Toast toast = Toast.makeText(this, "請先輸入id", Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.BOTTOM, 0, 200);
-                toast.show();
+                Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
             }
         });
         btGET.setOnClickListener(v -> {
@@ -532,48 +522,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
     }
-    /*public void str_process() {
-        int b = 0,index=0;
-        //BTValTmp = new StringBuffer("S123M456T789P147"); //test
-        //BTValTmp = new StringBuffer("B1"); //test
-        if(BTValTmp.length() == 0)return;
-        while (BTValTmp.length() !=0) {
-            if (BTValTmp.toString().charAt(index) == 'S') {
-                for (int i = 0; i < BTValTmp.length(); i++) {
-                    if (BTValTmp.toString().getBytes()[i] > 57) {
-                        StrPosition[b] = i;
-                        System.out.println("a");
-                        System.out.println(StrPosition[b]);
-                        b++;
-                    }
-                }
-                SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
-                MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
-                TVal = BTValTmp.toString().substring(StrPosition[2] + 1, StrPosition[3]).trim();
-                PVal = BTValTmp.toString().substring(StrPosition[3] + 1).trim();
-                Log.d(BTValTmp.toString(), "Tmp");
-                Log.d(SVal, "S");
-                Log.d(MVal, "M");
-                Log.d(TVal, "T");
-                Log.d(PVal, "P");
-                BTValTmp.delete(0, BTValTmp.length());
-            } else if (BTValTmp.toString().charAt(index) == 'B') {
-                String Status = BTValTmp.toString().substring(index+1, index+2).trim();
-                BTValTmp.delete(0, BTValTmp.length());
-                DanFlag.Flag = Status.equals("1");
-                System.out.println(DanFlag.Flag);
-                if (DanFlag.Flag) Danger_Msg();
-            }
-            index++;
-        }
-    }*/
 
     private void BTMsg(int start, int end, String Msg1, String Msg2, FlagAddress SelectFlag) {
         MsgBtFlag.Flag = true;
         if(id.length() == 0){
-            Toast toast = Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.BOTTOM, 0, 200);
-            toast.show();
+            Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
             return;
         }
         if (SelectFlag.Flag && MsgBtFlag.Flag) {
@@ -635,9 +588,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 str_process();
                 sendPOST();
             } else {
-                Toast toast = Toast.makeText(this, "請先設定時速", Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.BOTTOM, 0, 200);
-                toast.show();
+                Toast.makeText(this, "請先設定時速", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -670,54 +621,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //if(Alert.Flag)Danger_Msg();
         //loadingDialog.startLoadingDialog();
         DanFlag.Flag = false;
-    }
-
-    void Danger_Msg() {
-        new AlertDialog.Builder(MainActivity.this)
-                .setIcon(R.drawable.ic_baseline_warning_48)
-                .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
-                .setPositiveButton("確定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                })
-                .show();
-    }
-
-    public void Notify() {
-
-        NotificationManager mNotificationManager
-                = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        Intent notifyIntent = new Intent(MainActivity.this, MainActivity.class);
-        notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent appIntent
-                = PendingIntent.getActivity(MainActivity.this, 0, notifyIntent, 0);
-        Notification notification
-                = new Notification.Builder(MainActivity.this)
-                .setContentIntent(appIntent)
-                .setSmallIcon(R.drawable.ic_baseline_warning_48) // 設置狀態列裡面的圖示（小圖示）　　
-                //.setLargeIcon(BitmapFactory.decodeResource(MainActivity.this.getResources(), R.drawable.ic_launcher)) // 下拉下拉清單裡面的圖示（大圖示）
-                .setTicker("notification on status bar.") // 設置狀態列的顯示的資訊
-                .setWhen(System.currentTimeMillis())// 設置時間發生時間
-                .setAutoCancel(false) // 設置通知被使用者點擊後是否清除  //notification.flags = Notification.FLAG_AUTO_CANCEL;
-                .setContentTitle("Notification Title") // 設置下拉清單裡的標題
-                .setContentText("Notification Content")// 設置上下文內容
-                .setOngoing(true)      //true使notification变为ongoing，用户不能手动清除  // notification.flags = Notification.FLAG_ONGOING_EVENT; notification.flags = Notification.FLAG_NO_CLEAR;
-
-                //.setDefaults(Notification.DEFAULT_ALL) //使用所有默認值，比如聲音，震動，閃屏等等
-// .setDefaults(Notification.DEFAULT_VIBRATE) //使用默認手機震動提示
-// .setDefaults(Notification.DEFAULT_SOUND) //使用默認聲音提示
-// .setDefaults(Notification.DEFAULT_LIGHTS) //使用默認閃光提示
-// .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND) //使用默認閃光提示 與 默認聲音提示
-
-// .setVibrate(vibrate) //自訂震動長度
-// .setSound(uri) //自訂鈴聲
-// .setLights(0xff00ff00, 300, 1000) //自訂燈光閃爍 (ledARGB, ledOnMS, ledOffMS)
-                .build();
-
-//把指定ID的通知持久的發送到狀態條上
-        mNotificationManager.notify(0, notification);
     }
 
     public void showNotification() {
