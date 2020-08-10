@@ -178,8 +178,11 @@ public class ConnectActivity extends AppCompatActivity {
                     Intent intent = new Intent(ConnectActivity.this, MainActivity.class);
                     intent.putExtra("DeviceName", device.getName());
                     intent.putExtra("DeviceAddress", device.getAddress());
-
                     startActivity(intent);
+                    Intent Service = new Intent(ConnectActivity.this,HelloService.class);
+                    intent.putExtra("DeviceName", device.getName());
+                    intent.putExtra("DeviceAddress", device.getAddress());
+                    startService(Service);
                 }
             });
         }

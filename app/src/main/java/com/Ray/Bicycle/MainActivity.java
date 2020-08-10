@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -22,6 +24,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.HandlerThread;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -49,6 +52,7 @@ import java.util.UUID;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+import okhttp3.Address;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -61,6 +65,8 @@ import okhttp3.logging.HttpLoggingInterceptor;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     //private final UUID uuid = UUID.fromString("8c4102d5-f0f9-4958-806e-7ba5fd54ce7c");
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private String deviceName;
+    private String deviceAddress;
     private EditText id;
     private EditText BTM;
     private String SpeedLimit = "";
@@ -68,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public String SVal,PVal,MVal,TVal,GetVal;
     private String UserName;
     public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer,[6]CloudMode
-    public StringBuffer BTValTmp = new StringBuffer();
+    public  StringBuffer BTValTmp = MyApp.appInstance.getBTVal();
     public byte[] buffer = new byte[256];
     public TextView text_Respond;
     /**Bluetooth**/
@@ -78,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private OutputStream outputStream = null;
     private TextView textContent;
     private Button btBTConct;
+    private MyApp MyAppInst = MyApp.getAppInstance();
+    private IBinder binder;
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
@@ -93,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress BuzFlag = new FlagAddress(true);
     FlagAddress SpdFlag = new FlagAddress(true);
     FlagAddress DanFlag = new FlagAddress(false);
-    FlagAddress StrFlag = new FlagAddress(false);
+    public FlagAddress StrFlag = new FlagAddress(false);
     FlagAddress PostFlag = new FlagAddress(false);
     /*******************Layout***********************/
     private DrawerLayout drawer;
@@ -101,6 +109,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Handler mUI_Handler=new Handler();
     private Handler mThreadHandler;
     private HandlerThread mThread;
+    /**Service**/
+    private HelloService mService;
+    private LocalServiceConnection mLocalServiceConnection;
 
     private Thread reader = new Thread(new Runnable() {
         @Override
@@ -109,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             while (!readerStop && !DanFlag.Flag) {
                 //read();
                 if (!LckFlag.Flag){
-                    Save_Val(BTValTmp);
+                    MyAppInst.Save_Val(BTValTmp);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -118,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Danger_Str();
                     if(DanFlag.Flag)Danger();
                 }
-                Save_Val(BTValTmp);
+                MyAppInst.Save_Val(BTValTmp);
             }
 
         }
@@ -139,26 +150,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         //setContentView(R.layout.home_page);
         /*****************藍牙*************/
-        final String deviceName = getIntent().getStringExtra("DeviceName");
-        final String deviceAddress = getIntent().getStringExtra("DeviceAddress");
+        deviceName = getIntent().getStringExtra("DeviceName");
+        deviceAddress = getIntent().getStringExtra("DeviceAddress");
         text_Respond = findViewById(R.id.text_Respond);
         String name = deviceName != null ? deviceName : "尚未選擇裝置";
         address = deviceAddress;
         setTitle(String.format("%s (%s)", address, name));
-        Button btBTSend = findViewById(R.id.btBTSend);
-        Button btBTOpen = findViewById(R.id.BTOpen);
-        btBTConct = findViewById(R.id.btBTConct);
-        Button btBTDiscont = findViewById(R.id.btBTDiscont);
-        Button btClear = findViewById(R.id.btClr);
-        Button btDisplay = findViewById(R.id.btDisplay);
-        Switch SWPost = findViewById(R.id.SWPost);
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
         textContent = findViewById(R.id.textContent);
-        NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
-        final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
         loadingDialog = new LoadingDialog(MainActivity.this);
+        setSpdPick();
+        ButtonListen();
+        /***********Other***************/
+        //MyAppInst.startTimer();
+        MyAppInst.startTimer();
+        mLocalServiceConnection = new LocalServiceConnection();
+        /**********Layout***************/
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        drawer = findViewById(R.id.drawer_layout);
+        setSupportActionBar(toolbar);
+        //toolbar.setTitle(String.format("%s (%s)", address, name));
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+    }
+    private void setSpdPick(){
+        final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
+        NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
         SpdPick.setMinValue(0);
         SpdPick.setMaxValue(SpdList.length - 1);
         SpdPick.setDisplayedValues(SpdList);
@@ -172,20 +195,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(aaa);
             System.out.println(SpdList[a]);
         });
-        /***********Other***************/
-        MyApp.appInstance.startTimer();
-        /**********Layout***************/
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        drawer = findViewById(R.id.drawer_layout);
-        setSupportActionBar(toolbar);
-        //toolbar.setTitle(String.format("%s (%s)", address, name));
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
+    }
+    private void ButtonListen(){
+        /**Bluetooth**/
+        Button btBTSend = findViewById(R.id.btBTSend);
+        Button btBTOpen = findViewById(R.id.BTOpen);
+        btBTConct = findViewById(R.id.btBTConct);
+        Button btBTDiscont = findViewById(R.id.btBTDiscont);
+        Button btClear = findViewById(R.id.btClr);
+        Button btDisplay = findViewById(R.id.btDisplay);
+        Switch SWPost = findViewById(R.id.SWPost);
+        Button btService = findViewById(R.id.BTServ);
+        Button btSerSTOP = findViewById(R.id.btSerSTOP);
         /**IO按鈕*/
         Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
@@ -194,15 +215,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btPost = findViewById(R.id.button_POST);
         Button btGET = findViewById(R.id.button_GET);
         Button btSpLit = findViewById(R.id.SpLit_btn);
-        btBTDiscont.setOnClickListener(view -> disconnect());
+        btBTDiscont.setOnClickListener(view -> MyAppInst.disconnect(btBTConct));
         btBuzz.setEnabled(false);
         id.setOnEditorActionListener((view, actionId, event) -> {
-            BTSend(id.getText().toString());
+            MyAppInst.BTSend(id.getText().toString());
             return false;
         });
         BTM.setOnEditorActionListener((view, actionId, event) -> {
-            BTSend(BTM.getText().toString());
+            MyAppInst.BTSend(BTM.getText().toString());
             return false;
+        });
+        /**test Button**/
+        btService.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this,HelloService.class);
+            intent.putExtra("DeviceName", deviceName);
+            intent.putExtra("DeviceAddress", deviceAddress);
+            startService(intent);
+            bindService(new Intent(MainActivity.this,HelloService.class),mLocalServiceConnection,BIND_AUTO_CREATE);
+        });
+        btSerSTOP.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this,HelloService.class);
+            intent.putExtra("DeviceName", deviceName);
+            intent.putExtra("DeviceAddress", deviceAddress);
+            stopService(intent);
+            unbindService(mLocalServiceConnection);
         });
         /**藍牙按鈕動作**/
         btBTOpen.setOnClickListener(v -> {
@@ -210,12 +246,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(BTListAct);
         });
         btBTSend.setOnClickListener(v -> {
-            BTSend(BTM.getText().toString());
-
+            MyAppInst.BTSend(BTM.getText().toString());
         });
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
-            BTConnect();
+            //BTConnect();
+            MyAppInst.BTConnect(address,btBTConct);
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -223,8 +259,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
-            BTSend(BTSendMsg.toString());
-            //BTSend("aaa");
+            MyAppInst.BTSend(BTSendMsg.toString());
+            //MyAppInst.BTSend("aaa");
             //loadingDialog.startLoadingDialog();
             try {
 
@@ -240,8 +276,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
-            BTSend(BTSendMsg.toString());
-            //BTSend("bbb");
+            MyAppInst.BTSend(BTSendMsg.toString());
+            //MyAppInst.BTSend("bbb");
             try {
 
                 Thread.sleep(1000);
@@ -256,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
-            BTSend(BTSendMsg.toString());
+            MyAppInst.BTSend(BTSendMsg.toString());
             try {
                 Thread.sleep(1000);
 
@@ -268,18 +304,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 btBuzz.setEnabled(true);
                 btSpLit.setEnabled(false);
                 btLaser.setEnabled(false);
-                //setVibrate(1000);
-                //Notify();
-                /*new AlertDialog.Builder(MainActivity.this)
-                        .setIcon(R.drawable.ic_baseline_warning_48)
-                        .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
-                        .setPositiveButton("確定", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                VibFlag.Flag = false;
-                            }
-                        })
-                        .show();*/
             } else {
                 btBuzz.setEnabled(false);
                 btSpLit.setEnabled(true);
@@ -327,10 +351,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btGET.setOnClickListener(v -> {
             sendGET();
         });
-
-
-
     }
+    private class LocalServiceConnection implements ServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            //透過Binder調用Service內的方法
+            mService = ((HelloService.MyBinder)service).getService();
+            String serviceName = mService.getServiceName();
+            String BTStatus = mService.getBTStatus();
+            String DevName = mService.getDeviceName();
+            setTitle(String.format("%s (%s)", address, DevName));
+            textContent.setText("service name is " + serviceName);
+            btBTConct.setText(BTStatus);
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            //service 物件設為null
+            mService = null;
+        }
+    }
+
     /***********Navigation*************/
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -388,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        reader.start();
+        //reader.start();
 //        loadingDialog.dismissDialog();
         //Danger.start();
     }
@@ -564,7 +605,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             BTMsg(3, 4, "Y", "N", SpdFlag);
             System.out.println(BTSendMsg);
-            BTSend(BTSendMsg.toString());
+            MyAppInst.BTSend(BTSendMsg.toString());
             try {
 
                 Thread.sleep(1000);
@@ -578,7 +619,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BTSendMsg.replace(3, 4, "N");
                 SpdFlag.Flag = true;
                 System.out.println(BTSendMsg);
-                BTSend(BTSendMsg.toString());
+                MyAppInst.BTSend(BTSendMsg.toString());
                 try {
 
                     Thread.sleep(1000);

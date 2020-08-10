@@ -35,6 +35,15 @@
             app:layout_constraintTop_toBottomOf="@+id/include" />
 
         <Button
+            android:id="@+id/btSerSTOP"
+            android:layout_width="89dp"
+            android:layout_height="49dp"
+            android:text="StopSer"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/BTServ"
+            app:layout_constraintTop_toBottomOf="@+id/lck_btn" />
+
+        <Button
             android:id="@+id/btBTDiscont"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -78,6 +87,15 @@
             android:orientation="horizontal"
             app:layout_constraintGuide_begin="562dp" />
 
+        <Button
+            android:id="@+id/BTServ"
+            android:layout_width="87dp"
+            android:layout_height="54dp"
+            android:text="Service"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/button_GET"
+            app:layout_constraintTop_toBottomOf="@+id/buzz_btn" />
+
         <TextView
             android:id="@+id/textContent"
             android:layout_width="0dp"
@@ -104,7 +122,7 @@
             android:layout_height="wrap_content"
             android:ems="16"
             android:hint="傳送id"
-            android:inputType="textEmailAddress"
+            android:inputType="textVisiblePassword"
             android:maxLength="16"
             app:layout_constraintBottom_toTopOf="@+id/guideline3"
             app:layout_constraintStart_toStartOf="parent" />
@@ -115,6 +133,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="傳送BT"
+            android:inputType="textVisiblePassword"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/guideline3" />
 
