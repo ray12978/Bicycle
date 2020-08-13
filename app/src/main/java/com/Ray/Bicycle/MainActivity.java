@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private EditText id;
     private EditText BTM;
     private String SpeedLimit = "";
-    private String address;
     public String SVal,PVal,MVal,TVal,GetVal;
     private String UserName;
     public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer,[6]CloudMode
@@ -112,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     /**Service**/
     private HelloService mService;
     private LocalServiceConnection mLocalServiceConnection;
+    private String serviceName,BTStatus,DevName,DevAdr;
+
 
     private Thread reader = new Thread(new Runnable() {
         @Override
@@ -150,12 +151,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         //setContentView(R.layout.home_page);
         /*****************藍牙*************/
-        deviceName = getIntent().getStringExtra("DeviceName");
-        deviceAddress = getIntent().getStringExtra("DeviceAddress");
+        DevName = mService.getDeviceName();
+        DevAdr = mService.getAddress();
+        deviceName = DevName == null ? getIntent().getStringExtra("DeviceName") : DevName;
+        deviceAddress = DevAdr == null ? getIntent().getStringExtra("DeviceAddress") : DevAdr;
+        //deviceName = getIntent().getStringExtra("DeviceName");
+        //deviceAddress = getIntent().getStringExtra("DeviceAddress");
         text_Respond = findViewById(R.id.text_Respond);
         String name = deviceName != null ? deviceName : "尚未選擇裝置";
-        address = deviceAddress;
-        setTitle(String.format("%s (%s)", address, name));
+        setTitle(String.format("%s (%s)", deviceAddress, name));
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
@@ -251,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             //BTConnect();
-            MyAppInst.BTConnect(address,btBTConct);
+            MyAppInst.BTConnect(deviceAddress,btBTConct);
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -358,10 +362,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onServiceConnected(ComponentName name, IBinder service) {
             //透過Binder調用Service內的方法
             mService = ((HelloService.MyBinder)service).getService();
-            String serviceName = mService.getServiceName();
-            String BTStatus = mService.getBTStatus();
-            String DevName = mService.getDeviceName();
-            setTitle(String.format("%s (%s)", address, DevName));
+            serviceName = mService.getServiceName();
+            BTStatus = mService.getBTStatus();
+            DevName = mService.getDeviceName();
+            DevAdr = mService.getAddress();
+            setTitle(String.format("%s (%s)", DevAdr, DevName));
             textContent.setText("service name is " + serviceName);
             btBTConct.setText(BTStatus);
         }
@@ -436,11 +441,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     /***********************藍牙副程式*******************************/
     private void BTConnect() {
-        if(address == null){
+        if(deviceAddress == null){
             btBTConct.setText("未選擇裝置");
             return;
         }
-        final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+        final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
         try {
 
             //loadingDialog.startLoadingDialog();

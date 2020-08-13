@@ -85,7 +85,12 @@ public class HelloService extends Service {
         return BTStatus;
     }
     public String getDeviceName(){
-        return name;
+        if(name != null) return name;
+        else return null;
+    }
+    public String getAddress(){
+        if(address != null) return address;
+        else return null;
     }
 
     /****/

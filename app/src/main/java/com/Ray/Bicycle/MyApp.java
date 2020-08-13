@@ -33,6 +33,8 @@ public class MyApp extends Application {
     public InputStream inputStream = null;
     public OutputStream outputStream = null;
     private BluetoothAdapter bluetoothAdapter;
+    /**Service**/
+    private HelloService mService;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -42,6 +44,8 @@ public class MyApp extends Application {
         dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+
 
     }
 
