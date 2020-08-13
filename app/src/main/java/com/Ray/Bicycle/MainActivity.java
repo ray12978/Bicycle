@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private EditText id;
     private EditText BTM;
     private String SpeedLimit = "";
-    private String address;
+    private String address,Name;
     public String SVal,PVal,MVal,TVal,GetVal;
     private String UserName;
     public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer,[6]CloudMode
@@ -78,10 +78,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private OutputStream outputStream = null;
     private TextView textContent;
     private Button btBTConct;
+    ConnectActivity dName = new ConnectActivity();
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
-    private static final int NOTYFI_REQUEST_ID = 300;
+    private static final int NOTIFY_REQUEST_ID = 300;
     public LoadingDialog loadingDialog;
     /*****************StringProcess******************/
     private int[] StrPosition = new int[4];
@@ -101,6 +102,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Handler mUI_Handler=new Handler();
     private Handler mThreadHandler;
     private HandlerThread mThread;
+    /**Application**/
+    private MyApp MyAppInst = MyApp.getAppInstance();
 
     private Thread reader = new Thread(new Runnable() {
         @Override
@@ -143,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         text_Respond = findViewById(R.id.text_Respond);
         String name = deviceName != null ? deviceName : "尚未選擇裝置";
         address = deviceAddress;
+        Name = deviceName;
         setTitle(String.format("%s (%s)", address, name));
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
@@ -150,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         textContent = findViewById(R.id.textContent);
         loadingDialog = new LoadingDialog(MainActivity.this);
         /***********Other***************/
-        MyApp.appInstance.startTimer();
+        MyAppInst.startTimer();
         /**********Layout***************/
         Toolbar toolbar = findViewById(R.id.toolbar);
         drawer = findViewById(R.id.drawer_layout);
@@ -186,11 +190,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTDiscont.setOnClickListener(view -> disconnect());
         btBuzz.setEnabled(false);
         id.setOnEditorActionListener((view, actionId, event) -> {
-            BTSend(id.getText().toString());
+            MyAppInst.BTSend(id.getText().toString());
             return false;
         });
         BTM.setOnEditorActionListener((view, actionId, event) -> {
-            BTSend(BTM.getText().toString());
+            MyAppInst.BTSend(BTM.getText().toString());
             return false;
         });
         /**藍牙按鈕動作**/
@@ -199,12 +203,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(BTListAct);
         });
         btBTSend.setOnClickListener(v -> {
-            BTSend(BTM.getText().toString());
+            MyAppInst.BTSend(BTM.getText().toString());
 
         });
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
-            BTConnect();
+            MyAppInst.BTConnect(Name,address,btBTConct);
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -212,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
-            BTSend(BTSendMsg.toString());
+            MyAppInst.BTSend(BTSendMsg.toString());
             //BTSend("aaa");
             //loadingDialog.startLoadingDialog();
             try {
@@ -229,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
-            BTSend(BTSendMsg.toString());
+            MyAppInst.BTSend(BTSendMsg.toString());
             //BTSend("bbb");
             try {
 
@@ -245,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
-            BTSend(BTSendMsg.toString());
+            MyAppInst.BTSend(BTSendMsg.toString());
             try {
                 Thread.sleep(1000);
 
@@ -568,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             BTMsg(3, 4, "Y", "N", SpdFlag);
             System.out.println(BTSendMsg);
-            BTSend(BTSendMsg.toString());
+            MyAppInst.BTSend(BTSendMsg.toString());
             try {
 
                 Thread.sleep(1000);
@@ -582,7 +586,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BTSendMsg.replace(3, 4, "N");
                 SpdFlag.Flag = true;
                 System.out.println(BTSendMsg);
-                BTSend(BTSendMsg.toString());
+                MyAppInst.BTSend(BTSendMsg.toString());
                 try {
 
                     Thread.sleep(1000);
@@ -632,7 +636,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
-                    NOTYFI_REQUEST_ID,
+                    NOTIFY_REQUEST_ID,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             final Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ getApplicationContext().getPackageName() + "/" + R.raw.sound);

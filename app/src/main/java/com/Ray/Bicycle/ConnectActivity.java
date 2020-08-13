@@ -34,14 +34,13 @@ import java.util.Set;
 public class ConnectActivity extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;
     private final Set<BluetoothDevice> discoveredDevices = new HashSet<>();
-
+    public String Address,Name;
     private RecyclerViewAdapter recyclerViewAdapter;
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device == null) return;
@@ -55,8 +54,14 @@ public class ConnectActivity extends AppCompatActivity {
             }
         }
     };
-
     private Button buttonDiscovery;
+
+    public String getName() {
+        return Name;
+    }
+    public String getAddress(){
+        return Address;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +110,6 @@ public class ConnectActivity extends AppCompatActivity {
                     startActivity(intentBluetoothEnable);
                     return;
                 }
-
                 discoverDevices();
             }
         });
@@ -174,7 +178,8 @@ public class ConnectActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     stopDiscovery();
-
+                    Name = device.getAddress();
+                    Address = device.getAddress();
                     Intent intent = new Intent(ConnectActivity.this, MainActivity.class);
                     intent.putExtra("DeviceName", device.getName());
                     intent.putExtra("DeviceAddress", device.getAddress());
