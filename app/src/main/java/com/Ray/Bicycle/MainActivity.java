@@ -137,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //setContentView(R.layout.home_page);
         /*****************藍牙*************/
         final String deviceName = getIntent().getStringExtra("DeviceName");
         final String deviceAddress = getIntent().getStringExtra("DeviceAddress");
@@ -145,33 +144,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String name = deviceName != null ? deviceName : "尚未選擇裝置";
         address = deviceAddress;
         setTitle(String.format("%s (%s)", address, name));
-        Button btBTSend = findViewById(R.id.btBTSend);
-        Button btBTOpen = findViewById(R.id.BTOpen);
-        btBTConct = findViewById(R.id.btBTConct);
-        Button btBTDiscont = findViewById(R.id.btBTDiscont);
-        Button btClear = findViewById(R.id.btClr);
-        Button btDisplay = findViewById(R.id.btDisplay);
-        Switch SWPost = findViewById(R.id.SWPost);
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
         textContent = findViewById(R.id.textContent);
-        NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
-        final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
         loadingDialog = new LoadingDialog(MainActivity.this);
-        SpdPick.setMinValue(0);
-        SpdPick.setMaxValue(SpdList.length - 1);
-        SpdPick.setDisplayedValues(SpdList);
-        SpdPick.setValue(0); // 設定預設位置
-        SpdPick.setWrapSelectorWheel(false); // 是否循環顯示
-        SpdPick.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // 不可編輯
-        SpdPick.setOnValueChangedListener((picker, oldVal, newVal) -> {
-            String[] aaa = SpdPick.getDisplayedValues();
-            int a = SpdPick.getValue();
-            SpeedLimit = SpdList[a];
-            System.out.println(aaa);
-            System.out.println(SpdList[a]);
-        });
         /***********Other***************/
         MyApp.appInstance.startTimer();
         /**********Layout***************/
@@ -185,7 +162,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+        setSpdPick();
+        ButtonListen();
+    }
 
+    private void ButtonListen(){
+        /**BT按鈕**/
+        Button btBTSend = findViewById(R.id.btBTSend);
+        Button btBTOpen = findViewById(R.id.BTOpen);
+        btBTConct = findViewById(R.id.btBTConct);
+        Button btBTDiscont = findViewById(R.id.btBTDiscont);
+        Button btClear = findViewById(R.id.btClr);
+        Button btDisplay = findViewById(R.id.btDisplay);
+        Switch SWPost = findViewById(R.id.SWPost);
         /**IO按鈕*/
         Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
@@ -327,9 +316,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btGET.setOnClickListener(v -> {
             sendGET();
         });
+    }
 
-
-
+    private void setSpdPick(){
+        NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
+        final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
+        SpdPick.setMinValue(0);
+        SpdPick.setMaxValue(SpdList.length - 1);
+        SpdPick.setDisplayedValues(SpdList);
+        SpdPick.setValue(0); // 設定預設位置
+        SpdPick.setWrapSelectorWheel(false); // 是否循環顯示
+        SpdPick.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // 不可編輯
+        SpdPick.setOnValueChangedListener((picker, oldVal, newVal) -> {
+        String[] aaa = SpdPick.getDisplayedValues();
+        int a = SpdPick.getValue();
+        SpeedLimit = SpdList[a];
+        System.out.println(aaa);
+        System.out.println(SpdList[a]);
+    });
     }
     /***********Navigation*************/
     @Override
