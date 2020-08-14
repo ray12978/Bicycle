@@ -56,10 +56,10 @@ public class ConnectActivity extends AppCompatActivity {
     };
     private Button buttonDiscovery;
 
-    public String getName() {
+    public String getDevName() {
         return Name;
     }
-    public String getAddress(){
+    public String getDevAddress(){
         return Address;
     }
 

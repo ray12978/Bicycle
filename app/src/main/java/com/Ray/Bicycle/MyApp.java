@@ -47,8 +47,6 @@ public class MyApp extends Application {
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-
-
     }
 
     public void afficher() {
