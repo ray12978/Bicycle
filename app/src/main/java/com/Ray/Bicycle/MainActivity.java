@@ -36,6 +36,7 @@ import android.content.DialogInterface;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.ivbaranov.rxbluetooth.exceptions.ConnectionClosedException;
 import com.google.android.material.navigation.NavigationView;
 
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +50,10 @@ import java.util.UUID;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -57,6 +62,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
+
+/**rxJava**/
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     //private final UUID uuid = UUID.fromString("8c4102d5-f0f9-4958-806e-7ba5fd54ce7c");
@@ -104,6 +116,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private HandlerThread mThread;
     /**Application**/
     private MyApp MyAppInst = MyApp.getAppInstance();
+    /**test javaRX**/
+    private Flowable<Byte> observeInputStream;
+    boolean connected = false;
+
+
 
     private Thread reader = new Thread(new Runnable() {
         @Override
@@ -802,5 +819,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PVal = null;
         System.out.println("SVal");
         System.out.println(SVal);
+    }
+
+
+    /**test**/
+
+    public Flowable<Byte> observeByteStream() {
+        if (observeInputStream == null) {
+            observeInputStream = Flowable.create(new FlowableOnSubscribe<Byte>() {
+                @Override public void subscribe(final FlowableEmitter<Byte> subscriber) {
+                    while (!subscriber.isCancelled()) {
+                        try {
+                            subscriber.onNext((byte) inputStream.read());
+                        } catch (IOException e) {
+                            connected = false;
+                            subscriber.onError(new ConnectionClosedException("Can't read stream", e));
+                        } finally {
+                            if (!connected) {
+                                //closeConnection();
+                            }
+                        }
+                    }
+                }
+            }, BackpressureStrategy.BUFFER).share();
+        }
+
+        return observeInputStream;
     }
 }
