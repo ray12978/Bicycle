@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -120,6 +122,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Flowable<Byte> observeInputStream;
     boolean connected = false;
 
+    /**SharedPreferences**/
+
+
 
 
     private Thread reader = new Thread(new Runnable() {
@@ -129,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             while (!readerStop && !DanFlag.Flag) {
                 //read();
                 if (!LckFlag.Flag){
-                    Save_Val(BTValTmp);
+                    MyAppInst.Save_Val(BTValTmp);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -138,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Danger_Str();
                     if(DanFlag.Flag)Danger();
                 }
-                Save_Val(BTValTmp);
+                MyAppInst.Save_Val(BTValTmp);
             }
 
         }
@@ -158,13 +163,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         /*****************藍牙*************/
-        final String deviceName = getIntent().getStringExtra("DeviceName");
-        final String deviceAddress = getIntent().getStringExtra("DeviceAddress");
-        text_Respond = findViewById(R.id.text_Respond);
+        //final String deviceName = getIntent().getStringExtra("DeviceName");
+        //final String deviceAddress = getIntent().getStringExtra("DeviceAddress");
+        final String deviceName = getSharedPreferences("BTDetail" , MODE_PRIVATE)
+                .getString("Name" , "null2");
+        final String deviceAddress = getSharedPreferences("BTDetail" , MODE_PRIVATE)
+                .getString("Address" , "null3");
+                text_Respond = findViewById(R.id.text_Respond);
         String name = deviceName != null ? deviceName : "尚未選擇裝置";
         address = deviceAddress;
         Name = deviceName;
-        setTitle(String.format("%s (%s)", address, name));
+        setTitle(String.format("%s (%s)", name , address));
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
@@ -204,7 +213,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btPost = findViewById(R.id.button_POST);
         Button btGET = findViewById(R.id.button_GET);
         Button btSpLit = findViewById(R.id.SpLit_btn);
-        btBTDiscont.setOnClickListener(view -> disconnect());
+        btBTDiscont.setOnClickListener((view )->{
+            MyAppInst.disconnect(btBTConct);
+            SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail" , MODE_PRIVATE);
+            SharedPreferences.Editor BTEdit = BTDetail.edit();
+            BTEdit.clear();
+            BTEdit.apply();
+        });
         btBuzz.setEnabled(false);
         id.setOnEditorActionListener((view, actionId, event) -> {
             MyAppInst.BTSend(id.getText().toString());
@@ -310,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btDisplay.setOnClickListener(v -> {
             Toast.makeText(this, BTValTmp, Toast.LENGTH_LONG).show();
-
+            str_process();
             System.out.println("BTTmp:");
             System.out.println(BTValTmp.toString());
             System.out.println("PostFlag:");
@@ -322,6 +337,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.d(PVal, "P");
             System.out.println("LckFlag:");
             System.out.println(LckFlag.Flag);
+            //Log.d("obser",MyAppInst);
+            System.out.print("Sta");
+            System.out.print(MyAppInst.getBTConnSta());
         });
         SWPost.setOnCheckedChangeListener((buttonView, isChecked) -> {
             PostFlag.Flag = buttonView.isChecked();
@@ -390,7 +408,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             super.onBackPressed();
         }*/
         new AlertDialog.Builder(MainActivity.this)
-                .setMessage("確定要退出嗎?")
+                .setMessage("要結束應用程式嗎?")
                 .setPositiveButton("確定", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         finish();//Exit Activity
@@ -416,8 +434,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         reader.start();
 //        loadingDialog.dismissDialog();
         //Danger.start();
+
+    }
+    @Override
+    protected void onStop(){
+        readerStop = true;
+        super.onStop();
     }
 
+    /*@Override
+    protected void onDestroy(){
+        //
+        SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail" , MODE_PRIVATE);
+        SharedPreferences.Editor BTEdit = BTDetail.edit();
+        BTEdit.clear();
+        BTEdit.apply();
+        super.onDestroy();
+    }*/
     /***********************藍牙副程式*******************************/
     private void BTConnect() {
         if(address == null){

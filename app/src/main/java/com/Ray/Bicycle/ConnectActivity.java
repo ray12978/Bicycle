@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +31,12 @@ import com.Ray.Bicycle.R;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 
 public class ConnectActivity extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;
@@ -178,15 +185,80 @@ public class ConnectActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     stopDiscovery();
-                    Name = device.getAddress();
+                    Name = device.getName();
                     Address = device.getAddress();
                     Intent intent = new Intent(ConnectActivity.this, MainActivity.class);
                     intent.putExtra("DeviceName", device.getName());
                     intent.putExtra("DeviceAddress", device.getAddress());
-
+                    SharedPreferences BT = getSharedPreferences("BTDetail" , MODE_PRIVATE);
+                    BT.edit()
+                            .putString("Name" , Name)
+                            .putString("Address" , Address)
+                            .apply();
                     startActivity(intent);
+                    finish();
                 }
             });
+        }
+        /*public Observable.create(new ObservableOnSubscribe<Integer>() {
+            String TAG = "TEST0";
+            @Override
+            public void subscribe(ObservableEmitter<Integer> e) throws Exception {
+                Log.d(TAG, "=========================currentThread name: " + Thread.currentThread().getName());
+                e.onNext(1);
+                e.onNext(2);
+                e.onNext(3);
+                e.onComplete();
+            }
+        })
+        .subscribe(new Observer<Integer>() {
+            String TAG = "TEST1";
+
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d(TAG, "======================onSubscribe");
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                Log.d(TAG, "======================onNext " + integer);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, "======================onError");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "======================onComplete");
+            }
+        });*/
+        public Observer observer = new Observer<Integer>() {
+            String TAG = "test1";
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d(TAG, "======================onSubscribe");
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                Log.d(TAG, "======================onNext " + integer);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, "======================onError");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "======================onComplete");
+            }
+        };
+
+        public Observer getObserver() {
+            return observer;
         }
 
         void loadDevice(@NonNull BluetoothDevice device, boolean isPaired) {

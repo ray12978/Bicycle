@@ -32,6 +32,8 @@ import android.os.Parcelable;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import android.text.TextUtils;
+import android.widget.Switch;
+
 import com.github.ivbaranov.rxbluetooth.events.AclEvent;
 import com.github.ivbaranov.rxbluetooth.events.BondStateEvent;
 import com.github.ivbaranov.rxbluetooth.events.ConnectionStateEvent;
@@ -54,6 +56,7 @@ import static android.location.LocationManager.GPS_PROVIDER;
 import static android.location.LocationManager.NETWORK_PROVIDER;
 import static android.os.Build.VERSION.SDK_INT;
 import static com.github.ivbaranov.rxbluetooth.Utils.createRfcommSocket;
+import static com.github.ivbaranov.rxbluetooth.events.ServiceEvent.State.CONNECTED;
 
 /**
  * Enables clients to listen to bluetooth events using RxJava Observables.
@@ -66,7 +69,6 @@ public final class RxBluetooth {
     this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     this.context = context;
   }
-
   /**
    * Return true if Bluetooth is available.
    *
@@ -363,7 +365,7 @@ public final class RxBluetooth {
           throws Exception {
         if (!bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
           @Override public void onServiceConnected(int profile, BluetoothProfile proxy) {
-            emitter.onNext(new ServiceEvent(ServiceEvent.State.CONNECTED, profile, proxy));
+            emitter.onNext(new ServiceEvent(CONNECTED, profile, proxy));
           }
 
           @Override public void onServiceDisconnected(int profile) {

@@ -28,7 +28,7 @@ public final class ServiceEvent {
     CONNECTED, DISCONNECTED
   }
 
-  private State state;
+  public State state;
   private int profileType;
   private BluetoothProfile bluetoothProfile;
 

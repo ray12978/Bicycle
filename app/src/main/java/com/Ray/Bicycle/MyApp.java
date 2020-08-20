@@ -14,7 +14,14 @@ import android.os.Handler;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
+import com.github.ivbaranov.rxbluetooth.RxBluetooth;
+import com.github.ivbaranov.rxbluetooth.events.ConnectionStateEvent;
+
 import org.jetbrains.annotations.NotNull;
+
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
 
 public class MyApp extends Application {
 
@@ -37,6 +44,9 @@ public class MyApp extends Application {
     public String DevAddress,DevName;
     /**Service**/
     private HelloService mService;
+    /**RxBluetooth**/
+    BluetoothConnection blueConn;
+    RxBluetooth rxBluetooth = new RxBluetooth(this);
     @Override
     public void onCreate() {
         super.onCreate();
@@ -146,6 +156,12 @@ public class MyApp extends Application {
         }
     }
 
+    public Flowable<String> getBTVal1(){
+       return blueConn.observeStringStream();
+    }
+    public Observable<ConnectionStateEvent> getBTConnSta(){
+        return rxBluetooth.observeConnectionState();
+    }
     public void startListenBT(){
         count++;
         Toast.makeText(getBaseContext(), Integer.toString(count), Toast.LENGTH_LONG).show();
