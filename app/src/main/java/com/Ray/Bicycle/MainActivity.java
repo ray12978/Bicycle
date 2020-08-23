@@ -123,18 +123,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     boolean connected = false;
 
     /**SharedPreferences**/
-
+    public FlagAddress connflag = new FlagAddress(false);
 
 
 
     private Thread reader = new Thread(new Runnable() {
         @Override
         public void run() {
-            readerStop = false;
             while (!readerStop && !DanFlag.Flag) {
                 //read();
                 if (!LckFlag.Flag){
                     MyAppInst.Save_Val(BTValTmp);
+                    //btBTConct.setText(MyAppInst.getBTState()?"已連線":"未連線");
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
         setSpdPick();
         ButtonListen();
+        btBTConct.setText(dName.isConnected()? "已連線" : "未連線");
     }
 
     private void ButtonListen(){
@@ -215,10 +216,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btSpLit = findViewById(R.id.SpLit_btn);
         btBTDiscont.setOnClickListener((view )->{
             MyAppInst.disconnect(btBTConct);
-            SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail" , MODE_PRIVATE);
-            SharedPreferences.Editor BTEdit = BTDetail.edit();
-            BTEdit.clear();
-            BTEdit.apply();
         });
         btBuzz.setEnabled(false);
         id.setOnEditorActionListener((view, actionId, event) -> {
@@ -241,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             MyAppInst.BTConnect(Name,address,btBTConct);
+            btBTConct.setText(dName.isConnected()? "已連線" : "未連線");
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -432,6 +430,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         reader.start();
+        readerStop = false;
 //        loadingDialog.dismissDialog();
         //Danger.start();
 

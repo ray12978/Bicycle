@@ -43,6 +43,7 @@ public class ConnectActivity extends AppCompatActivity {
     private final Set<BluetoothDevice> discoveredDevices = new HashSet<>();
     public String Address,Name;
     private RecyclerViewAdapter recyclerViewAdapter;
+    public boolean isConnected = false;
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -58,6 +59,16 @@ public class ConnectActivity extends AppCompatActivity {
                 updateList();
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 stopDiscovery();
+            } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                isConnected = true;
+                System.out.println("conn");
+                //Device is now connected
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
+                //Device is about to disconnect
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                isConnected = false;
+                System.out.println("disconn");
+                //Device has disconnected
             }
         }
     };
@@ -123,13 +134,19 @@ public class ConnectActivity extends AppCompatActivity {
 
         final IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(broadcastReceiver, filter);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-
+        registerReceiver(broadcastReceiver, filter);
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        registerReceiver(broadcastReceiver, filter);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         registerReceiver(broadcastReceiver, filter);
 
         updateList();
     }
-
+    public boolean isConnected(){
+        return isConnected;
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

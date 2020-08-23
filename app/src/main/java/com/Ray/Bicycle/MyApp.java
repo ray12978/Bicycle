@@ -73,32 +73,37 @@ public class MyApp extends Application {
         }
     }
 
+    public boolean getBTState(){
+        boolean state = bluetoothAdapter.getAddress() != null;
+        return state;
+    }
+
     public void startTimer() {
         runnable.run();
     }
     /**BlueTooth**/
     public void BTConnect(String Name,String Adds, Button BTBut){
         if(Adds == null){
-            BTBut.setText("未選擇裝置");
+            //BTBut.setText("未選擇裝置");
             BTConnStatus.Flag = false;
             return;
         }
         final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(Adds);
         try {
             //loadingDialog.startLoadingDialog();
-            BTBut.setText("連線中");
+           // BTBut.setText("連線中");
             socket = device.createRfcommSocketToServiceRecord(serialPortUUID);
             socket.connect();
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-            BTBut.setText("已連線");
+           // BTBut.setText("已連線");
             BTConnStatus.Flag = true;
             DevAddress = Adds;
             DevName = Name;
 
         } catch (IOException e) {
             e.printStackTrace();
-            BTBut.setText("連線超時");
+           // BTBut.setText("連線超時");
             BTConnStatus.Flag = false;
         }
     }
