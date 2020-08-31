@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
@@ -194,7 +195,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
         setSpdPick();
         ButtonListen();
-        btBTConct.setText(dName.isConnected()? "已連線" : "未連線");
+        btBTConct.setText(MyAppInst.getBTState()? "已連線" : "未連線");
+
     }
 
     private void ButtonListen(){
@@ -238,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             MyAppInst.BTConnect(Name,address,btBTConct);
-            btBTConct.setText(dName.isConnected()? "已連線" : "未連線");
+            //btBTConct.setText(dName.isConnected()? "已連線" : "未連線");
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -353,6 +355,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btGET.setOnClickListener(v -> {
             sendGET();
         });
+        /*Button btn = findViewById(R.id.button);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MainActivity.this, "bluetooth is " + bluetoothStatus, Toast.LENGTH_SHORT).show();
+            }
+        });*/
     }
 
     private void setSpdPick(){

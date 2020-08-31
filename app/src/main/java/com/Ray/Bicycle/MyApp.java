@@ -10,7 +10,13 @@ import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -26,27 +32,44 @@ import io.reactivex.Observable;
 public class MyApp extends Application {
 
     public static MyApp appInstance;
-    public static synchronized MyApp getAppInstance(){
+
+    public static synchronized MyApp getAppInstance() {
         return appInstance;
     }
+
     public byte[] buffer = new byte[256];
     private SimpleDateFormat dateFormat;
     private int count = 0;
     /***Bluetooth***/
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     public StringBuffer BTValTmp = new StringBuffer();
-    public synchronized StringBuffer getBTVal(){return BTValTmp; }
+
+    public synchronized StringBuffer getBTVal() {
+        return BTValTmp;
+    }
+
     private BluetoothSocket socket;
     public InputStream inputStream = null;
     public OutputStream outputStream = null;
     private BluetoothAdapter bluetoothAdapter;
     public FlagAddress BTConnStatus = new FlagAddress(false);
-    public String DevAddress,DevName;
-    /**Service**/
+    public String DevAddress, DevName;
+    /**
+     * Service
+     **/
     private HelloService mService;
-    /**RxBluetooth**/
+    /**
+     * RxBluetooth
+     **/
     BluetoothConnection blueConn;
     RxBluetooth rxBluetooth = new RxBluetooth(this);
+    Observable<ConnectionStateEvent> ConSta = rxBluetooth.observeConnectionState();
+
+    /**
+     * BroadcastReceiver
+     */
+    String bluetoothStatus;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -57,53 +80,62 @@ public class MyApp extends Application {
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+        //inputStream = rxBluetooth.observeConnectionState()
+
+
     }
 
     public void afficher() {
         //Toast.makeText(getBaseContext(), dateFormat.format(new Date()), 300).show();
-        handler.postDelayed(runnable,1000);
+        handler.postDelayed(runnable, 1000);
     }
 
-    public void startCount(){
+    public void startCount() {
         count++;
         //Toast.makeText(getBaseContext(), Integer.toString(count), 300).show();
-        handler.postDelayed(runnable,1000);
-        if(count>=10){
-            count=0;
+        handler.postDelayed(runnable, 1000);
+        if (count >= 10) {
+            count = 0;
         }
     }
 
-    public boolean getBTState(){
-        boolean state = bluetoothAdapter.getAddress() != null;
-        return state;
+    public boolean getBTState() {
+        return socket != null;
     }
 
     public void startTimer() {
         runnable.run();
     }
-    /**BlueTooth**/
-    public void BTConnect(String Name,String Adds, Button BTBut){
-        if(Adds == null){
-            //BTBut.setText("未選擇裝置");
+
+    /**
+     * BlueTooth
+     **/
+    public void BTConnect(String Name, String Adds, Button BTBut) {
+        if (Adds == null) {
+            BTBut.setText("未選擇裝置");
             BTConnStatus.Flag = false;
+            return;
+        }
+        if (getBTState()) {
+            BTBut.setText("已連線");
             return;
         }
         final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(Adds);
         try {
             //loadingDialog.startLoadingDialog();
-           // BTBut.setText("連線中");
+            BTBut.setText("連線中");
             socket = device.createRfcommSocketToServiceRecord(serialPortUUID);
             socket.connect();
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-           // BTBut.setText("已連線");
+            BTBut.setText("已連線");
             BTConnStatus.Flag = true;
             DevAddress = Adds;
             DevName = Name;
 
         } catch (IOException e) {
             e.printStackTrace();
-           // BTBut.setText("連線超時");
+            BTBut.setText("連線超時");
             BTConnStatus.Flag = false;
         }
     }
@@ -122,14 +154,16 @@ public class MyApp extends Application {
         }
     }
 
-    public String getDevAddress(){
-        if(BTConnStatus.Flag)return DevAddress;
+    public String getDevAddress() {
+        if (BTConnStatus.Flag) return DevAddress;
         else return null;
     }
-    public String getDevName(){
-        if(BTConnStatus.Flag)return DevName;
+
+    public String getDevName() {
+        if (BTConnStatus.Flag) return DevName;
         else return null;
     }
+
     public void BTSend(String BTMsg) {
         if (outputStream == null) return;
 
@@ -161,19 +195,21 @@ public class MyApp extends Application {
         }
     }
 
-    public Flowable<String> getBTVal1(){
-       return blueConn.observeStringStream();
+    public Flowable<String> getBTVal1() {
+        return blueConn.observeStringStream();
     }
-    public Observable<ConnectionStateEvent> getBTConnSta(){
+
+    public Observable<ConnectionStateEvent> getBTConnSta() {
         return rxBluetooth.observeConnectionState();
     }
-    public void startListenBT(){
+
+    public void startListenBT() {
         count++;
         Toast.makeText(getBaseContext(), Integer.toString(count), Toast.LENGTH_LONG).show();
         Save_Val(BTValTmp);
-        handler.postDelayed(runnable,1000);
-        if(count>=10){
-            count=0;
+        handler.postDelayed(runnable, 1000);
+        if (count >= 10) {
+            count = 0;
         }
 
     }
