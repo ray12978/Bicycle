@@ -42,6 +42,7 @@ public class ConnectActivity extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;
     private final Set<BluetoothDevice> discoveredDevices = new HashSet<>();
     public String Address,Name;
+    public BluetoothDevice BTDevice;
     private RecyclerViewAdapter recyclerViewAdapter;
     public boolean isConnected = false;
 
@@ -144,9 +145,6 @@ public class ConnectActivity extends AppCompatActivity {
 
         updateList();
     }
-    public boolean isConnected(){
-        return isConnected;
-    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -185,10 +183,10 @@ public class ConnectActivity extends AppCompatActivity {
         recyclerViewAdapter.notifyDataSetChanged();
     }
 
-    private class RecyclerViewHolder extends RecyclerView.ViewHolder {
+    public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         private ImageView icon;
         private TextView textName, textAddress;
-        private BluetoothDevice device;
+        public BluetoothDevice device;
         private boolean isPaired;
 
         RecyclerViewHolder(@NonNull View itemView) {
@@ -198,84 +196,23 @@ public class ConnectActivity extends AppCompatActivity {
             textName = itemView.findViewById(R.id.textName);
             textAddress = itemView.findViewById(R.id.textAddress);
 
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    stopDiscovery();
-                    Name = device.getName();
-                    Address = device.getAddress();
-                    Intent intent = new Intent(ConnectActivity.this, MainActivity.class);
-                    intent.putExtra("DeviceName", device.getName());
-                    intent.putExtra("DeviceAddress", device.getAddress());
-                    SharedPreferences BT = getSharedPreferences("BTDetail" , MODE_PRIVATE);
-                    BT.edit()
-                            .putString("Name" , Name)
-                            .putString("Address" , Address)
-                            .apply();
-                    startActivity(intent);
-                    finish();
-                }
+            itemView.setOnClickListener(view -> {
+                stopDiscovery();
+                Name = device.getName();
+                Address = device.getAddress();
+                BTDevice = device;
+                Intent intent = new Intent(ConnectActivity.this, MainActivity.class);
+                intent.putExtra("DeviceName", device.getName());
+                intent.putExtra("DeviceAddress", device.getAddress());
+                SharedPreferences BT = getSharedPreferences("BTDetail" , MODE_PRIVATE);
+                BT.edit()
+                        .putString("Name" , Name)
+                        .putString("Address" , Address)
+
+                        .apply();
+                startActivity(intent);
+                finish();
             });
-        }
-        /*public Observable.create(new ObservableOnSubscribe<Integer>() {
-            String TAG = "TEST0";
-            @Override
-            public void subscribe(ObservableEmitter<Integer> e) throws Exception {
-                Log.d(TAG, "=========================currentThread name: " + Thread.currentThread().getName());
-                e.onNext(1);
-                e.onNext(2);
-                e.onNext(3);
-                e.onComplete();
-            }
-        })
-        .subscribe(new Observer<Integer>() {
-            String TAG = "TEST1";
-
-            @Override
-            public void onSubscribe(Disposable d) {
-                Log.d(TAG, "======================onSubscribe");
-            }
-
-            @Override
-            public void onNext(Integer integer) {
-                Log.d(TAG, "======================onNext " + integer);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.d(TAG, "======================onError");
-            }
-
-            @Override
-            public void onComplete() {
-                Log.d(TAG, "======================onComplete");
-            }
-        });*/
-        public Observer observer = new Observer<Integer>() {
-            String TAG = "test1";
-            @Override
-            public void onSubscribe(Disposable d) {
-                Log.d(TAG, "======================onSubscribe");
-            }
-
-            @Override
-            public void onNext(Integer integer) {
-                Log.d(TAG, "======================onNext " + integer);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.d(TAG, "======================onError");
-            }
-
-            @Override
-            public void onComplete() {
-                Log.d(TAG, "======================onComplete");
-            }
-        };
-
-        public Observer getObserver() {
-            return observer;
         }
 
         void loadDevice(@NonNull BluetoothDevice device, boolean isPaired) {
@@ -314,5 +251,8 @@ public class ConnectActivity extends AppCompatActivity {
             return bluetoothAdapter.getBondedDevices().size() + discoveredDevices.size();
         }
     }
-
+    public BluetoothDevice getDevice(){
+        if(BTDevice!=null) return BTDevice;
+        return null;
+    }
 }

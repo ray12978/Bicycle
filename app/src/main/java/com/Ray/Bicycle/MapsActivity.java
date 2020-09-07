@@ -45,6 +45,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
+
+
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener  {
@@ -57,7 +62,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LatLng mDestination;
     private Polyline mPolyline;
     private DrawerLayout drawer;
-
+    private RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
+    private CompositeDisposable MapCompositeDisposable = new CompositeDisposable();
+    private LatLng RxLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +88,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+        initEventListeners();
     }
     /***********Navigation*************/
     @Override
@@ -178,16 +186,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMyLocationEnabled(true);
                 mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,10000,0,mLocationListener);
 
-                mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-                    @Override
-                    public void onMapLongClick(LatLng latLng) {
-                        mDestination = latLng;
-                        mMap.clear();
-                        mMarkerOptions = new MarkerOptions().position(mDestination).title("Destination");
-                        mMap.addMarker(mMarkerOptions);
-                        if(mOrigin != null && mDestination != null)
-                            drawRoute();
-                    }
+                mMap.setOnMapLongClickListener(latLng -> {
+                    mDestination = latLng;
+                    mMap.clear();
+                    mMarkerOptions = new MarkerOptions().position(mDestination).title("Destination");
+                    mMap.addMarker(mMarkerOptions);
+                    if(mOrigin != null && mDestination != null)
+                        drawRoute();
                 });
 
             }else{
@@ -273,7 +278,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return data;
     }
 
+    protected void initEventListeners() {
+        MapCompositeDisposable.add(rxOkHttp3.LocationStream()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(Loca -> {
+                    //
+                    System.out.println("RxLocation:");
+                    RxLocation = Loca;
 
+                    System.out.println(Loca);
+                }, throwable -> {
+                   //
+                    System.out.println("RxLocation Error");
+                }));
+
+    }
 
     /** A class to download data from Google Directions URL */
     private class DownloadTask extends AsyncTask<String, Void, String> {

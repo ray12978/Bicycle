@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioAttributes;
@@ -24,9 +25,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.HandlerThread;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
@@ -39,16 +43,23 @@ import android.content.DialogInterface;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.github.ivbaranov.rxbluetooth.exceptions.ConnectionClosedException;
+import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate;
 import com.google.android.material.navigation.NavigationView;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import androidx.appcompat.widget.Toolbar;
@@ -57,6 +68,9 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -80,10 +94,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private EditText BTM;
     private String SpeedLimit = "";
     private String address,Name;
-    public String SVal,PVal,MVal,TVal,GetVal;
     private String UserName;
-    public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock,[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser,[5]Buzzer,[6]CloudMode
-    public StringBuffer BTValTmp = new StringBuffer();
+    public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock{L,F,N},[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser{T,J,N},[5]Buzzer{E,N},[6]CloudMode{Y,N}
     public byte[] buffer = new byte[256];
     public TextView text_Respond;
     /**Bluetooth**/
@@ -92,17 +104,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private InputStream inputStream = null;
     private OutputStream outputStream = null;
     private TextView textContent;
-    private Button btBTConct;
-    ConnectActivity dName = new ConnectActivity();
+    public Button btBTConct;
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
     private static final int NOTIFY_REQUEST_ID = 300;
     public LoadingDialog loadingDialog;
-    /*****************StringProcess******************/
-    private int[] StrPosition = new int[4];
     /******************ButtonFlag********************/
-    //FlagAddress MsgStaFlag = new FlagAddress(true);
+    FlagAddress SendFlag = new FlagAddress(false);
     FlagAddress MsgBtFlag = new FlagAddress(true);
     FlagAddress LasFlag = new FlagAddress(true);
     FlagAddress LckFlag = new FlagAddress(true);
@@ -113,22 +122,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress PostFlag = new FlagAddress(false);
     /*******************Layout***********************/
     private DrawerLayout drawer;
-    /********************Runnable********************/
-    private Handler mUI_Handler=new Handler();
-    private Handler mThreadHandler;
-    private HandlerThread mThread;
     /**Application**/
     private MyApp MyAppInst = MyApp.getAppInstance();
-    /**test javaRX**/
-    private Flowable<Byte> observeInputStream;
-    boolean connected = false;
-
+    /**test RxJava**/
+    RxBluetooth rxBluetooth = new RxBluetooth(this);
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
     /**SharedPreferences**/
     public FlagAddress connflag = new FlagAddress(false);
-
-
-
-    private Thread reader = new Thread(new Runnable() {
+    /**Http**/
+    private String GetVal;
+    /*private Thread reader = new Thread(new Runnable() {
         @Override
         public void run() {
             while (!readerStop && !DanFlag.Flag) {
@@ -148,18 +151,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         }
-    });
+    });*/
 
     private Thread danger = new Thread(new Runnable() {
         @Override
         public void run() {
-            readerStop = false;
+
         }
     });
 
-    private boolean readerStop;
-   // @RequiresApi(api = Build.VERSION_CODES.O)
-    @Override
+      @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -196,7 +197,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setSpdPick();
         ButtonListen();
         btBTConct.setText(MyAppInst.getBTState()? "已連線" : "未連線");
+        initEventListeners();
+      }
 
+    public void DpBTConnState(boolean state){
+        btBTConct.setText(state? "已連線" : "未連線");
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            // 獲得當前得到焦點的View，一般情況下就是EditText（特殊情況就是軌跡求或者實體案件會移動焦點）
+            View v = getCurrentFocus();
+            if (isShouldHideInput(v, ev)) {
+                hideSoftInput(v.getWindowToken());
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void hideSoftInput(IBinder token) {
+        if (token != null) {
+            InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(token,
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+    /**
+     * 根據EditText所在座標和用戶點擊的座標相對比，來判斷是否隱藏鍵盤，因爲當用戶點擊EditText時沒必要隱藏
+     * @param v
+     * @param event
+     * @return
+     */
+    private boolean isShouldHideInput(View v, MotionEvent event) {
+        if (v != null && (v instanceof EditText)) {
+            int[] l = { 0, 0 };
+            v.getLocationInWindow(l);
+            int left = l[0], top = l[1], bottom = top + v.getHeight(), right = left
+                    + v.getWidth();
+            if (event.getX() > left && event.getX() < right
+                    && event.getY() > top && event.getY() < bottom) {
+                // 點擊EditText的事件，忽略它。
+                return false;
+            } else {
+                return true;
+            }
+        }
+        // 如果焦點不是EditText則忽略，這個發生在視圖剛繪製完，第一個焦點不在EditView上，和用戶用軌跡球選擇其他的焦點
+        return false;
     }
 
     private void ButtonListen(){
@@ -220,27 +269,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             MyAppInst.disconnect(btBTConct);
         });
         btBuzz.setEnabled(false);
-        id.setOnEditorActionListener((view, actionId, event) -> {
-            MyAppInst.BTSend(id.getText().toString());
-            return false;
-        });
-        BTM.setOnEditorActionListener((view, actionId, event) -> {
-            MyAppInst.BTSend(BTM.getText().toString());
-            return false;
-        });
         /**藍牙按鈕動作**/
         btBTOpen.setOnClickListener(v -> {
             Intent BTListAct = new Intent(MainActivity.this, ConnectActivity.class);
             startActivity(BTListAct);
         });
         btBTSend.setOnClickListener(v -> {
-            MyAppInst.BTSend(BTM.getText().toString());
-
+            try {
+                MyAppInst.writeBT(id.getText().toString());
+                Thread.sleep(500);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
-            MyAppInst.BTConnect(Name,address,btBTConct);
-            //btBTConct.setText(dName.isConnected()? "已連線" : "未連線");
+            final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+            MyAppInst.connDevice(device);
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -248,16 +293,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
-            MyAppInst.BTSend(BTSendMsg.toString());
-            //BTSend("aaa");
-            //loadingDialog.startLoadingDialog();
             try {
-
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
+                //if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+                if(SendFlag.Flag) MyAppInst.writeBT("aaa");
+                Thread.sleep(500);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            str_process();
+            //if(!MyAppInst.BTRevSta.Flag)
+                //MyAppInst.Save_Val(BTValTmp);
+            //loadingDialog.startLoadingDialog();
+            MyAppInst.str_process();
             sendPOST();
         });
         btBuzz.setOnClickListener(v -> {
@@ -265,15 +311,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
-            MyAppInst.BTSend(BTSendMsg.toString());
-            //BTSend("bbb");
             try {
+                if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+                Thread.sleep(500);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            //BTSend("bbb");
+            /*try {
 
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
-            str_process();
+            }*/
+            MyAppInst.str_process();
             sendPOST();
         });
         btLck.setOnClickListener(v -> {
@@ -281,11 +332,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
-            MyAppInst.BTSend(BTSendMsg.toString());
             try {
-                Thread.sleep(1000);
-
-            } catch (InterruptedException e) {
+                if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+                Thread.sleep(500);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             //str_process();
@@ -312,7 +362,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
         btSpLit.setOnClickListener(v -> {
-            Speed_Limit();
+            try {
+                Speed_Limit();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
             Button_exterior(btSpLit, Off, On, 3, 'N');
@@ -321,25 +375,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         btClear.setOnClickListener(v -> {
             textContent.setText("");
-            BTValTmp.delete(0, BTValTmp.length());
+            MyAppInst.BTValTmp.delete(0, MyAppInst.BTValTmp.length());
         });
         btDisplay.setOnClickListener(v -> {
-            Toast.makeText(this, BTValTmp, Toast.LENGTH_LONG).show();
-            str_process();
+            Toast.makeText(this, MyAppInst.getVal('A'), Toast.LENGTH_LONG).show();
+            MyAppInst.str_process();
             System.out.println("BTTmp:");
-            System.out.println(BTValTmp.toString());
+            System.out.println(MyAppInst.getVal('A'));
             System.out.println("PostFlag:");
             System.out.println(PostFlag);
-            Log.d(BTValTmp.toString(), "Tmp");
-            Log.d(SVal, "S");
-            Log.d(MVal, "M");
-            Log.d(TVal, "T");
-            Log.d(PVal, "P");
+            Log.d(MyAppInst.getVal('A'), "Tmp");
+            Log.d(MyAppInst.getVal('S'), "S");
+            Log.d(MyAppInst.getVal('M'), "M");
+            Log.d(MyAppInst.getVal('T'), "T");
+            Log.d(MyAppInst.getVal('P'), "P");
             System.out.println("LckFlag:");
             System.out.println(LckFlag.Flag);
-            //Log.d("obser",MyAppInst);
-            System.out.print("Sta");
-            System.out.print(MyAppInst.getBTConnSta());
+
         });
         SWPost.setOnCheckedChangeListener((buttonView, isChecked) -> {
             PostFlag.Flag = buttonView.isChecked();
@@ -430,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onPause() {
         super.onPause();
-        readerStop = true;
+        //readerStop = true;
         DanFlag.Flag = false;
         //loadingDialog.startLoadingDialog();
     }
@@ -438,15 +490,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        reader.start();
-        readerStop = false;
+        //reader.start();
+       // readerStop = false;
 //        loadingDialog.dismissDialog();
         //Danger.start();
 
     }
     @Override
     protected void onStop(){
-        readerStop = true;
         super.onStop();
     }
 
@@ -540,37 +591,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void str_process() {
-        int b = 0;
-        //BTValTmp = new StringBuffer("S123M456T789P147"); //test
-        //BTValTmp = new StringBuffer("B1"); //test
-        if(BTValTmp.length() == 0)return;
-        if (BTValTmp.toString().charAt(0) == 'S') {
-            for (int i = 0; i < BTValTmp.length(); i++) {
-                if (BTValTmp.toString().getBytes()[i] > 57) {
-                    StrPosition[b] = i;
-                    b++;
-                }
-            }
-            SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
-            MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
-            TVal = BTValTmp.toString().substring(StrPosition[2] + 1, StrPosition[3]).trim();
-            PVal = BTValTmp.toString().substring(StrPosition[3] + 1).trim();
-            Log.d(BTValTmp.toString(), "Tmp");
-            Log.d(SVal, "S");
-            Log.d(MVal, "M");
-            Log.d(TVal, "T");
-            Log.d(PVal, "P");
-            BTValTmp.delete(0, BTValTmp.length());
-        } /*else if (BTValTmp.toString().charAt(0) == 'B') {
-            String Status = BTValTmp.toString().substring(1, 2).trim();
-            BTValTmp.delete(0, BTValTmp.length());
-            DanFlag.Flag = Status.equals("1");
-            System.out.println(DanFlag.Flag);
-            //if (DanFlag.Flag) Danger_Msg();
-        }*/
-    }
-    public void Danger_Str(){
+    /*public void Danger_Str(){
         int index=0;
         if(BTValTmp.length() == 0)return;
         while (BTValTmp.length() != 0) {
@@ -587,14 +608,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         }
-    }
+    }*/
 
     private void BTMsg(int start, int end, String Msg1, String Msg2, FlagAddress SelectFlag) {
         MsgBtFlag.Flag = true;
         if(id.length() == 0){
             Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
+            SendFlag.Flag = false;
             return;
+
         }
+        SendFlag.Flag = true;
         if (SelectFlag.Flag && MsgBtFlag.Flag) {
             BTSendMsg.replace(start, end, Msg1);
             MsgBtFlag.Flag = false;
@@ -618,7 +642,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         System.out.println(BTSendMsg);
     }
 
-    void Speed_Limit() {
+    void Speed_Limit() throws Exception {
         //String SpeedLimit = "" ;
         if (SpeedLimit.length() != 0 && SpdFlag.Flag && SpeedLimit.length() < 3) {
             String SpLtVal = SpeedLimit;
@@ -630,28 +654,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             BTMsg(3, 4, "Y", "N", SpdFlag);
             System.out.println(BTSendMsg);
-            MyAppInst.BTSend(BTSendMsg.toString());
+            if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
             try {
 
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            str_process();
+            MyAppInst.str_process();
             sendPOST();
         } else {
             if (!SpdFlag.Flag) {
                 BTSendMsg.replace(3, 4, "N");
                 SpdFlag.Flag = true;
                 System.out.println(BTSendMsg);
-                MyAppInst.BTSend(BTSendMsg.toString());
+                MyAppInst.writeBT(BTSendMsg.toString());
                 try {
 
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                str_process();
+                MyAppInst.str_process();
                 sendPOST();
             } else {
                 Toast.makeText(this, "請先設定時速", Toast.LENGTH_SHORT).show();
@@ -750,6 +774,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /**設置傳送需求*/
         Request request = new Request.Builder()
                  .url("https://jsonplaceholder.typicode.com/posts/1")
+                     //.url("http://35.221.236.109:3000/getSetting")
+                // .url("http://35.221.236.109:3000/getSetting/id123")
+                //.url("http://35.221.236.109:3000/getGps/ID123456789ABC")
                 //資料庫測試        .url("http://35.221.236.109:3000/api880509")
                 //.url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=1")
 //                .header("Cookie","")//有Cookie需求的話則可用此發送
@@ -761,18 +788,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 /**如果傳送過程有發生錯誤*/
-                tvRes.setText(e.getMessage());
+               // tvRes.setText(e.getMessage());
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 /**取得回傳*/
                // GetVal = response.body().string();
-                GetVal = response.body().string();
-                tvRes.setText("GET回傳：\n" + GetVal);
-                //split();
+                GetVal = Objects.requireNonNull(response.body()).string();
+              //  tvRes.setText("GET回傳：\n" + GetVal);
+
                 System.out.print("Get:");
                 System.out.print(GetVal);
+                try {
+                    split(GetVal);
+                    System.out.print(split(GetVal));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
         });
     }
@@ -806,6 +840,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
     private void sendPOST() {
+        String SVal = MyAppInst.getVal('S');
+        String MVal = MyAppInst.getVal('M');
+        String TVal = MyAppInst.getVal('T');
+        String PVal = MyAppInst.getVal('P');
         if (SVal == null || MVal == null || TVal == null || PVal == null) {
             return;
         }
@@ -858,33 +896,77 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         MVal = null;
         TVal = null;
         PVal = null;
-        System.out.println("SVal");
-        System.out.println(SVal);
+    }
+    /**getJson**/
+    private double getJson(String json,char select) throws JSONException {
+        JSONArray ary = new JSONArray(json);
+        List<String> List = new ArrayList<String>();
+        for (int i = 0; i < ary.length(); i++) {
+            JSONObject objects = ary.getJSONObject(i);
+
+            Iterator key = objects.keys();
+
+            while (key.hasNext()) {
+                String k = key.next().toString();
+                System.out.println("Key : " + k + ", value : "
+                        + objects.getString(k));
+            }
+            System.out.println("-----------");
+        }
+        System.out.println("List:");
+        double longitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("longitude"));
+        double latitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("latitude"));
+        System.out.println(List);
+        switch (select){
+            case 'N':
+                return longitude;
+            case 'T':
+                return latitude;
+        }
+        return 0;
     }
 
+    /**RxJava**/
+    protected void initEventListeners() {
+        compositeDisposable.add(rxBluetooth.observeBluetoothState()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.computation())
+                .filter(BtPredicate.in(BluetoothAdapter.STATE_ON))
+                .subscribe(integer -> {
+                    //start.setBackgroundColor(getResources().getColor(R.color.colorActive));
+                }));
 
-    /**test**/
-
-    public Flowable<Byte> observeByteStream() {
-        if (observeInputStream == null) {
-            observeInputStream = Flowable.create(new FlowableOnSubscribe<Byte>() {
-                @Override public void subscribe(final FlowableEmitter<Byte> subscriber) {
-                    while (!subscriber.isCancelled()) {
-                        try {
-                            subscriber.onNext((byte) inputStream.read());
-                        } catch (IOException e) {
-                            connected = false;
-                            subscriber.onError(new ConnectionClosedException("Can't read stream", e));
-                        } finally {
-                            if (!connected) {
-                                //closeConnection();
-                            }
-                        }
+        compositeDisposable.add(rxBluetooth.observeBluetoothState()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.computation())
+                .filter(BtPredicate.in(BluetoothAdapter.STATE_OFF, BluetoothAdapter.STATE_TURNING_OFF,
+                        BluetoothAdapter.STATE_TURNING_ON))
+                .subscribe(integer -> {
+                    // start.setBackgroundColor(getResources().getColor(R.color.colorInactive));
+                }));
+        /**
+         * get bluetooth Connection State
+         */
+        compositeDisposable.add(rxBluetooth.observeAclEvent()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(event -> {
+                    switch (event.getAction()) {
+                        case BluetoothDevice.ACTION_ACL_CONNECTED:
+                            Log.e(TAG, "Device is connected");
+                            System.out.println("1");
+                            DpBTConnState(true);
+                            break;
+                        case BluetoothDevice.ACTION_ACL_DISCONNECTED:
+                            Log.e(TAG, "Device is disconnected");
+                            System.out.println("2");
+                            DpBTConnState(false);
+                            break;
+                        case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
+                            Log.e(TAG, "Device is Requested disconnected");
+                            System.out.println("3");
+                            break;
                     }
-                }
-            }, BackpressureStrategy.BUFFER).share();
-        }
-
-        return observeInputStream;
+                }));
     }
 }
