@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -25,6 +26,11 @@ import org.reactivestreams.Subscription;
 
 
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.annotations.CheckReturnValue;
+import io.reactivex.annotations.SchedulerSupport;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -95,10 +101,11 @@ public class RxOkHttp3 {
     }
     public Flowable<LatLng> LocationStream() {
         if (LongLat == null) {
-            LongLat = Flowable.create((FlowableOnSubscribe<LatLng>) subscriber -> {
-                while (!subscriber.isCancelled()) {
-                    //if(sendGET())
-                    sendGET();
+            LongLat = Flowable.interval(0,30,TimeUnit.SECONDS)
+                    .create((FlowableOnSubscribe<LatLng>) subscriber -> {
+                if (!subscriber.isCancelled()) {
+                    if(sendGET())
+                    //sendGET();
                     subscriber.onNext(Location);
                 }
             }, BackpressureStrategy.BUFFER).share();
@@ -109,7 +116,7 @@ public class RxOkHttp3 {
     /**getJson**/
     private LatLng getJson(String json) throws JSONException {
         JSONArray ary = new JSONArray(json);
-        for (int i = 0; i < ary.length(); i++) {
+        /*for (int i = 0; i < ary.length(); i++) {
             JSONObject objects = ary.getJSONObject(i);
 
             Iterator key = objects.keys();
@@ -120,7 +127,7 @@ public class RxOkHttp3 {
                         + objects.getString(k));
             }
             System.out.println("-----------");
-        }
+        }*/
         System.out.println("LatLng:");
         double latitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("latitude"));
         double longitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("longitude"));
@@ -130,5 +137,11 @@ public class RxOkHttp3 {
         System.out.println(locat);
         System.out.println("a");
         return locat;
+    }
+
+    @CheckReturnValue
+    @SchedulerSupport(SchedulerSupport.COMPUTATION)
+    public static Flowable<LatLng> interval(long initialDelay, long period, TimeUnit unit) {
+        return interval(initialDelay, period, unit);
     }
 }

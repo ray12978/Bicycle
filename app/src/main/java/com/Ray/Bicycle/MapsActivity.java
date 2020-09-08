@@ -44,7 +44,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -280,8 +282,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     protected void initEventListeners() {
         MapCompositeDisposable.add(rxOkHttp3.LocationStream()
+        //MapCompositeDisposable.add(Observable.interval(0, 3000, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(Schedulers.computation())
                 .subscribe(Loca -> {
                     //
                     System.out.println("RxLocation:");

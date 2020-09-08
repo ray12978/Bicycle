@@ -173,9 +173,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .getString("Address" , "null3");
                 text_Respond = findViewById(R.id.text_Respond);
         String name = deviceName != null ? deviceName : "尚未選擇裝置";
+
         address = deviceAddress;
         Name = deviceName;
-        setTitle(String.format("%s (%s)", name , address));
+        setTitle(String.format("%s %s", name ,MyAppInst.getBTState()? "已連線" : "未連線"));
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
@@ -201,7 +202,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
       }
 
     public void DpBTConnState(boolean state){
+        String name = Name != null ? Name : "尚未選擇裝置";
         btBTConct.setText(state? "已連線" : "未連線");
+        setTitle(String.format("%s %s", name ,state? "已連線" : "未連線"));
     }
 
     @Override
