@@ -98,6 +98,7 @@ public class RxOkHttp3 {
             }
         });
         return ans;
+
     }
     public Flowable<LatLng> LocationStream() {
         if (LongLat == null) {
@@ -139,9 +140,9 @@ public class RxOkHttp3 {
         return locat;
     }
 
-    @CheckReturnValue
+    /*@CheckReturnValue
     @SchedulerSupport(SchedulerSupport.COMPUTATION)
     public static Flowable<LatLng> interval(long initialDelay, long period, TimeUnit unit) {
         return interval(initialDelay, period, unit);
-    }
+    }*/
 }
