@@ -26,6 +26,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -47,8 +49,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 
@@ -65,8 +71,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Polyline mPolyline;
     private DrawerLayout drawer;
     private RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
+    private RxTimerUtil rxTimerUtil = new RxTimerUtil();
     private CompositeDisposable MapCompositeDisposable = new CompositeDisposable();
     private LatLng RxLocation;
+    private LatLng TestLocation = new LatLng(24.922582, 121.422590);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        initEventListeners();
+
     }
     /***********Navigation*************/
     @Override
@@ -123,6 +131,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         getMyLocation();
+        //initEventListeners();
+        //maptest();
+        TimeTest();
+
     }
 
 
@@ -151,6 +163,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return true;
     }
 
+    protected void maptest(LatLng RxLocation){
+        System.out.println("Set Mark:");
+        System.out.println(RxLocation);
+        mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination").icon(BitmapDescriptorFactory.fromResource(R.drawable.bicycle48p));
+        mMap.addMarker(mMarkerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation,12));
+    }
+
     private void getMyLocation(){
 
         // Getting LocationManager object from System Service LOCATION_SERVICE
@@ -160,7 +180,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onLocationChanged(Location location) {
                 mOrigin = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mOrigin,12));
+                //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mOrigin,12));
                 if(mOrigin != null && mDestination != null)
                     drawRoute();
             }
@@ -190,8 +210,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 mMap.setOnMapLongClickListener(latLng -> {
                     mDestination = latLng;
-                    mMap.clear();
-                    mMarkerOptions = new MarkerOptions().position(mDestination).title("Destination");
+                    //mMap.clear();
+                    //mMarkerOptions = new MarkerOptions().position(mDestination).title("Destination");
+                    mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination");
                     mMap.addMarker(mMarkerOptions);
                     if(mOrigin != null && mDestination != null)
                         drawRoute();
@@ -280,22 +301,104 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return data;
     }
 
-    protected void initEventListeners() {
+    public void initEventListeners() {
+        RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
         MapCompositeDisposable.add(rxOkHttp3.LocationStream()
         //MapCompositeDisposable.add(Observable.interval(0, 3000, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.computation())
+                //.subscribeOn(Schedulers.computation())
+                .subscribeOn(Schedulers.io())
                 .subscribe(Loca -> {
                     //
                     System.out.println("RxLocation:");
                     RxLocation = Loca;
-
+                    mDestination = Loca;
+                    mMap.clear();
+                    maptest(RxLocation);
                     System.out.println(Loca);
+                    //System.out.print("aaaaa");
                 }, throwable -> {
                    //
+                    System.out.println(RxLocation);
+
                     System.out.println("RxLocation Error");
                 }));
 
+    }
+
+    private void TimeTest(){
+        RxTimerUtil rxTimer = new RxTimerUtil();
+        rxTimer.interval(5000, new RxTimerUtil.IRxNext() {
+            @Override
+            public void doNext(Object number) {
+                Log.e("home_show_three", "======MainActivity======" + number);
+                //maptest(RxLocation);
+                sub();
+                System.out.println(number);
+                //LatLng latLng = (LatLng) number;
+                //maptest(latLng);
+                //System.out.println(latLng);
+                /*if (isFront && IsFirstStart) {
+                    initHomeThreeAd();
+                }*/
+            }
+        });
+
+    }
+
+    ObservableOnSubscribe<LatLng> observableOnSubscribe = new ObservableOnSubscribe<LatLng>() {
+        @Override
+        public void subscribe(ObservableEmitter<LatLng> emitter) throws Exception {
+            System.out.println("已经订阅：subscribe，获取发射器");
+            RxLocation = rxOkHttp3.sendGET();
+            emitter.onNext(RxLocation);
+            //emitter.onNext(TestLocation);
+            /*System.out.println("信号发射："+1);
+            emitter.onNext(2);
+            System.out.println("信号发射："+2);
+            emitter.onNext(3);
+            System.out.println("信号发射："+3);
+            emitter.onNext(4);
+            System.out.println("信号发射："+4);
+            emitter.onComplete();*/
+            System.out.println("信号发射：onComplete");
+        }
+    };
+    /**
+     * 创建被观察者，并带上被观察者的订阅
+     */
+    Observable<LatLng> observable = Observable.create(observableOnSubscribe);
+
+    final Disposable[] disposable = new Disposable[1];
+
+    Observer<LatLng> observer = new Observer<LatLng>() {
+        @Override
+        public void onSubscribe(Disposable d) {
+            disposable[0] = d;
+            System.out.println("已经订阅：onSubscribe，获取解除器");
+        }
+
+        @Override
+        public void onNext(LatLng integer) {
+            System.out.println("信号接收：onNext " + integer);
+            maptest(integer);
+
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            System.out.println("信号接收：onError " + e.getMessage());
+        }
+
+        @Override
+        public void onComplete() {
+            System.out.println("信号接收：onComplete");
+        }
+    };
+
+    public void sub() {
+        System.out.println("开始订阅：subscribe");
+        observable.subscribe(observer);
     }
 
     /** A class to download data from Google Directions URL */
