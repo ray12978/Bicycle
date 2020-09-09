@@ -7,5 +7,7 @@
     android:layout_height="match_parent"
     android:layout_gravity="start"
     app:headerLayout="@layout/nav_header"
-    app:menu="@menu/drawer_menu">
+    app:menu="@menu/drawer_menu"
+    app:theme="@style/NavigationDrawerStyle"
+    app:itemTextAppearance="@dimen/dimen_size">
 </com.google.android.material.navigation.NavigationView>

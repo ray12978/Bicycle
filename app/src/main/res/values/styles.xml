@@ -11,8 +11,31 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-
+    <style name="myNavMenuTextStyle">
+        <item name="android:textSize">@dimen/dimen_size</item>
+    </style>
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="NavigationDrawerStyle">
+
+        <item name="android:textSize">15sp</item><!-- text size in menu-->
+
+        <!-- item size in menu-->
+        <item name="android:listPreferredItemHeightSmall">40dp</item>
+        <item name="listPreferredItemHeightSmall">40dp</item>
+
+        <!-- item padding left in menu-->
+        <item name="android:listPreferredItemPaddingLeft">0dp</item>
+        <item name="listPreferredItemPaddingLeft">0dp</item>
+
+        <!-- item padding right in menu-->
+        <item name="android:listPreferredItemPaddingRight">0dp</item>
+        <item name="listPreferredItemPaddingRight">0dp</item>
+
+        <item name="android:listPreferredItemPaddingStart">80dp</item>
+        <item name="android:listPreferredItemPaddingEnd">80dp</item>
+        <item name="listPreferredItemPaddingStart">80dp</item>
+        <item name="android:itemPadding">80dp</item>
+
+    </style>
 </resources>

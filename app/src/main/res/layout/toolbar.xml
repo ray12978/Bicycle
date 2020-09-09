@@ -7,5 +7,6 @@
     android:background="@color/colorPrimary"
     android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
     app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+    app:navigationIcon="?attr/homeAsUpIndicator"
     >
 </androidx.appcompat.widget.Toolbar>

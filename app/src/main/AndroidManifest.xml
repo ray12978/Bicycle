@@ -26,7 +26,8 @@
 
         </activity>
         <activity android:name=".ConnectActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"
@@ -40,8 +41,15 @@
         <activity
             android:name=".MapsActivity"
             android:screenOrientation="portrait"
-            android:label="@string/title_activity_maps">
+            android:label="@string/title_activity_maps"
+            android:theme="@style/AppTheme.NoActionBar">
 
+        </activity>
+        <activity
+            android:name=".SettingPage"
+            android:screenOrientation="portrait"
+            android:label="Setting"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <service android:name=".BluetoothService"/>
     </application>

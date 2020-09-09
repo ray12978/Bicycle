@@ -4,14 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.Uri;
-import android.os.Handler;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -24,7 +21,6 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.MenuItem;
@@ -44,7 +40,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
-import com.github.ivbaranov.rxbluetooth.exceptions.ConnectionClosedException;
 import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate;
 import com.google.android.material.navigation.NavigationView;
 
@@ -64,10 +59,6 @@ import java.util.UUID;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
-import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -122,36 +113,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress PostFlag = new FlagAddress(false);
     /*******************Layout***********************/
     private DrawerLayout drawer;
+    private Toolbar toolbar;
     /**Application**/
     private MyApp MyAppInst = MyApp.getAppInstance();
     /**test RxJava**/
     RxBluetooth rxBluetooth = new RxBluetooth(this);
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
-    /**SharedPreferences**/
-    public FlagAddress connflag = new FlagAddress(false);
     /**Http**/
     private String GetVal;
-    /*private Thread reader = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (!readerStop && !DanFlag.Flag) {
-                //read();
-                if (!LckFlag.Flag){
-                    MyAppInst.Save_Val(BTValTmp);
-                    //btBTConct.setText(MyAppInst.getBTState()?"已連線":"未連線");
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    Danger_Str();
-                    if(DanFlag.Flag)Danger();
-                }
-                MyAppInst.Save_Val(BTValTmp);
-            }
 
-        }
-    });*/
 
     private Thread danger = new Thread(new Runnable() {
         @Override
@@ -165,8 +135,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         /*****************藍牙*************/
-        //final String deviceName = getIntent().getStringExtra("DeviceName");
-        //final String deviceAddress = getIntent().getStringExtra("DeviceAddress");
         final String deviceName = getSharedPreferences("BTDetail" , MODE_PRIVATE)
                 .getString("Name" , "null2");
         final String deviceAddress = getSharedPreferences("BTDetail" , MODE_PRIVATE)
@@ -176,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         address = deviceAddress;
         Name = deviceName;
-        setTitle(String.format("%s %s", name ,MyAppInst.getBTState()? "已連線" : "未連線"));
+
         id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
@@ -185,10 +153,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /***********Other***************/
         MyAppInst.startTimer();
         /**********Layout***************/
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        drawer = findViewById(R.id.drawer_layout);
-        setSupportActionBar(toolbar);
-        //toolbar.setTitle(String.format("%s (%s)", address, name));
+        toolbar = findViewById(R.id.toolbar);
+        drawer = findViewById(R.id.drawer_layout_Main);
+        //setSupportActionBar(toolbar);
+        //toolbar.inflateMenu(R.menu.setting_menu);
+        //toolbar.setTitle(String.format("%s", name, address));
+        toolbar.setTitle(String.format("%s %s", name ,MyAppInst.getBTState()? "已連線" : "未連線"));
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
@@ -204,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void DpBTConnState(boolean state){
         String name = Name != null ? Name : "尚未選擇裝置";
         btBTConct.setText(state? "已連線" : "未連線");
-        setTitle(String.format("%s %s", name ,state? "已連線" : "未連線"));
+        toolbar.setTitle(String.format("%s %s", name ,state? "已連線" : "未連線"));
     }
 
     @Override
@@ -288,7 +258,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-            MyAppInst.connDevice(device);
+            if(MyAppInst.connDevice(device))DpBTConnState(true);
+            else DpBTConnState(false);
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
@@ -320,13 +291,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            //BTSend("bbb");
-            /*try {
-
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }*/
             MyAppInst.str_process();
             sendPOST();
         });
@@ -448,21 +412,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent intent2 = new Intent(MainActivity.this, MapsActivity.class);
                 startActivity(intent2);
                 break;
-            case R.id.nav_profile:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                        new ProfileFragment()).commit();
-                break;
             case R.id.nav_share:
-                Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.nav_send:
-                Toast.makeText(this, "Send", Toast.LENGTH_SHORT).show();
+                Intent intent3 = new Intent(MainActivity.this, SettingPage.class);
+                startActivity(intent3);
                 break;
         }
         //drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-    @Override
+
     public void onBackPressed() {
         /*if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -504,95 +462,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onStop();
     }
 
-    /*@Override
+
     protected void onDestroy(){
-        //
-        SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail" , MODE_PRIVATE);
+        /*SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail" , MODE_PRIVATE);
         SharedPreferences.Editor BTEdit = BTDetail.edit();
         BTEdit.clear();
-        BTEdit.apply();
+        BTEdit.apply();*/
+        if (rxBluetooth != null) {
+            // Make sure we're not doing discovery anymore
+            rxBluetooth.cancelDiscovery();
+        }
+        compositeDisposable.dispose();
         super.onDestroy();
-    }*/
+    }
     /***********************藍牙副程式*******************************/
-    private void BTConnect() {
-        if(address == null){
-            btBTConct.setText("未選擇裝置");
-            return;
-        }
-        final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-        try {
-
-            //loadingDialog.startLoadingDialog();
-            btBTConct.setText("連線中");
-            socket = device.createRfcommSocketToServiceRecord(serialPortUUID);
-            socket.connect();
-            inputStream = socket.getInputStream();
-            outputStream = socket.getOutputStream();
-            btBTConct.setText("已連線");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            btBTConct.setText("連線超時");
-        }
-    }
-
-    private void disconnect() {
-        if (socket == null) return;
-
-        try {
-            socket.close();
-            socket = null;
-            inputStream = null;
-            outputStream = null;
-            btBTConct.setText("未連線");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void BTSend(String BTMsg) {
-        if (outputStream == null) return;
-
-        try {
-            for(int i =0;i<5;i++) {
-                outputStream.write(BTMsg.getBytes());
-                outputStream.flush();
-            }
-            System.out.print("BT:");
-            System.out.print(BTMsg);
-            System.out.print(",");
-            System.out.print(BTMsg.getBytes());
-            BTM.setText("");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void read() {
-        if (inputStream == null) return;
-        try {
-            if (inputStream.available() <= 0) return;
-            String a = new String(buffer, 0, inputStream.read(buffer));
-            Log.d(a, "read: ");
-            textContent.append(a);
-            Thread.sleep(100);
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void Save_Val(@NotNull StringBuffer StrBufTmp) {
-        if (inputStream == null) return;
-        try {
-           // if (inputStream.available() <= 0)return;
-            String a = new String(buffer, 0, inputStream.read(buffer));
-            StrBufTmp.append(a);
-            StrFlag.Flag = false;
-            //Thread.sleep(100);
-        } catch (IOException /*| InterruptedException*/ e) {
-            e.printStackTrace();
-        }
-    }
 
     /*public void Danger_Str(){
         int index=0;
@@ -900,34 +783,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TVal = null;
         PVal = null;
     }
-    /**getJson**/
-    private double getJson(String json,char select) throws JSONException {
-        JSONArray ary = new JSONArray(json);
-        List<String> List = new ArrayList<String>();
-        for (int i = 0; i < ary.length(); i++) {
-            JSONObject objects = ary.getJSONObject(i);
-
-            Iterator key = objects.keys();
-
-            while (key.hasNext()) {
-                String k = key.next().toString();
-                System.out.println("Key : " + k + ", value : "
-                        + objects.getString(k));
-            }
-            System.out.println("-----------");
-        }
-        System.out.println("List:");
-        double longitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("longitude"));
-        double latitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("latitude"));
-        System.out.println(List);
-        switch (select){
-            case 'N':
-                return longitude;
-            case 'T':
-                return latitude;
-        }
-        return 0;
-    }
 
     /**RxJava**/
     protected void initEventListeners() {
@@ -969,6 +824,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Log.e(TAG, "Device is Requested disconnected");
                             System.out.println("3");
                             break;
+                        default:
+                            Log.e(TAG, "None Device");
+                            DpBTConnState(false);
+                            break;
+
                     }
                 }));
     }

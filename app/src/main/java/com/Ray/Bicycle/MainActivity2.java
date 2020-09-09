@@ -30,7 +30,7 @@ public class MainActivity2 extends AppCompatActivity implements NavigationView.O
         setContentView(R.layout.activity_main2);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        FloatingActionButton fab = findViewById(R.id.fab);
+        //FloatingActionButton fab = findViewById(R.id.fab);
         toolbar.setTitle("地圖");
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -47,16 +47,11 @@ public class MainActivity2 extends AppCompatActivity implements NavigationView.O
                 Intent intent2 = new Intent(MainActivity2.this, MainActivity2.class);
                 startActivity(intent2);
                 break;
-            case R.id.nav_profile:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                        new ProfileFragment()).commit();
-                break;
+
             case R.id.nav_share:
                 Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 break;
-            case R.id.nav_send:
-                Toast.makeText(this, "Send", Toast.LENGTH_SHORT).show();
-                break;
+
         }
         //drawer.closeDrawer(GravityCompat.START);
         return true;

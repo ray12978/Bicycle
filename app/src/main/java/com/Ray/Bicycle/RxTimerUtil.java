@@ -83,7 +83,7 @@ public class RxTimerUtil {
 
                     @Override
                     public void onError(@NonNull Throwable e) {
-
+                        cancel();
                     }
 
                     @Override
@@ -97,7 +97,7 @@ public class RxTimerUtil {
     /**
      * 取消订阅
      */
-    public static void cancel() {
+    public void cancel() {
         if (mDisposable != null && !mDisposable.isDisposed()) {
             mDisposable.dispose();
             Log.e("Sys", "====定时器取消======");

@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.app.Application;
@@ -28,7 +28,7 @@ import io.reactivex.schedulers.Schedulers;
 public class MyApp extends Application {
 
     public static MyApp appInstance;
-    public static MainActivity mainActivity = new MainActivity();
+   // public static MainActivity mainActivity = new MainActivity();
     public static synchronized MyApp getAppInstance() {
         return appInstance;
     }
@@ -209,7 +209,8 @@ public class MyApp extends Application {
 
 
 
-    protected void connDevice(BluetoothDevice device) {
+    protected boolean connDevice(BluetoothDevice device) {
+        AtomicBoolean Sta = new AtomicBoolean(false);
         compositeDisposable.add(rxBluetooth.connectAsClient(device, serialPortUUID)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -219,13 +220,15 @@ public class MyApp extends Application {
                             System.out.println("conned");
                             socket = bluetoothSocket;
                             ReadBT();
+                            Sta.set(true);
                         }, throwable -> {
                             // On error
                             System.out.println("error");
-
+                            Sta.set(false);
                             //System.out.println(ConnAct.getDevice().getName());
                             //System.out.println(ConnAct.getDevice().getAddress());
                         }));
+        return Sta.get();
     }
     private void ReadBT() throws Exception {
     AtomicInteger i = new AtomicInteger();

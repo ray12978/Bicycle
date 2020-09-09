@@ -46,28 +46,9 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 public class RxOkHttp3 {
     private String GetVal;
-    double Long,Lat;
     private LatLng Location;
-    private Flowable<LatLng> LongLat;
-    private boolean ans = false;
-    Context context;
 
-
-    private int m_nTime = 0;
-    private Handler mHandlerTime = new Handler();
-     //mHandlerTime.postDelayed(timerRun, 1000);
-
-    private final Runnable timerRun = new Runnable()
-    {
-        public void run()
-        {
-            ++m_nTime; // 經過的秒數 + 1
-            mHandlerTime.postDelayed(this, 1000);
-            // 若要取消可以寫一個判斷在這決定是否啟動下一次即可
-        }
-    };
-
-    protected LatLng sendGET() {
+    protected LatLng getLocation() {
 
         /**建立連線*/
         OkHttpClient client = new OkHttpClient().newBuilder()
@@ -92,7 +73,6 @@ public class RxOkHttp3 {
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 /**如果傳送過程有發生錯誤*/
                 // tvRes.setText(e.getMessage());
-                ans = false;
                 System.out.println(e.getMessage());
             }
 
@@ -102,7 +82,6 @@ public class RxOkHttp3 {
                 // GetVal = response.body().string();
                 GetVal = Objects.requireNonNull(response.body()).string();
                 //  tvRes.setText("GET回傳：\n" + GetVal);
-                ans = true;
                 System.out.print("Get:");
                 System.out.print(GetVal);
                 try {
@@ -117,52 +96,19 @@ public class RxOkHttp3 {
         return Location;
 
     }
-    public Flowable<LatLng> LocationStream() {
-        if (LongLat == null) {
-            LongLat =Flowable.create((FlowableOnSubscribe<LatLng>) subscriber -> {
-                if (!subscriber.isCancelled()) {
-                    //if(sendGET())
-                    sendGET();
-                    Location = getJson(GetVal);
-                    //Location = new LatLng(24.922582, 121.422590);
-                    subscriber.onNext(Location);
-
-                }
-            }, BackpressureStrategy.BUFFER).share();
-        }
-        return LongLat;
-    }
 
     /**getJson**/
     protected LatLng getJson(String json) throws JSONException {
         JSONArray ary = new JSONArray(json);
-        /*for (int i = 0; i < ary.length(); i++) {
-            JSONObject objects = ary.getJSONObject(i);
-
-            Iterator key = objects.keys();
-
-            while (key.hasNext()) {
-                String k = key.next().toString();
-                System.out.println("Key : " + k + ", value : "
-                        + objects.getString(k));
-            }
-            System.out.println("-----------");
-        }*/
         System.out.println("LatLng:");
         double latitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("longitude"));
         double longitude = Double.parseDouble(ary.getJSONObject(ary.length()-1).getString("latitude"));
         System.out.println(latitude);
         System.out.println(longitude);
         LatLng locat = new LatLng(latitude,longitude);
-        //LatLng locat = new LatLng(24.922582, 121.422590);
         System.out.println(locat);
         System.out.println("a");
         return locat;
     }
 
-    /*@CheckReturnValue
-    @SchedulerSupport(SchedulerSupport.COMPUTATION)
-    public static Flowable<LatLng> interval(long initialDelay, long period, TimeUnit unit) {
-        return interval(initialDelay, period, unit);
-    }*/
 }

@@ -21,6 +21,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -45,7 +46,7 @@ public class ConnectActivity extends AppCompatActivity {
     public BluetoothDevice BTDevice;
     private RecyclerViewAdapter recyclerViewAdapter;
     public boolean isConnected = false;
-
+    private Toolbar toolbar;
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -75,17 +76,19 @@ public class ConnectActivity extends AppCompatActivity {
     };
     private Button buttonDiscovery;
 
-    public String getDevName() {
-        return Name;
+    private void setToolbar(){
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        toolbar.setNavigationOnClickListener(v -> finish());
     }
-    public String getDevAddress(){
-        return Address;
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.bluetooth_list);
+        /**toolbar**/
+        setToolbar();
 
         final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(RecyclerView.VERTICAL);

@@ -75,6 +75,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private CompositeDisposable MapCompositeDisposable = new CompositeDisposable();
     private LatLng RxLocation;
     private LatLng TestLocation = new LatLng(24.922582, 121.422590);
+    private boolean SubFlag = false;
+    private RxTimerUtil rxTimer = new RxTimerUtil();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +100,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
+        SubFlag = true;
+    }
+    @Override
+    protected void onDestroy(){
+        if(disposable != null)
+            cancel();
+        rxTimer.cancel();
+        super.onDestroy();
+    }
+    @Override
+    protected void onStop(){
+        if(disposable != null)
+            cancel();
+        rxTimer.cancel();
+        super.onStop();
+    }
+    @Override
+    protected void onStart(){
+        super.onStart();
     }
     /***********Navigation*************/
     @Override
@@ -112,16 +132,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Intent intent2 = new Intent(MapsActivity.this, MapsActivity.class);
                 startActivity(intent2);
                 break;
-            case R.id.nav_profile:
-                /*getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                        new ProfileFragment()).commit();*/
-                break;
             case R.id.nav_share:
                 Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
                 break;
-            case R.id.nav_send:
-                Toast.makeText(this, "Send", Toast.LENGTH_SHORT).show();
-                break;
+
         }
         //drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -131,10 +145,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         getMyLocation();
-        //initEventListeners();
-        //maptest();
         TimeTest();
-
     }
 
 
@@ -163,7 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return true;
     }
 
-    protected void maptest(LatLng RxLocation){
+    protected void SetMark(LatLng RxLocation){
         System.out.println("Set Mark:");
         System.out.println(RxLocation);
         mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination").icon(BitmapDescriptorFactory.fromResource(R.drawable.bicycle48p));
@@ -301,46 +312,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return data;
     }
 
-    public void initEventListeners() {
-        RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
-        MapCompositeDisposable.add(rxOkHttp3.LocationStream()
-        //MapCompositeDisposable.add(Observable.interval(0, 3000, TimeUnit.MILLISECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                //.subscribeOn(Schedulers.computation())
-                .subscribeOn(Schedulers.io())
-                .subscribe(Loca -> {
-                    //
-                    System.out.println("RxLocation:");
-                    RxLocation = Loca;
-                    mDestination = Loca;
-                    mMap.clear();
-                    maptest(RxLocation);
-                    System.out.println(Loca);
-                    //System.out.print("aaaaa");
-                }, throwable -> {
-                   //
-                    System.out.println(RxLocation);
-
-                    System.out.println("RxLocation Error");
-                }));
-
-    }
-
     private void TimeTest(){
-        RxTimerUtil rxTimer = new RxTimerUtil();
+
         rxTimer.interval(5000, new RxTimerUtil.IRxNext() {
             @Override
             public void doNext(Object number) {
                 Log.e("home_show_three", "======MainActivity======" + number);
-                //maptest(RxLocation);
                 sub();
                 System.out.println(number);
-                //LatLng latLng = (LatLng) number;
-                //maptest(latLng);
-                //System.out.println(latLng);
-                /*if (isFront && IsFirstStart) {
-                    initHomeThreeAd();
-                }*/
             }
         });
 
@@ -349,19 +328,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ObservableOnSubscribe<LatLng> observableOnSubscribe = new ObservableOnSubscribe<LatLng>() {
         @Override
         public void subscribe(ObservableEmitter<LatLng> emitter) throws Exception {
-            System.out.println("已经订阅：subscribe，获取发射器");
-            RxLocation = rxOkHttp3.sendGET();
+            System.out.println("已經訂閱：subscribe，获取发射器");
+            RxLocation = rxOkHttp3.getLocation();
+            if(RxLocation!=null)
             emitter.onNext(RxLocation);
-            //emitter.onNext(TestLocation);
-            /*System.out.println("信号发射："+1);
-            emitter.onNext(2);
-            System.out.println("信号发射："+2);
-            emitter.onNext(3);
-            System.out.println("信号发射："+3);
-            emitter.onNext(4);
-            System.out.println("信号发射："+4);
-            emitter.onComplete();*/
-            System.out.println("信号发射：onComplete");
+            System.out.println("信號發射：onComplete");
         }
     };
     /**
@@ -381,13 +352,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onNext(LatLng integer) {
             System.out.println("信号接收：onNext " + integer);
-            maptest(integer);
+            SetMark(integer);
 
         }
 
         @Override
         public void onError(Throwable e) {
             System.out.println("信号接收：onError " + e.getMessage());
+            cancel();
         }
 
         @Override
@@ -397,8 +369,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     public void sub() {
-        System.out.println("开始订阅：subscribe");
+        System.out.println("開始訂閱：subscribe");
         observable.subscribe(observer);
+    }
+    public void cancel(){
+        System.out.println("取消訂閱：unsubscribe");
+        if(disposable[0] != null)
+            disposable[0].dispose();
     }
 
     /** A class to download data from Google Directions URL */

@@ -1,30 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
+    <group android:checkableBehavior="single"
+        >
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_home"
-            android:title="首頁" />
+            android:title="首頁"
+            />
         <item
             android:id="@+id/nav_map"
             android:icon="@drawable/ic_map"
             android:title="地圖" />
         <item
-            android:id="@+id/nav_profile"
-            android:icon="@drawable/ic_profile"
-            android:title="Profile" />
+            android:id="@+id/nav_share"
+            android:icon="@drawable/ic_baseline_settings_24"
+            android:title="@string/menu_setting" />
     </group>
-    <item android:title="Communicate">
+    <!--<item android:title="">
         <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_send"
-                android:title="Track" />
+
         </menu>
-    </item>
+    </item>-->
 </menu>
