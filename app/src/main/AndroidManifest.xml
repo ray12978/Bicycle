@@ -49,8 +49,9 @@
             android:name=".SettingPage"
             android:screenOrientation="portrait"
             android:label="Setting"
-            android:theme="@style/AppTheme.NoActionBar">
+            >
         </activity>
+
         <service android:name=".BluetoothService"/>
     </application>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

@@ -81,7 +81,7 @@ import io.reactivex.disposables.Disposable;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     //private final UUID uuid = UUID.fromString("8c4102d5-f0f9-4958-806e-7ba5fd54ce7c");
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private EditText id;
+   // private EditText id;
     private EditText BTM;
     private String SpeedLimit = "";
     private String address,Name;
@@ -109,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress BuzFlag = new FlagAddress(true);
     FlagAddress SpdFlag = new FlagAddress(true);
     FlagAddress DanFlag = new FlagAddress(false);
-    FlagAddress StrFlag = new FlagAddress(false);
     FlagAddress PostFlag = new FlagAddress(false);
     /*******************Layout***********************/
     private DrawerLayout drawer;
@@ -121,7 +120,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     /**Http**/
     private String GetVal;
-
+    /**Setting Val**/
+    FlagAddress CloudFlag = new FlagAddress(false);
+    String id;
+    String nb;
 
     private Thread danger = new Thread(new Runnable() {
         @Override
@@ -145,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         address = deviceAddress;
         Name = deviceName;
 
-        id = findViewById(R.id.id);
+        //id = findViewById(R.id.id);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
         textContent = findViewById(R.id.textContent);
@@ -169,7 +171,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ButtonListen();
         btBTConct.setText(MyAppInst.getBTState()? "已連線" : "未連線");
         initEventListeners();
+        CheckSetting();
       }
+
+      private Object getSetting(String Sel){
+          if(Sel.equals("cloud")){
+              boolean ans =  getSharedPreferences("UserSetting",MODE_PRIVATE)
+                      .getBoolean(Sel,false);
+              return ans;
+          }
+          String ans = getSharedPreferences("UserSetting",MODE_PRIVATE)
+                  .getString(Sel,"null");
+
+          //System.out.println(Sel);
+          if(Sel.equals("nb")||Sel.equals("id")) return ans;
+          assert ans != null;
+          return  !ans.equals("null");
+      }
+    private void CheckSetting(){
+        CloudFlag.Flag = (Boolean) getSetting("cloud");
+        nb = (String) getSetting("nb");
+        id = (String) getSetting("id");
+        System.out.print("nb狀態:");
+        System.out.println(nb);
+        System.out.print("cloud狀態:");
+        System.out.println(CloudFlag.Flag);
+        System.out.print("id:");
+        System.out.println(id);
+    }
 
     public void DpBTConnState(boolean state){
         String name = Name != null ? Name : "尚未選擇裝置";
@@ -249,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btBTSend.setOnClickListener(v -> {
             try {
-                MyAppInst.writeBT(id.getText().toString());
+                MyAppInst.writeBT(id);
                 Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -415,6 +444,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_share:
                 Intent intent3 = new Intent(MainActivity.this, SettingPage.class);
                 startActivity(intent3);
+                onStop();
                 break;
         }
         //drawer.closeDrawer(GravityCompat.START);
@@ -457,6 +487,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //Danger.start();
 
     }
+    @Override
+    protected void onStart(){
+        CheckSetting();
+        super.onStart();
+    }
+
     @Override
     protected void onStop(){
         super.onStop();
@@ -517,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         if(PostFlag.Flag)BTSendMsg.replace(6, 7, "Y");
         else BTSendMsg.replace(6, 7, "N");
-        UserName = id.getText().toString();
+        UserName = id;
         while (UserName.length()<16) UserName+='@';
         if(BTSendMsg.length()>=8) {
             BTSendMsg.replace(7,23, UserName);

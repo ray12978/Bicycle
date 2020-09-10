@@ -1,0 +1,12 @@
+<resources>
+    <!-- Reply Preference -->
+    <string-array name="nbIot_entries">
+        <item>使用手機網路上傳</item>
+        <item>使用NB-IoT上傳</item>
+    </string-array>
+
+    <string-array name="nbIot_values">
+        <item>使用手機網路上傳</item>
+        <item>使用NB-IoT上傳</item>
+    </string-array>
+</resources>

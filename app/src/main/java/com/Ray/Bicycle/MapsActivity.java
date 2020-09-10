@@ -100,7 +100,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        SubFlag = true;
     }
     @Override
     protected void onDestroy(){
@@ -175,18 +174,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     protected void SetMark(LatLng RxLocation){
-        System.out.println("Set Mark:");
+        System.out.print("Set Mark:");
         System.out.println(RxLocation);
-        mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination").icon(BitmapDescriptorFactory.fromResource(R.drawable.bicycle48p));
+        mMarkerOptions = new MarkerOptions()
+                .position(RxLocation)
+                .title("Destination")
+                .icon(BitmapDescriptorFactory
+                        .fromResource(R.drawable.bicycle48p));
         mMap.addMarker(mMarkerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation,12));
     }
 
     private void getMyLocation(){
-
         // Getting LocationManager object from System Service LOCATION_SERVICE
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
         mLocationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
