@@ -36,6 +36,6 @@
         <item name="android:listPreferredItemPaddingEnd">80dp</item>
         <item name="listPreferredItemPaddingStart">80dp</item>
         <item name="android:itemPadding">80dp</item>
-
+        <item name="paddingEnd">80dp</item>
     </style>
 </resources>

@@ -73,7 +73,7 @@ public class SettingPage extends AppCompatActivity  {
 
     public Object getSetting(String Select){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean Cloud = prefs.getBoolean("CloudSw",false);
+        boolean Cloud = prefs.getBoolean("cloud",false);
         String NbSet =  prefs.getString("nbIot",null);
         String userID = prefs.getString("id",null);
         switch (Select){
@@ -110,18 +110,18 @@ public class SettingPage extends AppCompatActivity  {
     private void TimeTest(){
 
         rxTimer.interval(200, number -> {
-            Log.e("home_show_three", "======MainActivity======" + number);
+            //Log.e("home_show_three", "======MainActivity======" + number);
             sub();
-            System.out.println(number);
+            //System.out.println(number);
         });
 
     }
     ObservableOnSubscribe<Integer> observableOnSubscribe = new ObservableOnSubscribe<Integer>() {
         @Override
         public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-            System.out.println("已經訂閱：subscribe，获取发射器");
+            //System.out.println("已經訂閱：subscribe，获取发射器");
             emitter.onNext(1);
-            System.out.println("信號發射：onComplete");
+            //System.out.println("信號發射：onComplete");
         }
     };
     Observable<Integer> observable = Observable.create(observableOnSubscribe);
@@ -132,12 +132,12 @@ public class SettingPage extends AppCompatActivity  {
         @Override
         public void onSubscribe(Disposable d) {
             disposable[0] = d;
-            System.out.println("已经订阅：onSubscribe，获取解除器");
+            //System.out.println("已经订阅：onSubscribe，获取解除器");
         }
 
         @Override
         public void onNext(Integer integer) {
-            System.out.println("信号接收：onNext " + integer);
+            //System.out.println("信号接收：onNext " + integer);
             //SetMark(integer);
             ShareSetting();
 
@@ -151,12 +151,12 @@ public class SettingPage extends AppCompatActivity  {
 
         @Override
         public void onComplete() {
-            System.out.println("信号接收：onComplete");
+            //System.out.println("信号接收：onComplete");
         }
     };
 
     public void sub() {
-        System.out.println("開始訂閱：subscribe");
+        //System.out.println("開始訂閱：subscribe");
         observable.subscribe(observer);
     }
     public void cancel(){

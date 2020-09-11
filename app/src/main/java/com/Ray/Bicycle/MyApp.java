@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +16,7 @@ import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
@@ -53,12 +55,13 @@ public class MyApp extends Application {
     BluetoothConnection blueConn;
     RxBluetooth rxBluetooth = new RxBluetooth(this);
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
+    AtomicInteger readCnt = new AtomicInteger();
     //private int i = 0;
     /** ConnectActivity Object**/
     ConnectActivity ConnAct = new ConnectActivity();
 
     /**String**/
-    public String SVal,PVal,MVal,TVal;
+    public String SVal,MVal,danger;
     private int[] StrPosition = new int[4];
 
     @Override
@@ -76,27 +79,11 @@ public class MyApp extends Application {
 
     }
 
-    public void afficher() {
-        //Toast.makeText(getBaseContext(), dateFormat.format(new Date()), 300).show();
-        handler.postDelayed(runnable, 1000);
-    }
-
-    public void startCount() {
-        count++;
-        //Toast.makeText(getBaseContext(), Integer.toString(count), 300).show();
-        handler.postDelayed(runnable, 1000);
-        if (count >= 10) {
-            count = 0;
-        }
-    }
 
     public boolean getBTState() {
         return socket != null;
     }
 
-    public void startTimer() {
-        runnable.run();
-    }
 
     /**
      * BlueTooth
@@ -144,6 +131,7 @@ public class MyApp extends Application {
         //Thread.sleep(100);
         System.out.print("BTValTmp:");
         System.out.println(BTValTmp);
+
     }
     public void str_process() {
         int b = 0;
@@ -159,13 +147,13 @@ public class MyApp extends Application {
             }
             SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
             MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
-            TVal = BTValTmp.toString().substring(StrPosition[2] + 1, StrPosition[3]).trim();
-            PVal = BTValTmp.toString().substring(StrPosition[3] + 1).trim();
-            Log.d(BTValTmp.toString(), "Tmp");
-            Log.d(SVal, "S");
-            Log.d(MVal, "M");
-            Log.d(TVal, "T");
-            Log.d(PVal, "P");
+            danger = BTValTmp.toString().substring(BTValTmp.length()-1, BTValTmp.length()).trim();
+            //PVal = BTValTmp.toString().substring(StrPosition[3] + 1).trim();
+            Log.e("Tmp", BTValTmp.toString());
+            Log.e("S", SVal);
+            Log.e("M", MVal);
+            Log.e("danger", danger);
+            //Log.e("P", PVal);
             //BTValTmp.delete(0, BTValTmp.length());
         } /*else if (BTValTmp.toString().charAt(0) == 'B') {
             String Status = BTValTmp.toString().substring(1, 2).trim();
@@ -176,7 +164,7 @@ public class MyApp extends Application {
         }*/
     }
     public String getVal(char Select){
-        if(SVal==null || MVal==null || TVal==null || PVal==null)
+        if(SVal==null || MVal==null || danger==null)
             return null;
         switch (Select){
             case 'S':
@@ -184,9 +172,7 @@ public class MyApp extends Application {
             case 'M':
                 return MVal;
             case 'T':
-                return TVal;
-            case 'P':
-                return PVal;
+                return danger;
             case 'A':
                 return BTValTmp.toString();
         }
@@ -194,18 +180,6 @@ public class MyApp extends Application {
     }
 
 
-    public void stopTimer() {
-        handler.removeCallbacks(runnable);
-    }
-
-    Handler handler = new Handler();
-    Runnable runnable = new Runnable() {
-        public void run() {
-            //afficher();
-            //startCount();
-            //startListenBT();
-        }
-    };
 
 
 
@@ -231,16 +205,16 @@ public class MyApp extends Application {
         return Sta.get();
     }
     private void ReadBT() throws Exception {
-    AtomicInteger i = new AtomicInteger();
+
         BluetoothConnection bluetoothConnection = new BluetoothConnection(socket);
         compositeDisposable.add(bluetoothConnection.observeByteStream()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(aByte -> {
                     //buffer[i] = aByte;
-                    SavByte(i.get(),aByte);
-                    Save_Val(BTValTmp,i.get());
-                    i.getAndIncrement();
+                    SavByte(readCnt.get(),aByte);
+                    Save_Val(BTValTmp,readCnt.get());
+                    readCnt.getAndIncrement();
                     BTRevSta.Flag = true;
                     // This will be called every single byte received
                     System.out.print("Recv byte:");
@@ -259,8 +233,15 @@ public class MyApp extends Application {
 
 
     protected void writeBT(String Msg) throws Exception {
+        buffer = new byte[256];
+        readCnt = new AtomicInteger();
+        BTValTmp.delete(0, BTValTmp.length());
+        System.out.println("BTValTmp:"+BTValTmp);
+        System.out.println("buffer:"+ Arrays.toString(buffer));
         BluetoothConnection bluetoothConnection = new BluetoothConnection(socket);
         bluetoothConnection.send(Msg); // String
+        System.out.println("Now Send:" + Msg);
+        Toast.makeText(this, "Now Send:" + Msg, Toast.LENGTH_SHORT).show();
     }
 
 }

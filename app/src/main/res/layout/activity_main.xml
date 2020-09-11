@@ -84,10 +84,10 @@
             android:id="@+id/textContent"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/edit_SpeedLimit"
+            app:layout_constraintBottom_toTopOf="@+id/buzz_btn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/id2" />
+            app:layout_constraintTop_toBottomOf="@+id/btClr" />
 
         <TextView
             android:id="@+id/text_Respond"
@@ -100,26 +100,6 @@
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btBTConct" />
-
-        <EditText
-            android:id="@+id/id"
-            android:layout_width="201dp"
-            android:layout_height="wrap_content"
-            android:ems="16"
-            android:hint="傳送id"
-            android:inputType="textEmailAddress"
-            android:maxLength="16"
-            app:layout_constraintBottom_toTopOf="@+id/guideline3"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <EditText
-            android:id="@+id/id2"
-            android:layout_width="201dp"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="傳送BT"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/guideline3" />
 
         <Button
             android:id="@+id/SpLit_btn"
@@ -134,20 +114,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/btnline"
             app:layout_constraintVertical_bias="0.551" />
-
-        <EditText
-            android:id="@+id/edit_SpeedLimit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:ems="10"
-            android:hint="速度限制(時速)"
-            android:inputType="number"
-            android:maxLength="2"
-            app:layout_constraintBottom_toTopOf="@+id/btnline"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/guideline3"
-            app:layout_constraintVertical_bias="1.0" />
 
         <Button
             android:id="@+id/lck_btn"
@@ -213,8 +179,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Send"
-            app:layout_constraintBottom_toTopOf="@+id/id"
-            app:layout_constraintStart_toStartOf="@+id/id" />
+            app:layout_constraintBottom_toTopOf="@+id/textContent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_Respond" />
 
         <Button
             android:id="@+id/btBTConct"
@@ -229,16 +196,19 @@
             android:id="@+id/btClr"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="235dp"
             android:text="Clear"
-            app:layout_constraintBottom_toTopOf="@+id/id"
-            app:layout_constraintStart_toEndOf="@+id/btBTSend" />
+            app:layout_constraintEnd_toEndOf="@+id/text_Respond"
+            app:layout_constraintStart_toEndOf="@+id/btBTSend"
+            app:layout_constraintTop_toBottomOf="@+id/text_Respond" />
 
         <Button
             android:id="@+id/btDisplay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Display"
-            app:layout_constraintBottom_toTopOf="@+id/id"
+            app:layout_constraintBottom_toTopOf="@+id/textView"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/btClr" />
 
         <Switch
@@ -269,9 +239,7 @@
             android:layout_height="wrap_content"
             android:text="速度限制(時速)"
             app:layout_constraintBottom_toTopOf="@+id/guideline3"
-            app:layout_constraintEnd_toStartOf="@+id/SpeedPicker"
-            app:layout_constraintHorizontal_bias="0.6"
-            app:layout_constraintStart_toEndOf="@+id/id" />
+            app:layout_constraintEnd_toStartOf="@+id/SpeedPicker" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
