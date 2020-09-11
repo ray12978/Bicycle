@@ -181,7 +181,7 @@ public class SettingPage extends AppCompatActivity  {
             preference.setOnBindEditTextListener(new EditTextPreference.OnBindEditTextListener() {
                 @Override
                 public void onBindEditText(@NonNull EditText editText) {
-                    editText.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS); // set only numbers allowed to input
+                    editText.setInputType( InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD); // set only numbers allowed to input
                     editText.selectAll(); // select all text
                     int maxLength = 14;
                     editText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength)}); // set maxLength to 2

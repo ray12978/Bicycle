@@ -1,0 +1,33 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="@string/user_header">
+
+        <EditTextPreference
+            app:key="id"
+            app:title="@string/signature_title"
+            app:useSimpleSummaryProvider="true"
+            android:inputType="textEmailAddress"/>
+
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/cloud_header">
+
+        <SwitchPreferenceCompat
+            app:key="cloud"
+            app:title="@string/Cloud_title" />
+        <ListPreference
+            app:defaultValue="reply"
+            app:dependency="cloud"
+            app:entries="@array/nbIot_entries"
+            app:entryValues="@array/nbIot_values"
+            app:key="reply"
+            app:title="@string/nb_title"
+            app:useSimpleSummaryProvider="true" />
+
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
