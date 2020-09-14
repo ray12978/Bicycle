@@ -56,17 +56,17 @@ public class SettingPage extends AppCompatActivity  {
     }
     @Override
     protected void onStart() {
-        TimeTest();
+
         super.onStart();
     }
     @Override
     protected void onDestroy(){
-        rxTimer.cancel();
+
         super.onDestroy();
     }
     @Override
     protected void onStop(){
-        rxTimer.cancel();
+
         super.onStop();
     }
 
@@ -87,7 +87,10 @@ public class SettingPage extends AppCompatActivity  {
                 return null;
         }
     }
-
+    public void onBackPressed() {
+        ShareSetting();
+        finish();
+    }
     public void ShareSetting(){ //need keep run
         Setting.edit()
                 .putBoolean("cloud",(Boolean) getSetting("cloud"))
@@ -100,70 +103,14 @@ public class SettingPage extends AppCompatActivity  {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:   //返回键的id
+                ShareSetting();
                 this.finish();
                 return false;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
-    /**Timer**/
-    private void TimeTest(){
 
-        rxTimer.interval(200, number -> {
-            //Log.e("home_show_three", "======MainActivity======" + number);
-            sub();
-            //System.out.println(number);
-        });
-
-    }
-    ObservableOnSubscribe<Integer> observableOnSubscribe = new ObservableOnSubscribe<Integer>() {
-        @Override
-        public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-            //System.out.println("已經訂閱：subscribe，获取发射器");
-            emitter.onNext(1);
-            //System.out.println("信號發射：onComplete");
-        }
-    };
-    Observable<Integer> observable = Observable.create(observableOnSubscribe);
-
-    final Disposable[] disposable = new Disposable[1];
-
-    Observer<Integer> observer = new Observer<Integer>() {
-        @Override
-        public void onSubscribe(Disposable d) {
-            disposable[0] = d;
-            //System.out.println("已经订阅：onSubscribe，获取解除器");
-        }
-
-        @Override
-        public void onNext(Integer integer) {
-            //System.out.println("信号接收：onNext " + integer);
-            //SetMark(integer);
-            ShareSetting();
-
-        }
-
-        @Override
-        public void onError(Throwable e) {
-            System.out.println("信号接收：onError " + e.getMessage());
-            cancel();
-        }
-
-        @Override
-        public void onComplete() {
-            //System.out.println("信号接收：onComplete");
-        }
-    };
-
-    public void sub() {
-        //System.out.println("開始訂閱：subscribe");
-        observable.subscribe(observer);
-    }
-    public void cancel(){
-        System.out.println("取消訂閱：unsubscribe");
-        if(disposable[0] != null)
-            disposable[0].dispose();
-    }
     private void setToolbar(){
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {

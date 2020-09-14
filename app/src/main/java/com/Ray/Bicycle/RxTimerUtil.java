@@ -22,6 +22,7 @@ public class RxTimerUtil {
     private LatLng Location = new LatLng(24.922582, 121.422590);
     private RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
     //private MapsActivity mapsActivity = new MapsActivity();
+
     /**
      * milliseconds毫秒后执行next操作
      *
@@ -107,7 +108,6 @@ public class RxTimerUtil {
     public interface IRxNext {
         void doNext(Object number);
     }
-
 
 
 }

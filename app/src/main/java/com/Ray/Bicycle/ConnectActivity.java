@@ -78,6 +78,7 @@ public class ConnectActivity extends AppCompatActivity {
 
     private void setToolbar(){
         Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("選擇藍芽裝置");
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);

@@ -58,9 +58,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 
-
-
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener  {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
@@ -101,24 +99,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         drawer.addDrawerListener(toggle);
         toggle.syncState();
     }
+
     @Override
-    protected void onDestroy(){
-        if(disposable != null)
+    protected void onDestroy() {
+        if (disposable != null)
             cancel();
         rxTimer.cancel();
         super.onDestroy();
     }
+
     @Override
-    protected void onStop(){
-        if(disposable != null)
+    protected void onStop() {
+        if (disposable != null)
             cancel();
         rxTimer.cancel();
         super.onStop();
     }
+
     @Override
-    protected void onStart(){
+    protected void onStart() {
         super.onStart();
     }
+
     /***********Navigation*************/
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -152,13 +154,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
                                            int[] grantResults) {
 
-        if (requestCode == 100){
+        if (requestCode == 100) {
             if (!verifyAllPermissions(grantResults)) {
-                Toast.makeText(getApplicationContext(),"No sufficient permissions", Toast.LENGTH_LONG).show();
-            }else{
+                Toast.makeText(getApplicationContext(), "No sufficient permissions", Toast.LENGTH_LONG).show();
+            } else {
                 getMyLocation();
             }
-        }else {
+        } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
@@ -173,7 +175,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return true;
     }
 
-    protected void SetMark(LatLng RxLocation){
+    protected void SetMark(LatLng RxLocation) {
         System.out.print("Set Mark:");
         System.out.println(RxLocation);
         mMarkerOptions = new MarkerOptions()
@@ -182,10 +184,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .icon(BitmapDescriptorFactory
                         .fromResource(R.drawable.bicycle48p));
         mMap.addMarker(mMarkerOptions);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation,12));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation, 12));
     }
 
-    private void getMyLocation(){
+    private void getMyLocation() {
         // Getting LocationManager object from System Service LOCATION_SERVICE
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         mLocationListener = new LocationListener() {
@@ -193,7 +195,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationChanged(Location location) {
                 mOrigin = new LatLng(location.getLatitude(), location.getLongitude());
                 //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mOrigin,12));
-                if(mOrigin != null && mDestination != null)
+                if (mOrigin != null && mDestination != null)
                     drawRoute();
             }
 
@@ -218,7 +220,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED) {
                 mMap.setMyLocationEnabled(true);
-                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,10000,0,mLocationListener);
+                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 0, mLocationListener);
 
                 mMap.setOnMapLongClickListener(latLng -> {
                     mDestination = latLng;
@@ -226,20 +228,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //mMarkerOptions = new MarkerOptions().position(mDestination).title("Destination");
                     mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination");
                     mMap.addMarker(mMarkerOptions);
-                    if(mOrigin != null && mDestination != null)
+                    if (mOrigin != null && mDestination != null)
                         drawRoute();
                 });
 
-            }else{
+            } else {
                 requestPermissions(new String[]{
                         android.Manifest.permission.ACCESS_FINE_LOCATION
-                },100);
+                }, 100);
             }
         }
     }
 
 
-    private void drawRoute(){
+    private void drawRoute() {
 
         // Getting URL to the Google Directions API
         String url = getDirectionsUrl(mOrigin, mDestination);
@@ -251,35 +253,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private String getDirectionsUrl(LatLng origin, LatLng dest){
+    private String getDirectionsUrl(LatLng origin, LatLng dest) {
 
         // Origin of route
-        String str_origin = "origin="+origin.latitude+","+origin.longitude;
+        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
 
         // Destination of route
-        String str_dest = "destination="+dest.latitude+","+dest.longitude;
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
 
         // Key
         String key = "key=" + getString(R.string.google_maps_key);
 
         // Building the parameters to the web service
-        String parameters = str_origin+"&"+str_dest+"&"+key;
+        String parameters = str_origin + "&" + str_dest + "&" + key;
 
         // Output format
         String output = "json";
 
         // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
 
         return url;
     }
 
-    /** A method to download json data from url */
+    /**
+     * A method to download json data from url
+     */
     private String downloadUrl(String strUrl) throws IOException {
         String data = "";
         InputStream iStream = null;
         HttpURLConnection urlConnection = null;
-        try{
+        try {
             URL url = new URL(strUrl);
 
             // Creating an http connection to communicate with url
@@ -293,10 +297,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
 
-            StringBuffer sb  = new StringBuffer();
+            StringBuffer sb = new StringBuffer();
 
             String line = "";
-            while( ( line = br.readLine())  != null){
+            while ((line = br.readLine()) != null) {
                 sb.append(line);
             }
 
@@ -304,16 +308,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             br.close();
 
-        }catch(Exception e){
+        } catch (Exception e) {
             Log.d("Exception on download", e.toString());
-        }finally{
+        } finally {
             iStream.close();
             urlConnection.disconnect();
         }
         return data;
     }
 
-    private void TimeTest(){
+    private void TimeTest() {
 
         rxTimer.interval(5000, new RxTimerUtil.IRxNext() {
             @Override
@@ -328,11 +332,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     ObservableOnSubscribe<LatLng> observableOnSubscribe = new ObservableOnSubscribe<LatLng>() {
         @Override
-        public void subscribe(ObservableEmitter<LatLng> emitter) throws Exception {
+        public void subscribe(ObservableEmitter<LatLng> emitter) {
             System.out.println("已經訂閱：subscribe，获取发射器");
             RxLocation = rxOkHttp3.getLocation();
-            if(RxLocation!=null)
-            emitter.onNext(RxLocation);
+            if (RxLocation != null)
+                emitter.onNext(RxLocation);
             System.out.println("信號發射：onComplete");
         }
     };
@@ -373,13 +377,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         System.out.println("開始訂閱：subscribe");
         observable.subscribe(observer);
     }
-    public void cancel(){
+
+    public void cancel() {
         System.out.println("取消訂閱：unsubscribe");
-        if(disposable[0] != null)
+        if (disposable[0] != null)
             disposable[0].dispose();
     }
 
-    /** A class to download data from Google Directions URL */
+    /**
+     * A class to download data from Google Directions URL
+     */
     private class DownloadTask extends AsyncTask<String, Void, String> {
 
         // Downloading data in non-ui thread
@@ -389,12 +396,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // For storing data from web service
             String data = "";
 
-            try{
+            try {
                 // Fetching the data from web service
                 data = downloadUrl(url[0]);
-                Log.d("DownloadTask","DownloadTask : " + data);
-            }catch(Exception e){
-                Log.d("Background Task",e.toString());
+                Log.d("DownloadTask", "DownloadTask : " + data);
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
             }
             return data;
         }
@@ -413,7 +420,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    /** A class to parse the Google Directions in JSON format */
+    /**
+     * A class to parse the Google Directions in JSON format
+     */
     private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
         // Parsing the data in non-ui thread
@@ -423,13 +432,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             JSONObject jObject;
             List<List<HashMap<String, String>>> routes = null;
 
-            try{
+            try {
 
                 DirectionsJSONParser parser = new DirectionsJSONParser();
                 jObject = new JSONObject(jsonData[0]);
                 // Starts parsing data
                 routes = parser.parse(jObject);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return routes;
@@ -442,7 +451,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             PolylineOptions lineOptions = null;
 
             // Traversing through all the routes
-            for(int i=0;i<result.size();i++){
+            for (int i = 0; i < result.size(); i++) {
                 points = new ArrayList<LatLng>();
                 lineOptions = new PolylineOptions();
 
@@ -450,7 +459,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 List<HashMap<String, String>> path = result.get(i);
 
                 // Fetching all the points in i-th route
-                for(int j=0;j<path.size();j++){
+                for (int j = 0; j < path.size(); j++) {
                     HashMap<String, String> point = path.get(j);
 
                     double lat = Double.parseDouble(point.get("lat"));
@@ -467,14 +476,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            if(lineOptions != null) {
-                if(mPolyline != null){
+            if (lineOptions != null) {
+                if (mPolyline != null) {
                     mPolyline.remove();
                 }
                 mPolyline = mMap.addPolyline(lineOptions);
 
-            }else
-                Toast.makeText(getApplicationContext(),"No route is found", Toast.LENGTH_LONG).show();
+            } else
+                Toast.makeText(getApplicationContext(), "No route is found", Toast.LENGTH_LONG).show();
         }
     }
 

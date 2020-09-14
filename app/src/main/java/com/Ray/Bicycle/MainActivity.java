@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -82,24 +83,21 @@ import io.reactivex.disposables.Disposable;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     //private final UUID uuid = UUID.fromString("8c4102d5-f0f9-4958-806e-7ba5fd54ce7c");
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-   // private EditText id;
+    // private EditText id;
     private EditText BTM;
     private String SpeedLimit = "";
-    private String address,Name;
+    private String address, Name;
     private String UserName;
     public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock{L,F,N},[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser{T,J,N},[5]Buzzer{E,N},[6]CloudMode{Y,N}
     public TextView text_Respond;
-    /**Bluetooth**/
+    /**
+     * Bluetooth
+     **/
     private BluetoothAdapter bluetoothAdapter;
-    private BluetoothSocket socket;
-    private InputStream inputStream = null;
-    private OutputStream outputStream = null;
-    private TextView textContent;
-    public Button btBTConct;
+    public Button btBTConct, btSpLit;
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
-    private static final int NOTIFY_REQUEST_ID = 300;
+
     public LoadingDialog loadingDialog;
     /******************ButtonFlag********************/
     FlagAddress SendFlag = new FlagAddress(false);
@@ -113,81 +111,88 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     /*******************Layout***********************/
     private DrawerLayout drawer;
     private Toolbar toolbar;
-    /**Application**/
+    /**
+     * Application
+     **/
     private MyApp MyAppInst = MyApp.getAppInstance();
-    /**test RxJava**/
+    /**
+     * test RxJava
+     **/
     RxBluetooth rxBluetooth = new RxBluetooth(this);
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
-    /**Http**/
+    /**
+     * Http
+     **/
     private String GetVal;
-    /**Setting Val**/
+    /**
+     * Setting Val
+     **/
     FlagAddress NbFlag = new FlagAddress(false);
     FlagAddress BTConnFlag = new FlagAddress(false);
     String id;
     String nb;
+    /*******TimePicker*********/
+    private TimePickerDialog dialog = new TimePickerDialog(this);
 
-    private Thread danger = new Thread(new Runnable() {
-        @Override
-        public void run() {
 
-        }
-    });
 
-      @Override
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //context = this;
         /*****************藍牙*************/
-        final String deviceName = getSharedPreferences("BTDetail" , MODE_PRIVATE)
-                .getString("Name" , "尚未選擇裝置");
-        final String deviceAddress = getSharedPreferences("BTDetail" , MODE_PRIVATE)
-                .getString("Address" , "null");
+        final String deviceName = getSharedPreferences("BTDetail", MODE_PRIVATE)
+                .getString("Name", "尚未選擇裝置");
+        final String deviceAddress = getSharedPreferences("BTDetail", MODE_PRIVATE)
+                .getString("Address", "null");
         address = deviceAddress;
         Name = deviceName;
         text_Respond = findViewById(R.id.text_Respond);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
-        textContent = findViewById(R.id.textContent);
         loadingDialog = new LoadingDialog(MainActivity.this);
         /***********Other***************/
 
         /**********Layout***************/
         toolbar = findViewById(R.id.toolbar);
         drawer = findViewById(R.id.drawer_layout_Main);
-        toolbar.setTitle(String.format("%s %s", deviceName ,deviceName.equals("尚未選擇裝置")?"":MyAppInst.getBTState()? "已連線" : "未連線"));
+        toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + deviceName, deviceName.equals("尚未選擇裝置") ? "" : MyAppInst.getBTState() ? "已連線" : "未連線"));
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        setSpdPick();
         ButtonListen();
-        btBTConct.setText(MyAppInst.getBTState()? "已連線" : "未連線");
+        MyAppInst.startTimer();
+        btBTConct.setText(MyAppInst.getBTState() ? "已連線" : "未連線");
         initEventListeners();
         CheckSetting();
-      }
+        SpeedDialog();
+    }
 
-      private Object getSetting(String Sel){
-          if(Sel.equals("cloud")){
-              boolean ans =  getSharedPreferences("UserSetting",MODE_PRIVATE)
-                      .getBoolean(Sel,false);
-              return ans;
-          }
-          String ans = getSharedPreferences("UserSetting",MODE_PRIVATE)
-                  .getString(Sel,"null");
+    protected Object getSetting(String Sel) {
+        if (Sel.equals("cloud")) {
+            boolean ans = getSharedPreferences("UserSetting", MODE_PRIVATE)
+                    .getBoolean(Sel, false);
+            return ans;
+        }
+        String ans = getSharedPreferences("UserSetting", MODE_PRIVATE)
+                .getString(Sel, "null");
 
-          //System.out.println(Sel);
-          if(Sel.equals("nb")||Sel.equals("id")) return ans;
-          assert ans != null;
-          return  !ans.equals("null");
-      }
-    private void CheckSetting(){
+        //System.out.println(Sel);
+        if (Sel.equals("nb") || Sel.equals("id")) return ans;
+        assert ans != null;
+        return !ans.equals("null");
+    }
+
+    private void CheckSetting() {
         nb = (String) getSetting("nb");
         id = (String) getSetting("id");
         PostFlag.Flag = (Boolean) getSetting("cloud");
         NbFlag.Flag = nb.equals("使用NB-IoT上傳");
-        if(PostFlag.Flag)BTSendMsg.replace(6, 7, "Y");
+        if (PostFlag.Flag) BTSendMsg.replace(6, 7, "Y");
         else BTSendMsg.replace(6, 7, "N");
         System.out.print("nb狀態:");
         System.out.println(nb);
@@ -197,58 +202,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         System.out.println(id);
     }
 
-    public void DpBTConnState(boolean state){
-        btBTConct.setText(state? "已連線" : "未連線");
-        toolbar.setTitle(String.format("%s %s", Name ,Name.equals("尚未選擇裝置")?
-                "":state? "已連線" : "未連線"));
+    public void DpBTConnState(boolean state) {
+        btBTConct.setText(state ? "已連線" : "未連線");
+        toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name, Name.equals("尚未選擇裝置") ?
+                "" : state ? "已連線" : "未連線"));
         BTConnFlag.Flag = state;
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            // 獲得當前得到焦點的View，一般情況下就是EditText（特殊情況就是軌跡求或者實體案件會移動焦點）
-            View v = getCurrentFocus();
-            if (isShouldHideInput(v, ev)) {
-                hideSoftInput(v.getWindowToken());
+
+    void SpeedDialog() {
+        final String[] num = new String[1];
+        dialog.onDialogRespond = new TimePickerDialog.OnDialogRespond() {
+            @Override
+            public void onRespond(String selected) {
+                num[0] = selected;
+                System.out.print("number is ");
+                //System.out.println(selected);
             }
-        }
-        return super.dispatchTouchEvent(ev);
-    }
 
-    private void hideSoftInput(IBinder token) {
-        if (token != null) {
-            InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            im.hideSoftInputFromWindow(token,
-                    InputMethodManager.HIDE_NOT_ALWAYS);
-        }
-    }
-
-    /**
-     * 根據EditText所在座標和用戶點擊的座標相對比，來判斷是否隱藏鍵盤，因爲當用戶點擊EditText時沒必要隱藏
-     * @param v
-     * @param event
-     * @return
-     */
-    private boolean isShouldHideInput(View v, MotionEvent event) {
-        if (v != null && (v instanceof EditText)) {
-            int[] l = { 0, 0 };
-            v.getLocationInWindow(l);
-            int left = l[0], top = l[1], bottom = top + v.getHeight(), right = left
-                    + v.getWidth();
-            if (event.getX() > left && event.getX() < right
-                    && event.getY() > top && event.getY() < bottom) {
-                // 點擊EditText的事件，忽略它。
-                return false;
-            } else {
-                return true;
+            @Override
+            public void onResult(boolean ans) throws Exception {
+                if (ans) {
+                    SpeedLimit = (num[0]);
+                    text_Respond.setText(num[0]);
+                    System.out.println(num[0]);
+                    System.out.println("Sel true");
+                    Speed_Limit();
+                } else System.out.println("Sel false");
             }
-        }
-        // 如果焦點不是EditText則忽略，這個發生在視圖剛繪製完，第一個焦點不在EditView上，和用戶用軌跡球選擇其他的焦點
-        return false;
+        };
     }
 
-    private void ButtonListen(){
+    private void ButtonListen() {
         /**BT按鈕**/
         Button btBTSend = findViewById(R.id.btBTSend);
         Button btBTOpen = findViewById(R.id.BTOpen);
@@ -256,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btBTDiscont = findViewById(R.id.btBTDiscont);
         Button btClear = findViewById(R.id.btClr);
         Button btDisplay = findViewById(R.id.btDisplay);
-        Switch SWPost = findViewById(R.id.SWPost);
         /**IO按鈕*/
         Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
@@ -264,8 +248,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /**HTTP按鈕*/
         Button btPost = findViewById(R.id.button_POST);
         Button btGET = findViewById(R.id.button_GET);
-        Button btSpLit = findViewById(R.id.SpLit_btn);
-        btBTDiscont.setOnClickListener((view )->{ MyAppInst.disconnect(btBTConct); });
+        btSpLit = findViewById(R.id.SpLit_btn);
+        btBTDiscont.setOnClickListener((view) -> {
+            MyAppInst.disconnect(btBTConct);
+        });
         btBuzz.setEnabled(false);
         /**藍牙按鈕動作**/
         btBTOpen.setOnClickListener(v -> {
@@ -275,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTSend.setOnClickListener(v -> {
             try {
                 MyAppInst.writeBT("bbb");
+
                 Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -283,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-            if(MyAppInst.connDevice(device))DpBTConnState(true);
+            if (MyAppInst.connDevice(device)) DpBTConnState(true);
             else DpBTConnState(false);
             //loadingDialog.dismissDialog();
         });
@@ -294,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
             try {
-                if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+                if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
                 //if(SendFlag.Flag) MyAppInst.writeBT("aaa");
                 Thread.sleep(500);
             } catch (Exception e) {
@@ -311,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
             try {
-                if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+                if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
                 Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -326,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
             try {
-                if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+                if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
                 Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -355,10 +342,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
         btSpLit.setOnClickListener(v -> {
-            try {
-                Speed_Limit();
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (!BTConnFlag.Flag) {
+                Toast.makeText(this, "請先連線藍芽", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (SpdFlag.Flag) dialog.showDialog();
+            if (!SpdFlag.Flag) {
+                BTSendMsg.replace(3, 4, "N");
+                SpdFlag.Flag = true;
+                System.out.println(BTSendMsg);
+                try {
+                    MyAppInst.writeBT(BTSendMsg.toString());
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                MyAppInst.str_process();
+                //sendPOST();
+            } else {
+                Toast.makeText(this, "請先設定時速", Toast.LENGTH_SHORT).show();
             }
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
@@ -367,8 +369,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         btClear.setOnClickListener(v -> {
-            textContent.setText("");
-            MyAppInst.BTValTmp.delete(0, MyAppInst.BTValTmp.length());
+
+            //MyAppInst.BTValTmp.delete(0, MyAppInst.BTValTmp.length());
+            Danger_Msg();
+
         });
         btDisplay.setOnClickListener(v -> {
             Toast.makeText(this, MyAppInst.getVal('A'), Toast.LENGTH_LONG).show();
@@ -390,33 +394,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         /**HTTP按鈕動作**/
         /**傳送POST**/
         btPost.setOnClickListener(v -> {
-            if (id.length() != 0) sendPOST();
+            /*if (id.length() != 0) //sendPOST();
             else {
                 Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
-            }
+            }*/
         });
-        btGET.setOnClickListener(v -> {
-            sendGET();
-        });
+
     }
 
-    private void setSpdPick(){
-        NumberPicker SpdPick = findViewById(R.id.SpeedPicker);
-        final String[] SpdList = getResources().getStringArray(R.array.Speed_List);
-        SpdPick.setMinValue(0);
-        SpdPick.setMaxValue(SpdList.length - 1);
-        SpdPick.setDisplayedValues(SpdList);
-        SpdPick.setValue(0); // 設定預設位置
-        SpdPick.setWrapSelectorWheel(false); // 是否循環顯示
-        SpdPick.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS); // 不可編輯
-        SpdPick.setOnValueChangedListener((picker, oldVal, newVal) -> {
-        String[] aaa = SpdPick.getDisplayedValues();
-        int a = SpdPick.getValue();
-        SpeedLimit = SpdList[a];
-        System.out.println(aaa);
-        System.out.println(SpdList[a]);
-    });
-    }
     /***********Navigation*************/
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -430,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                if(!BTConnFlag.Flag){
+                if (!BTConnFlag.Flag) {
                     Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
                     break;
                 }
@@ -461,6 +446,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }).create().show();
     }
+
     /***/
     @Override
     protected void onPause() {
@@ -475,13 +461,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         super.onResume();
         //reader.start();
-       // readerStop = false;
+        // readerStop = false;
 //        loadingDialog.dismissDialog();
-        //Danger.start();
+        //danger.start();
 
     }
+
     @Override
-    protected void onStart(){
+    protected void onStart() {
         CheckSetting();
         addUserId();
         try {
@@ -493,13 +480,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    protected void onStop(){
+    protected void onStop() {
         super.onStop();
     }
 
 
-    protected void onDestroy(){
-        SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail" , MODE_PRIVATE);
+    protected void onDestroy() {
+        SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail", MODE_PRIVATE);
         SharedPreferences.Editor BTEdit = BTDetail.edit();
         BTEdit.clear();
         BTEdit.apply();
@@ -510,35 +497,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         compositeDisposable.dispose();
         super.onDestroy();
     }
+
     /***********************藍牙副程式*******************************/
-
-    /*public void Danger_Str(){
-        int index=0;
-        if(BTValTmp.length() == 0)return;
-        while (BTValTmp.length() != 0) {
-            if(index<BTValTmp.length()-1)index++;
-            System.out.println(BTValTmp.toString());
-            if(BTValTmp.length()>=2) {
-                if (BTValTmp.toString().charAt(index - 1) == 'B' && BTValTmp.toString().charAt(index) == '1') {
-                    BTValTmp.delete(0, BTValTmp.length());
-                    DanFlag.Flag = true;
-                    BTValTmp.delete(0, BTValTmp.length());
-                    System.out.println("danger!!");
-                }
-                BTValTmp.delete(0, BTValTmp.length());
-
-            }
-        }
-    }*/
 
     private void BTMsg(int start, int end, String Msg1, String Msg2, FlagAddress SelectFlag) {
         MsgBtFlag.Flag = true;
-        if(id.length() == 0){
+        if (id.length() == 0) {
             Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
             SendFlag.Flag = false;
             return;
         }
-        if(!BTConnFlag.Flag){
+        if (!BTConnFlag.Flag) {
             Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
             SendFlag.Flag = false;
             return;
@@ -558,20 +527,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //if(NbFlag.Flag)BTSendMsg.replace()
         System.out.println(BTSendMsg);
     }
-    void addUserId(){
+
+    void addUserId() {
         UserName = id;
-        while (UserName.length()<14) UserName+='@';
-        if(BTSendMsg.length()>=8) {
-            BTSendMsg.replace(7,21, UserName);
-        }
-        else {
+        while (UserName.length() < 14) UserName += '@';
+        if (BTSendMsg.length() >= 8) {
+            BTSendMsg.replace(7, 21, UserName);
+        } else {
             BTSendMsg.append(UserName);
         }
     }
+
     void Speed_Limit() throws Exception {
         //String SpeedLimit = "" ;
+        String SpLtVal;
+        if (!BTConnFlag.Flag) {
+            Toast.makeText(this, "請先連線藍芽", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (SpeedLimit.length() != 0 && SpdFlag.Flag && SpeedLimit.length() < 3) {
-            String SpLtVal = SpeedLimit;
+            SpLtVal = SpeedLimit;
+            System.out.print("SpLtVal is:");
+            System.out.println(SpLtVal);
+            btSpLit.setText(String.format("速度限制%s", SpLtVal));
             if (SpeedLimit.length() == 1) {
                 BTSendMsg.replace(1, 2, "0");
                 BTSendMsg.replace(2, 3, SpLtVal);
@@ -580,8 +559,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             BTMsg(3, 4, "Y", "N", SpdFlag);
             addUserId();
+            int On = R.drawable.ic_speed_white;
+            int Off = R.drawable.ic_speed;
+            Button_exterior(btSpLit, Off, On, 3, 'N');
             System.out.println(BTSendMsg);
-            if(SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+            if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
             try {
 
                 Thread.sleep(1000);
@@ -589,108 +571,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 e.printStackTrace();
             }
             MyAppInst.str_process();
-            sendPOST();
+            //sendPOST();
         } else {
-            if (!SpdFlag.Flag) {
-                BTSendMsg.replace(3, 4, "N");
-                SpdFlag.Flag = true;
-                System.out.println(BTSendMsg);
-                MyAppInst.writeBT(BTSendMsg.toString());
-                try {
 
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                MyAppInst.str_process();
-                sendPOST();
-            } else {
-                Toast.makeText(this, "請先設定時速", Toast.LENGTH_SHORT).show();
-            }
         }
 
+    }
+
+    public void Danger_Msg() {
+        new AlertDialog.Builder(MainActivity.this)
+                .setIcon(R.drawable.ic_baseline_warning_48)
+                .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
+                .setPositiveButton("確定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .show();
     }
 
     /*******************************其他**********************************/
     void Button_exterior(Button btn, int one, int two, int bit, char condi) {
-        if(id.length() == 0 || !BTConnFlag.Flag)return;
-        btn.setCompoundDrawablesWithIntrinsicBounds(0, BTSendMsg.charAt(bit) == condi ?
-                one : two, 0, 0);
-        btn.setBackgroundColor(BTSendMsg.charAt(bit) == condi ?
-                0xFFD0D0D0 : 0xFF1A64D4);
+        if (id.length() == 0 || !BTConnFlag.Flag) return;
+        btn.setCompoundDrawablesWithIntrinsicBounds(BTSendMsg.charAt(bit) == condi ?
+                one : two, 0, 0, 0);
+        /*btn.setBackgroundColor(BTSendMsg.charAt(bit) == condi ?
+                0xFFD0D0D0 : 0xFF1A64D4);*/
+        btn.setBackground(BTSendMsg.charAt(bit) == condi ?
+                this.getResources().getDrawable(R.drawable.button_style_off) : this.getResources().getDrawable(R.drawable.button_style_on));
+
         btn.setTextColor(BTSendMsg.charAt(bit) == condi ? 0xFF606060 : 0xFFFFFFFF);
     }
 
-    /**
-     * 手機震動
-     **/
-    public void setVibrate(int time) {
-        Vibrator myVibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
-        myVibrator.vibrate(time);
-    }
 
-    void Danger() {
-        if(!DanFlag.Flag)return;
-        setVibrate(1000);
-        //DanFlag.Flag = false;
-        showNotification();
-        //mediaPlayer.start();
-        //if(Alert.Flag)Danger_Msg();
-        //loadingDialog.startLoadingDialog();
-        DanFlag.Flag = false;
-    }
-
-    public void showNotification() {
-        Log.d(TAG, "showNotification: ");
-        try {
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
-                    NOTIFY_REQUEST_ID,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-            final Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ getApplicationContext().getPackageName() + "/" + R.raw.sound);
-            System.out.println(soundUri);
-            //final Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.sound);
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    .build();
-            NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-            Notification.Builder builder = new Notification.Builder(this)
-                    .setWhen(System.currentTimeMillis())
-                    .setContentTitle("您的腳踏車發生異常狀況")
-                    .setContentText("請立即前往確認")
-                    .setLights(0xff00ff00, 300, 1000)
-                    .setSmallIcon(R.drawable.ic_baseline_warning_48)
-                    .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
-                    .setDefaults(Notification.DEFAULT_VIBRATE)
-                    .setSound(soundUri,audioAttributes)
-                    .setContentIntent(pendingIntent);
-            NotificationChannel channel;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                channel = new NotificationChannel(TEST_NOTIFY_ID
-                        , "Danger Msg"
-                        , NotificationManager.IMPORTANCE_HIGH);
-                channel.enableLights(true);
-                channel.enableVibration(true);
-                channel.shouldShowLights();
-                channel.setLightColor(Color.GREEN);
-                channel.setSound(soundUri, audioAttributes);
-                channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-                builder.setChannelId(TEST_NOTIFY_ID);
-
-                manager.createNotificationChannel(channel);
-            } else {
-                builder.setDefaults(Notification.DEFAULT_ALL)
-                        .setVisibility(Notification.VISIBILITY_PUBLIC);
-            }
-            int testNotifyId = 12;
-            manager.notify(testNotifyId,
-                    builder.build());
-        } catch (Exception e) {
-
-        }
-    }
     /*****************************HTTP副程式******************************/
     private void sendGET() {
         TextView tvRes = findViewById(R.id.text_Respond);
@@ -700,8 +614,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .build();
         /**設置傳送需求*/
         Request request = new Request.Builder()
-                 .url("https://jsonplaceholder.typicode.com/posts/1")
-                     //.url("http://35.221.236.109:3000/getSetting")
+                .url("https://jsonplaceholder.typicode.com/posts/1")
+                //.url("http://35.221.236.109:3000/getSetting")
                 // .url("http://35.221.236.109:3000/getSetting/id123")
                 //.url("http://35.221.236.109:3000/getGps/ID123456789ABC")
                 //資料庫測試        .url("http://35.221.236.109:3000/api880509")
@@ -715,21 +629,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 /**如果傳送過程有發生錯誤*/
-               // tvRes.setText(e.getMessage());
+                // tvRes.setText(e.getMessage());
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 /**取得回傳*/
-               // GetVal = response.body().string();
+                // GetVal = response.body().string();
                 GetVal = Objects.requireNonNull(response.body()).string();
-              //  tvRes.setText("GET回傳：\n" + GetVal);
+                //  tvRes.setText("GET回傳：\n" + GetVal);
 
                 System.out.print("Get:");
                 System.out.print(GetVal);
                 try {
-                    split(GetVal);
-                    System.out.print(split(GetVal));
+                    //split(GetVal);
+                    //System.out.print(split(GetVal));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -737,95 +651,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
-    public List<String> split(String jsonArray) throws Exception {
-        List<String> splittedJsonElements = new ArrayList<String>();
-        ObjectMapper jsonMapper = new ObjectMapper();
-        JsonNode jsonNode = jsonMapper.readTree(jsonArray);
 
-        if (jsonNode.isArray()) {
-            ArrayNode arrayNode = (ArrayNode) jsonNode;
-            for (int i = 0; i <arrayNode.size(); i++) {
-                JsonNode individualElement = arrayNode.get(i);
-                splittedJsonElements.add(individualElement.toString());
-            }
-        }
-        return splittedJsonElements;
-    }
-
-    private final OkHttpClient client = new OkHttpClient();
-        public void run() throws Exception {
-            Request request = new Request.Builder()
-                    .url("http://publicobject.com/helloworld.txt")
-                    .build();
-            Response response = client.newCall(request).execute();
-            if (!response.isSuccessful()) throw new IOException("Unexpected code "+response);
-            Headers responseHeaders = response.headers();
-            for (int i = 0; i < responseHeaders.size(); i ++) {
-                System.out.println(responseHeaders.name(i)+ ": " +responseHeaders.value(i));
-            }
-            System.out.println(response.body().string());
-        }
-
-    private void sendPOST() {
-        String SVal = MyAppInst.getVal('S');
-        String MVal = MyAppInst.getVal('M');
-        String TVal = MyAppInst.getVal('T');
-        String PVal = MyAppInst.getVal('P');
-        if (SVal == null || MVal == null || TVal == null || PVal == null) {
-            return;
-        }
-        if (!PostFlag.Flag) return;
-        TextView tvRes = findViewById(R.id.text_Respond);
-        /**建立連線*/
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
-                .build();
-        /**設置傳送所需夾帶的內容*/
-        int topspeed = 0;
-
-        FormBody formBody = new FormBody.Builder()
-                /*.add("id", "3")
-                .add("speed", "1")
-                .add("miliage", "1000")
-                .add("exercise", "300")
-                .add("topspeed", "30")*/
-                .add("id", id.toString())
-                .add("speed", SVal)
-                .add("miliage", MVal)
-                .add("exercise", TVal)
-                .add("topspeed", PVal)
-                .build();
-        /**設置傳送需求*/
-        Request request = new Request.Builder()
-                .url("https://jsonplaceholder.typicode.com/posts")
-                //.url("http://35.221.236.109:3000/api880509")//資料庫測試
-                .addHeader("Content-Type", "x-www-form-urlencoded")
-
-                //.url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=2")
-                .post(formBody)
-                .build();
-        /**設置回傳*/
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                /**如果傳送過程有發生錯誤*/
-                tvRes.setText(e.getMessage());
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                /**取得回傳*/
-                tvRes.setText("POST回傳：\n" + response.body().string());
-            }
-        });
-        SVal = null;
-        MVal = null;
-        TVal = null;
-        PVal = null;
-    }
-
-    /**RxJava**/
+    /**
+     * RxJava
+     **/
     protected void initEventListeners() {
         compositeDisposable.add(rxBluetooth.observeBluetoothState()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -869,5 +698,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     }
                 }));
+    }
+
+    /**
+     * hide keyboard
+     **/
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            // 獲得當前得到焦點的View，一般情況下就是EditText（特殊情況就是軌跡求或者實體案件會移動焦點）
+            View v = getCurrentFocus();
+            if (isShouldHideInput(v, ev)) {
+                hideSoftInput(v.getWindowToken());
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void hideSoftInput(IBinder token) {
+        if (token != null) {
+            InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(token,
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+        }
+    }
+
+    /**
+     * 根據EditText所在座標和用戶點擊的座標相對比，來判斷是否隱藏鍵盤，因爲當用戶點擊EditText時沒必要隱藏
+     *
+     * @param v
+     * @param event
+     * @return
+     */
+    private boolean isShouldHideInput(View v, MotionEvent event) {
+        if (v != null && (v instanceof EditText)) {
+            int[] l = {0, 0};
+            v.getLocationInWindow(l);
+            int left = l[0], top = l[1], bottom = top + v.getHeight(), right = left
+                    + v.getWidth();
+            if (event.getX() > left && event.getX() < right
+                    && event.getY() > top && event.getY() < bottom) {
+                // 點擊EditText的事件，忽略它。
+                return false;
+            } else {
+                return true;
+            }
+        }
+        // 如果焦點不是EditText則忽略，這個發生在視圖剛繪製完，第一個焦點不在EditView上，和用戶用軌跡球選擇其他的焦點
+        return false;
     }
 }
