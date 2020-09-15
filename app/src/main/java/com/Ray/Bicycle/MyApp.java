@@ -37,9 +37,12 @@ import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 
 import org.jetbrains.annotations.NotNull;
+import org.reactivestreams.Subscription;
 
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class MyApp extends Application {
@@ -65,6 +68,7 @@ public class MyApp extends Application {
     public OutputStream outputStream = null;
     private BluetoothAdapter bluetoothAdapter;
     public FlagAddress BTRevSta = new FlagAddress(false);
+    public FlagAddress DangerFlag = new FlagAddress(true);
     public String DevAddress, DevName;
     private String TAG = "BTSta";
     /**
@@ -91,13 +95,36 @@ public class MyApp extends Application {
      **/
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
     private static final int NOTIFY_REQUEST_ID = 300;
-    Context context;
+    //Context context;
     /**
      * Timer
      */
     private int count = 0;
 
+    /**
+     * RxDanger
+     */
+    Subscription mSubscription;
 
+
+
+   public void ScanDanger(/*AlertDialog Dia*/){  //Temporarily reserved
+       RxDanger rxDanger = new RxDanger();
+        compositeDisposable.add(rxDanger.RxDangerStream("A")
+                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
+                .subscribe(s -> {
+                    if(s.equals("A"))
+                        System.out.println("recv:A");
+                    //Dia.show();
+                }, throwable -> {
+                    //BTRevSta.Flag = false;
+                    // Error occured
+                    System.out.println("Recv Danger Error");
+                }));
+
+
+    }
     @Override
     public void onCreate() {
         super.onCreate();
@@ -124,7 +151,7 @@ public class MyApp extends Application {
         //System.out.println(count);
         if(BTRevSta.Flag)str_process();
         //if()
-            DangerNow();
+        DangerNow();
 
         //Toast.makeText(getBaseContext(), Integer.toString(count), 300).show();
         handler.postDelayed(runnable,1000);
@@ -310,9 +337,10 @@ public class MyApp extends Application {
         }
         String codi = getVal('D');
         if (codi.equals("Y")) {
-            setVibrate(1000);
+            //setVibrate(1000);
             //DanFlag.Flag = false;
-            showNotification();
+            if(DangerFlag.Flag)showNotification();
+            System.out.println(DangerFlag.Flag);
             //mainActivity.Danger_Msg();
             //mediaPlayer.start();
             //if(Alert.Flag)Danger_Msg();
@@ -328,6 +356,7 @@ public class MyApp extends Application {
                     NOTIFY_REQUEST_ID,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
+            //PendingIntent MutePend =
             final Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getApplicationContext().getPackageName() + "/" + R.raw.sound);
             System.out.println(soundUri);
             //final Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.sound);
@@ -335,6 +364,7 @@ public class MyApp extends Application {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                     .build();
+            Notification.Action action = new Notification.Action.Builder(0,"確定",pendingIntent).build();
             NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
             Notification.Builder builder = new Notification.Builder(this)
                     .setWhen(System.currentTimeMillis())
@@ -345,7 +375,10 @@ public class MyApp extends Application {
                     .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
                     .setDefaults(Notification.DEFAULT_VIBRATE)
                     .setSound(soundUri, audioAttributes)
-                    .setContentIntent(pendingIntent);
+                    .setContentIntent(pendingIntent)
+                    //.addAction(action);
+                    .setAutoCancel(true);
+
             NotificationChannel channel;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 channel = new NotificationChannel(TEST_NOTIFY_ID

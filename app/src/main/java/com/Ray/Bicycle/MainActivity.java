@@ -170,6 +170,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initEventListeners();
         CheckSetting();
         SpeedDialog();
+        //MyAppInst.ScanDanger(Danger_Msg());
+        //MyAppInst.ScanDanger();
     }
 
     protected Object getSetting(String Sel) {
@@ -207,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name, Name.equals("尚未選擇裝置") ?
                 "" : state ? "已連線" : "未連線"));
         BTConnFlag.Flag = state;
+        btBTConct.setEnabled(!state);
     }
 
 
@@ -303,6 +306,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            System.out.println("Buzz:"+ BuzFlag.Flag);
+            MyAppInst.DangerFlag.Flag = BuzFlag.Flag;
+            //DanFlag.Flag = BuzFlag.Flag;
             //MyAppInst.str_process();
             //sendPOST();
         });
@@ -371,8 +377,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btClear.setOnClickListener(v -> {
 
             //MyAppInst.BTValTmp.delete(0, MyAppInst.BTValTmp.length());
-            Danger_Msg();
-
+            //Danger_Msg();
+            //MyAppInst.ScanDanger();
         });
         btDisplay.setOnClickListener(v -> {
             Toast.makeText(this, MyAppInst.getVal('A'), Toast.LENGTH_LONG).show();
@@ -471,6 +477,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onStart() {
         CheckSetting();
         addUserId();
+        //MyAppInst.ScanDanger();
         try {
             MyAppInst.writeBT(BTSendMsg.toString());
         } catch (Exception e) {
@@ -578,8 +585,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public void Danger_Msg() {
-        new AlertDialog.Builder(MainActivity.this)
+    public AlertDialog Danger_Msg() {
+        return new AlertDialog.Builder(MainActivity.this)
                 .setIcon(R.drawable.ic_baseline_warning_48)
                 .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
                 .setPositiveButton("確定", new DialogInterface.OnClickListener() {
