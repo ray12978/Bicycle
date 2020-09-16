@@ -70,7 +70,7 @@ public class RxOkHttp3 {
         Request request = new Request.Builder()
                 //.url("https://jsonplaceholder.typicode.com/posts/1")
                 //.url("http://35.221.236.109:3000/getSetting")
-                // .url("http://35.221.236.109:3000/getSetting/id123")
+                //.url("http://35.221.236.109:3000/getSetting/id123")
                 //.url("http://35.221.236.109:3000/getGps/ID123456789ABC")
                 .url("http://35.221.236.109:3000/getGps/ABC123")
                 //資料庫測試        .url("http://35.221.236.109:3000/api880509")

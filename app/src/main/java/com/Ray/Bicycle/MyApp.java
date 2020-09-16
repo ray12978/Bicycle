@@ -35,6 +35,7 @@ import android.widget.Toast;
 
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
+import com.google.android.datatransport.runtime.scheduling.jobscheduling.SchedulerConfig;
 
 import org.jetbrains.annotations.NotNull;
 import org.reactivestreams.Subscription;
@@ -49,7 +50,7 @@ public class MyApp extends Application {
 
     public static MyApp appInstance;
 
-    public MainActivity mainActivity = new MainActivity();
+    //public MainActivity mainActivity = new MainActivity();
     public static synchronized MyApp getAppInstance() {
         return appInstance;
     }
@@ -69,6 +70,7 @@ public class MyApp extends Application {
     private BluetoothAdapter bluetoothAdapter;
     public FlagAddress BTRevSta = new FlagAddress(false);
     public FlagAddress DangerFlag = new FlagAddress(true);
+    public FlagAddress BTRevFlag = new FlagAddress(false);
     public String DevAddress, DevName;
     private String TAG = "BTSta";
     /**
@@ -297,7 +299,7 @@ public class MyApp extends Application {
                     // This will be called every single byte received
                     System.out.print("Recv byte:");
                     System.out.println(aByte);
-
+                    BTRevFlag.Flag = true;
                     //SavByte(aByte);
                     //System.out.println(Arrays.toString(buffer));
                     //System.out.println(buffer[buffer.length-1]);
