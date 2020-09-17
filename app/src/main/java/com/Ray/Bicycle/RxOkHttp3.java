@@ -113,7 +113,7 @@ public class RxOkHttp3 {
      * POST
      **/
     private void PostVal() {
-        String id = (String) mainActivity.getSetting("id");
+        String id = (String) mainActivity.getSetting("id","str");
         String SVal = MyAppInst.getVal('S');
         String MVal = MyAppInst.getVal('M');
         String TVal = MyAppInst.getVal('T');

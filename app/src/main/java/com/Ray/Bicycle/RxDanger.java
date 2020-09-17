@@ -11,6 +11,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class RxDanger {
+
     private Flowable<String> dangerStream;
     public Flowable<String> RxDangerStream(String Msg){
         if(dangerStream == null) {

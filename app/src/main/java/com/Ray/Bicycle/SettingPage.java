@@ -76,13 +76,20 @@ public class SettingPage extends AppCompatActivity  {
         boolean Cloud = prefs.getBoolean("cloud",false);
         String NbSet =  prefs.getString("nbIot",null);
         String userID = prefs.getString("id",null);
+        boolean PTimeSw = prefs.getBoolean("develop",false);
+        String  postVal = prefs.getString("postTime",null);
+        int postTime = postVal == null ? -1:Integer.parseInt(postVal);
+        System.out.print("posttime:");
+        System.out.println(postTime);
         switch (Select){
             case "cloud":
                 return Cloud;
             case "nb":
-                return Cloud ? NbSet:"null";
+                return Cloud ? NbSet : "null";
             case "id":
                 return userID;
+            case "time":
+                return PTimeSw ? postTime : 0;
             default:
                 return null;
         }
@@ -96,6 +103,8 @@ public class SettingPage extends AppCompatActivity  {
                 .putBoolean("cloud",(Boolean) getSetting("cloud"))
                 .putString("nb",(String) getSetting("nb"))
                 .putString("id",(String) getSetting("id"))
+
+                .putInt("postTime",(Integer) getSetting("time"))
                 .apply();
         System.out.println("Shared!");
     }
@@ -120,20 +129,31 @@ public class SettingPage extends AppCompatActivity  {
     }
     public static class SettingsFragment extends PreferenceFragmentCompat {
         EditTextPreference preference = findPreference("id");
+        EditTextPreference postPreference = findPreference("postTime");
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
             this.preference = ((EditTextPreference) getPreferenceScreen() //put this in the onCreate
                     .findPreference("id"));
+            this.postPreference = getPreferenceScreen().findPreference("postTime");
             preference.setOnBindEditTextListener(new EditTextPreference.OnBindEditTextListener() {
                 @Override
                 public void onBindEditText(@NonNull EditText editText) {
-                    editText.setInputType( InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD); // set only numbers allowed to input
+                    editText.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD); // set only numbers allowed to input
                     editText.selectAll(); // select all text
                     int maxLength = 14;
                     editText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength)}); // set maxLength to 2
                 }
             });
+            postPreference.setOnBindEditTextListener(new EditTextPreference.OnBindEditTextListener(){
+            @Override
+            public void onBindEditText(@NonNull EditText editText) {
+                editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED); // set only numbers allowed to input
+                editText.selectAll(); // select all text
+                int maxLength = 4;
+                editText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength)}); // set maxLength to 2
+            }
+        });
         }
 
 

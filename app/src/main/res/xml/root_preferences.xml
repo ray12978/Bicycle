@@ -19,13 +19,27 @@
             app:key="cloud"
             app:title="@string/Cloud_title" />
         <ListPreference
-            app:defaultValue="reply"
+            app:defaultValue="null"
             app:dependency="cloud"
             app:entries="@array/nbIot_entries"
             app:entryValues="@array/nbIot_values"
-            app:key="reply"
+            app:key="nbIot"
             app:title="@string/nb_title"
             app:useSimpleSummaryProvider="true" />
+
+
+    </PreferenceCategory>
+    <PreferenceCategory app:title="@string/develop_header">
+
+        <SwitchPreferenceCompat
+            app:key="develop"
+            app:title="@string/develop_title" />
+        <EditTextPreference
+            app:dependency="develop"
+            app:key="postTime"
+            app:title="@string/post_time_title"
+            app:useSimpleSummaryProvider="true"
+            />
 
 
     </PreferenceCategory>

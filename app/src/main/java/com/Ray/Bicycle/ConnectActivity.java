@@ -212,7 +212,6 @@ public class ConnectActivity extends AppCompatActivity {
                 BT.edit()
                         .putString("Name" , Name)
                         .putString("Address" , Address)
-
                         .apply();
                 startActivity(intent);
                 finish();
@@ -254,9 +253,5 @@ public class ConnectActivity extends AppCompatActivity {
         public int getItemCount() {
             return bluetoothAdapter.getBondedDevices().size() + discoveredDevices.size();
         }
-    }
-    public BluetoothDevice getDevice(){
-        if(BTDevice!=null) return BTDevice;
-        return null;
     }
 }

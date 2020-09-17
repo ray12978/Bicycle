@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private String address, Name;
     private String UserName;
     public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock{L,F,N},[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser{T,J,N},[5]Buzzer{E,N},[6]CloudMode{Y,N}
-    public TextView text_Respond;
+    public TextView text_Respond,SpeedView,MileageView;
     /**
      * Bluetooth
      **/
@@ -132,14 +132,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress BTConnFlag = new FlagAddress(false);
     String id;
     String nb;
+    boolean cloud;
+    int postTime;
+    int preAllM;
     /*******TimePicker*********/
     private TimePickerDialog dialog = new TimePickerDialog(this);
     /**
      * Shared
      **/
     private SharedPreferences BTWrData;
-
-
+    private SharedPreferences BTReData;
+    private RxTimerUtil rxTimer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,11 +156,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         address = deviceAddress;
         Name = deviceName;
         text_Respond = findViewById(R.id.text_Respond);
+        SpeedView = findViewById(R.id.SpeedView);
+        MileageView = findViewById(R.id.MileageView);
         BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
         loadingDialog = new LoadingDialog(MainActivity.this);
         /***********SharedPreference***************/
         BTWrData = getSharedPreferences("BTMsg" , MODE_PRIVATE);
+        BTReData = getSharedPreferences("BTShare",MODE_PRIVATE);
         /**********Layout***************/
         toolbar = findViewById(R.id.toolbar);
         drawer = findViewById(R.id.drawer_layout_Main);
@@ -175,39 +181,64 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         CheckSetting();
         SpeedDialog();
         UpdateBTMsg();
+        rxTimer = new RxTimerUtil();
+        TimeTest();
         //rxBluetoothWrite.TimeTest();
         //MyAppInst.ScanDanger(Danger_Msg());
         //MyAppInst.ScanDanger();
     }
 
-    protected Object getSetting(String Sel) {
-        if (Sel.equals("cloud")) {
+    protected Object getSetting(String Sel,String type) {
+        /*if (type.equals("bool")) {
             boolean ans = getSharedPreferences("UserSetting", MODE_PRIVATE)
                     .getBoolean(Sel, false);
             return ans;
         }
-        String ans = getSharedPreferences("UserSetting", MODE_PRIVATE)
+        if(type.equals("int")){
+            int ans = getSharedPreferences("UserSetting" , MODE_PRIVATE)
+                    .getInt(Sel,0);
+            return ans;
+        }*/
+        switch (type){
+            case "bool":
+                boolean Sbool = getSharedPreferences("UserSetting", MODE_PRIVATE)
+                        .getBoolean(Sel, false);
+                return Sbool;
+            case "str":
+                String Sstr = getSharedPreferences("UserSetting", MODE_PRIVATE)
+                        .getString(Sel, "null");
+                return Sstr;
+            case "int":
+                int Sint = getSharedPreferences("UserSetting" , MODE_PRIVATE)
+                        .getInt(Sel,0);
+                return Sint;
+        }
+        /*String ans = getSharedPreferences("UserSetting", MODE_PRIVATE)
                 .getString(Sel, "null");
-
         //System.out.println(Sel);
         if (Sel.equals("nb") || Sel.equals("id")) return ans;
         assert ans != null;
-        return !ans.equals("null");
+        return !ans.equals("null");*/
+        return null;
     }
 
     private void CheckSetting() {
-        nb = (String) getSetting("nb");
-        id = (String) getSetting("id");
-        PostFlag.Flag = (Boolean) getSetting("cloud");
+        nb = (String) getSetting("nb","str");
+        id = (String) getSetting("id","str");
+        PostFlag.Flag = (Boolean) getSetting("cloud","bool");
         NbFlag.Flag = nb.equals("使用NB-IoT上傳");
         if (PostFlag.Flag) BTSendMsg.replace(6, 7, "Y");
         else BTSendMsg.replace(6, 7, "N");
+        postTime = (Integer) getSetting("postTime","int");
         System.out.print("nb狀態:");
         System.out.println(nb);
         System.out.print("cloud狀態:");
-        System.out.println(NbFlag.Flag);
+        //System.out.println(NbFlag.Flag);
+        System.out.println(PostFlag.Flag);
         System.out.print("id:");
         System.out.println(id);
+        System.out.print("PostTime:");
+        System.out.println(postTime);
     }
 
     public void DpBTConnState(boolean state) {
@@ -217,7 +248,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BTConnFlag.Flag = state;
         btBTConct.setEnabled(!state);
     }
-
 
     void SpeedDialog() {
         final String[] num = new String[1];
@@ -242,10 +272,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
     }
+
     void UpdateBTMsg(){
 
         BTWrData.edit()
-                .clear()
+                //.clear()
                 .putString("SendMsg" , BTSendMsg.toString())
                 .apply();
         System.out.println(getSharedPreferences("BTMsg", MODE_PRIVATE)
@@ -288,6 +319,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+            if (!bluetoothAdapter.isEnabled()) {
+                Intent intentBluetoothEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivity(intentBluetoothEnable);
+                return;
+            }
             if (MyAppInst.connDevice(device)) DpBTConnState(true);
             else DpBTConnState(false);
             //loadingDialog.dismissDialog();
@@ -393,7 +429,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         btClear.setOnClickListener(v -> {
+            try {
+                MyAppInst.writeBT("aaa");
 
+                Thread.sleep(500);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             //MyAppInst.BTValTmp.delete(0, MyAppInst.BTValTmp.length());
             //Danger_Msg();
             //MyAppInst.ScanDanger();
@@ -439,10 +481,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                if (!BTConnFlag.Flag) {
+                /*if (!BTConnFlag.Flag) {
                     Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
                     break;
-                }
+                }*/
                 Intent intent3 = new Intent(MainActivity.this, SettingPage.class);
                 startActivity(intent3);
                 onStop();
@@ -495,17 +537,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onStart() {
         CheckSetting();
         addUserId();
+        UpdateBTMsg();
         //MyAppInst.ScanDanger();
-        try {
+        /*try {
             MyAppInst.writeBT(BTSendMsg.toString());
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
         super.onStart();
     }
 
     @Override
     protected void onStop() {
+        rxTimer.cancel();
         super.onStop();
     }
 
@@ -515,6 +559,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         SharedPreferences.Editor BTEdit = BTDetail.edit();
         BTEdit.clear();
         BTEdit.apply();
+        rxTimer.cancel();
         if (rxBluetooth != null) {
             // Make sure we're not doing discovery anymore
             rxBluetooth.cancelDiscovery();
@@ -598,7 +643,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             MyAppInst.str_process();
             //sendPOST();
         } else {
-
+            BTSendMsg.replace(1, 3, "00");
         }
 
     }
@@ -724,7 +769,92 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 }));
     }
+    public void TimeTest() {
+        rxTimer.interval(200, new RxTimerUtil.IRxNext() {
+            @Override
+            public void doNext(Object number) {
+                //Log.e("home_show_three", "======MainActivity======" + number);
+                sub();
+                //System.out.println(number);
+            }
+        });
+    }
+    ObservableOnSubscribe<String> observableOnSubscribe = new ObservableOnSubscribe<String>() {
+        @Override
+        public void subscribe(ObservableEmitter<String> emitter) {
+            //System.out.println("已經訂閱：subscribe，获取发射器");
+            // if (RxLocation != null)
+            //    emitter.onNext(RxLocation);
+            //
+            String Sval = BTReData.getString("S",null);
+            //String Mval = BTReData.getString("M",null);
+            int AllM = BTReData.getInt("Mi",0);
+            if(Sval!=null && AllM!=0){
+                if(preAllM == AllM)return;
 
+
+                //if(BTSendMsg.equals("null"))System.out.println("BTReData null");
+                emitter.onNext(Sval+ ',' + AllM);
+                Sval = null;
+                preAllM = AllM;
+                AllM = 0;
+                System.out.println("SVMV信號發射：onComplete" + Sval + ',' + AllM*1.21);
+            }
+
+            //System.out.println("SVMV信號發射：onComplete" + Sval + ',' + AllM);
+        }
+    };
+    /**
+     * 创建被观察者，并带上被观察者的订阅
+     */
+    Observable<String> observable = Observable.create(observableOnSubscribe);
+
+    final Disposable[] disposable = new Disposable[1];
+
+    Observer<String> observer = new Observer<String>() {
+        @Override
+        public void onSubscribe(Disposable d) {
+            disposable[0] = d;
+            //System.out.println("已经订阅：onSubscribe，获取解除器");
+        }
+
+        @Override
+        public void onNext(String string) {
+            System.out.println("SVMV信号接收：onNext " + string);
+            String speed = string.substring(0,3);
+            String mileage = string.substring(4);
+            System.out.println(speed);
+            System.out.println(mileage);
+            SpeedView.setText(String.format("現在時速:%skm/s", speed));
+            MileageView.setText(String.format("總里程數:%s公尺", mileage));
+            //SetMark(integer);
+            //System.out.println(string);
+            //SpeedView.setText();
+
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            //System.out.println("SVMV信号接收：onError " + e.getMessage());
+            cancel();
+        }
+
+        @Override
+        public void onComplete() {
+            //System.out.println("SVMV信号接收：onComplete");
+        }
+    };
+
+    public void sub() {
+        //System.out.println("SVMV開始訂閱：subscribe");
+        observable.subscribe(observer);
+    }
+
+    public void cancel() {
+       // System.out.println("SVMV取消訂閱：unsubscribe");
+        if (disposable[0] != null)
+            disposable[0].dispose();
+    }
     /**
      * hide keyboard
      **/

@@ -23,6 +23,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -40,9 +41,14 @@ import com.google.android.datatransport.runtime.scheduling.jobscheduling.Schedul
 import org.jetbrains.annotations.NotNull;
 import org.reactivestreams.Subscription;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
 import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
@@ -90,6 +96,7 @@ public class MyApp extends Application {
      * String
      **/
     public String SVal, MVal, danger;
+    private int AllM;
     private int[] StrPosition = new int[4];
 
     /**
@@ -102,13 +109,18 @@ public class MyApp extends Application {
      * Timer
      */
     private int count = 0;
+    /**
+     * RxTimer
+     */
+    RxBluetoothWrite rxBluetoothWrite = new RxBluetoothWrite();
+    String BTSendMsg ;
+    private RxTimerUtil rxTimer = new RxTimerUtil();
+    int cnt = 0;
 
     /**
-     * RxDanger
+     * SharedBTValue
      */
-    Subscription mSubscription;
-
-
+    private SharedPreferences BTShare;
 
    public void ScanDanger(/*AlertDialog Dia*/){  //Temporarily reserved
        RxDanger rxDanger = new RxDanger();
@@ -136,11 +148,16 @@ public class MyApp extends Application {
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+        BTSendMsg = getSharedPreferences("BTMsg", MODE_PRIVATE)
+                .getString("SendMsg", "null");
+        BTShare = getSharedPreferences("BTShare",MODE_PRIVATE);
 
+        AllM = BTShare.getInt("Mi",0);
         //inputStream = rxBluetooth.observeConnectionState()
-
+        //ScanDanger();
 
     }
+
     /****/
     public void afficher() {
         //Toast.makeText(getBaseContext(), dateFormat.format(new Date()), 300).show();
@@ -271,8 +288,10 @@ public class MyApp extends Application {
                         bluetoothSocket -> {
                             // Connected to bluetooth device, do anything with the socket
                             System.out.println("conned");
+                            //System.out.println( BTRevSta.Flag);
                             socket = bluetoothSocket;
                             ReadBT();
+                            TimeTest();
                             Sta.set(true);
                         }, throwable -> {
                             // On error
@@ -285,7 +304,6 @@ public class MyApp extends Application {
     }
 
     private void ReadBT() throws Exception {
-
         BluetoothConnection bluetoothConnection = new BluetoothConnection(socket);
         compositeDisposable.add(bluetoothConnection.observeByteStream()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -313,9 +331,7 @@ public class MyApp extends Application {
 
 
     protected void writeBT(String Msg) throws Exception {
-        buffer = new byte[256];
-        readCnt = new AtomicInteger();
-        BTValTmp.delete(0, BTValTmp.length());
+
         System.out.println("BTValTmp:" + BTValTmp);
         System.out.println("buffer:" + Arrays.toString(buffer));
         BluetoothConnection bluetoothConnection = new BluetoothConnection(socket);
@@ -334,7 +350,7 @@ public class MyApp extends Application {
 
     void DangerNow() {
         if (getVal('D') == null) {
-            System.out.println("D is null will be end");
+            //System.out.println("D is null will be end");
             return;
         }
         String codi = getVal('D');
@@ -349,7 +365,113 @@ public class MyApp extends Application {
             //loadingDialog.startLoadingDialog();
         }
     }
+    private void SharedBTValue(){
+        int MInt = MVal == null?-1:Integer.parseInt(MVal);
+        if(MInt!=-1) AllM = MInt + AllM;
+        BTShare.edit()
+                .putString("S",SVal)
+                .putString("M",MVal)
+                .putInt("Mi",AllM)
+                .apply();
+        System.out.println("Shared BTval!");
+    }
 
+
+    /**
+     *
+     */
+    public void TimeTest() {
+        rxTimer.interval(200, new RxTimerUtil.IRxNext() {
+            @Override
+            public void doNext(Object number) {
+               // Log.e("home_show_three", "======MainActivity======" + number);
+                sub();
+               // System.out.println(number);
+            }
+        });
+    }
+    ObservableOnSubscribe<String> observableOnSubscribe = new ObservableOnSubscribe<String>() {
+        @Override
+        public void subscribe(ObservableEmitter<String> emitter) {
+            //System.out.println("已經訂閱：subscribe，获取发射器");
+            // if (RxLocation != null)
+            //    emitter.onNext(RxLocation);
+            //
+            if(BTRevFlag.Flag){
+
+                if(BTSendMsg == null) return;
+                BTSendMsg = getSharedPreferences("BTMsg", MODE_PRIVATE)
+                        .getString("SendMsg", "null");
+                if(BTSendMsg.equals("null"))System.out.println("Msg null");
+
+                emitter.onNext(BTSendMsg);
+            }
+
+            //System.out.println("信號發射：onComplete");
+        }
+    };
+    /**
+     * 创建被观察者，并带上被观察者的订阅
+     */
+    Observable<String> observable = Observable.create(observableOnSubscribe);
+
+    final Disposable[] disposable = new Disposable[1];
+
+    Observer<String> observer = new Observer<String>() {
+        @Override
+        public void onSubscribe(Disposable d) {
+            disposable[0] = d;
+            //System.out.println("已经订阅：onSubscribe，获取解除器");
+        }
+
+        @Override
+        public void onNext(String string) {
+           // System.out.println("信号接收：onNext " + string);
+            //  SetMark(integer);
+
+            try {
+                if(readCnt.get()>=9){
+                    cnt++;
+                    if(cnt%5==0){
+                        writeBT(string);
+                        cnt=0;
+                    }
+                    buffer = new byte[256];
+                    readCnt = new AtomicInteger();
+                    BTValTmp.delete(0, BTValTmp.length());
+                    str_process();
+                    SharedBTValue();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void onError(Throwable e) {
+           // System.out.println("信号接收：onError " + e.getMessage());
+            cancel();
+        }
+
+        @Override
+        public void onComplete() {
+            //System.out.println("信号接收：onComplete");
+        }
+    };
+
+    public void sub() {
+        //System.out.println("開始訂閱：subscribe");
+        observable.subscribe(observer);
+    }
+
+    public void cancel() {
+        System.out.println("取消訂閱：unsubscribe");
+        if (disposable[0] != null)
+            disposable[0].dispose();
+    }
+    /**notification**/
     public void showNotification() {
         Log.d(TAG, "showNotification: ");
         try {
