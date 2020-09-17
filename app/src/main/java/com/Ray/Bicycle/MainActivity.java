@@ -274,8 +274,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     void UpdateBTMsg(){
-
-        BTWrData.edit()
+        if(addUserId()) BTWrData.edit()
                 //.clear()
                 .putString("SendMsg" , BTSendMsg.toString())
                 .apply();
@@ -295,8 +294,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
         Button btLck = findViewById(R.id.lck_btn); //上鎖按鈕
         /**HTTP按鈕*/
-        Button btPost = findViewById(R.id.button_POST);
-        Button btGET = findViewById(R.id.button_GET);
         btSpLit = findViewById(R.id.SpLit_btn);
         btBTDiscont.setOnClickListener((view) -> {
             MyAppInst.disconnect(btBTConct);
@@ -318,19 +315,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
+            if(address.equals("null")){
+                Toast.makeText(this, "藍芽連線失敗，請先設定藍芽", Toast.LENGTH_SHORT).show();
+                return;
+            }
             final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
             if (!bluetoothAdapter.isEnabled()) {
                 Intent intentBluetoothEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivity(intentBluetoothEnable);
                 return;
             }
+
             if (MyAppInst.connDevice(device)) DpBTConnState(true);
             else DpBTConnState(false);
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
             BTMsg(4, 5, "T", "J", LasFlag);
-            addUserId();
+            //addUserId();
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
@@ -348,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btBuzz.setOnClickListener(v -> {
             BTMsg(5, 6, "E", "N", BuzFlag);
-            addUserId();
+            //addUserId();
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
@@ -367,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btLck.setOnClickListener(v -> {
             BTMsg(0, 1, "L", "F", LckFlag);
-            addUserId();
+            //addUserId();
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
@@ -457,15 +459,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        /**HTTP按鈕動作**/
-        /**傳送POST**/
-        btPost.setOnClickListener(v -> {
-            /*if (id.length() != 0) //sendPOST();
-            else {
-                Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
-            }*/
-        });
-
     }
 
     /***********Navigation*************/
@@ -536,7 +529,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStart() {
         CheckSetting();
-        addUserId();
+        //addUserId();
         UpdateBTMsg();
         //MyAppInst.ScanDanger();
         /*try {
@@ -598,7 +591,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         System.out.println(BTSendMsg);
     }
 
-    void addUserId() {
+    private boolean addUserId() {
+        if(id.equals("null")){
+            Toast.makeText(this, "請先設定ID,設定>>設定使用者id", Toast.LENGTH_SHORT).show();
+            return false;
+        }
         UserName = id;
         while (UserName.length() < 14) UserName += '@';
         if (BTSendMsg.length() >= 8) {
@@ -606,6 +603,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             BTSendMsg.append(UserName);
         }
+        return true;
     }
 
     void Speed_Limit() throws Exception {
@@ -628,12 +626,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BTSendMsg.replace(1, 3, SpLtVal);
             }
             BTMsg(3, 4, "Y", "N", SpdFlag);
-            addUserId();
+
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
             Button_exterior(btSpLit, Off, On, 3, 'N');
             System.out.println(BTSendMsg);
-            if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
+            if (SendFlag.Flag) UpdateBTMsg();  //MyAppInst.writeBT(BTSendMsg.toString());
             try {
 
                 Thread.sleep(1000);
@@ -798,7 +796,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Sval = null;
                 preAllM = AllM;
                 AllM = 0;
-                System.out.println("SVMV信號發射：onComplete" + Sval + ',' + AllM*1.21);
+                System.out.println("SVMV信號發射：onComplete" + Sval + ',' + (AllM*1.21));
             }
 
             //System.out.println("SVMV信號發射：onComplete" + Sval + ',' + AllM);

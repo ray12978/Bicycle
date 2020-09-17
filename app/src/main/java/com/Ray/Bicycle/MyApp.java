@@ -97,7 +97,7 @@ public class MyApp extends Application {
      **/
     public String SVal, MVal, danger;
     private int AllM;
-    private int[] StrPosition = new int[4];
+    private int[] StrPosition = new int[5];
 
     /**
      * NOTIFY
@@ -116,11 +116,12 @@ public class MyApp extends Application {
     String BTSendMsg ;
     private RxTimerUtil rxTimer = new RxTimerUtil();
     int cnt = 0;
-
+    boolean FState;
     /**
      * SharedBTValue
      */
     private SharedPreferences BTShare;
+    private SharedPreferences BTWrData;
 
    public void ScanDanger(/*AlertDialog Dia*/){  //Temporarily reserved
        RxDanger rxDanger = new RxDanger();
@@ -145,11 +146,11 @@ public class MyApp extends Application {
 
         appInstance = this;
 
-
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        BTSendMsg = getSharedPreferences("BTMsg", MODE_PRIVATE)
-                .getString("SendMsg", "null");
+        BTWrData = getSharedPreferences("BTMsg", MODE_PRIVATE);
+        BTSendMsg = BTWrData.getString("SendMsg", "null");
+
         BTShare = getSharedPreferences("BTShare",MODE_PRIVATE);
 
         AllM = BTShare.getInt("Mi",0);
@@ -168,7 +169,7 @@ public class MyApp extends Application {
         //count++;
         //System.out.print("count:");
         //System.out.println(count);
-        if(BTRevSta.Flag)str_process();
+        //**//if(BTRevSta.Flag)str_process();
         //if()
         DangerNow();
 
@@ -222,8 +223,10 @@ public class MyApp extends Application {
 
     public void Save_Val(@NotNull StringBuffer StrBufTmp, int count) {
         if (buffer == null) return;
+
         // if (inputStream.available() <= 0)return;
         String a = new String(buffer, 0, count + 1);
+        if(a.charAt(0)!='S')return;
         StrBufTmp.replace(0, count + 1, a);
         //Thread.sleep(100);
         System.out.print("BTValTmp:");
@@ -238,11 +241,12 @@ public class MyApp extends Application {
         if (BTValTmp.length() == 0) return;
         if (BTValTmp.toString().charAt(0) == 'S') {
             for (int i = 0; i < BTValTmp.length(); i++) {
-                if (BTValTmp.toString().getBytes()[i] > 57) {
+                if (BTValTmp.toString().getBytes()[i] > 57/* && BTValTmp.toString().charAt(i)!='Y'&& BTValTmp.toString().charAt(i)!='N'*/) {
                     StrPosition[b] = i;
-                    b++;
+                    if(b!=StrPosition.length-1)b++;
                 }
             }
+            System.out.println( BTValTmp.toString()+','+StrPosition[1]+','+StrPosition[2]);
             SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
             MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
             danger = BTValTmp.toString().substring(BTValTmp.length() - 1, BTValTmp.length()).trim();
@@ -331,11 +335,25 @@ public class MyApp extends Application {
 
 
     protected void writeBT(String Msg) throws Exception {
+        BluetoothConnection blueConn = new BluetoothConnection(socket);
+
+        /*if(FState){
+            String NMsg = Msg.replace('F','N');
+            blueConn.send(NMsg);
+            FState = false;
+            return;
+        }*/
 
         System.out.println("BTValTmp:" + BTValTmp);
         System.out.println("buffer:" + Arrays.toString(buffer));
-        BluetoothConnection bluetoothConnection = new BluetoothConnection(socket);
-        bluetoothConnection.send(Msg); // String
+
+        blueConn.send(Msg); // String
+        if(Msg.charAt(0)=='F'){
+            String NMsg = Msg.replace('F','N');
+            BTWrData.edit().putString("SendMsg",NMsg).apply();
+            System.out.println("chang F to N");
+        }
+
         System.out.println("Now Send:" + Msg);
         Toast.makeText(this, "Now Send:" + Msg, Toast.LENGTH_SHORT).show();
     }
@@ -400,9 +418,11 @@ public class MyApp extends Application {
             if(BTRevFlag.Flag){
 
                 if(BTSendMsg == null) return;
-                BTSendMsg = getSharedPreferences("BTMsg", MODE_PRIVATE)
-                        .getString("SendMsg", "null");
-                if(BTSendMsg.equals("null"))System.out.println("Msg null");
+                BTSendMsg = BTWrData.getString("SendMsg", "null");
+                if(BTSendMsg.equals("null")){
+                    System.out.println("Msg null");
+                    return;
+                }
 
                 emitter.onNext(BTSendMsg);
             }
@@ -432,14 +452,15 @@ public class MyApp extends Application {
             try {
                 if(readCnt.get()>=9){
                     cnt++;
-                    if(cnt%5==0){
+                    if(cnt%5==0 && cnt!=0){
                         writeBT(string);
                         cnt=0;
                     }
                     buffer = new byte[256];
                     readCnt = new AtomicInteger();
-                    BTValTmp.delete(0, BTValTmp.length());
                     str_process();
+                    BTValTmp.delete(0, BTValTmp.length());
+
                     SharedBTValue();
                 }
 
