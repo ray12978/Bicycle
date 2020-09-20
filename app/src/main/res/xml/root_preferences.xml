@@ -12,7 +12,15 @@
 
 
     </PreferenceCategory>
+    <PreferenceCategory app:title="@string/feature_header">
 
+        <SwitchPreferenceCompat
+        app:key="noti"
+        app:title="@string/notify_title" />
+
+
+
+    </PreferenceCategory>
     <PreferenceCategory app:title="@string/cloud_header">
 
         <SwitchPreferenceCompat

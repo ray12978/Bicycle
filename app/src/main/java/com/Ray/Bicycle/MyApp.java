@@ -19,6 +19,7 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -56,7 +57,7 @@ public class MyApp extends Application {
 
     public static MyApp appInstance;
 
-    //public MainActivity mainActivity = new MainActivity();
+    public MainActivity mainActivity;
     public static synchronized MyApp getAppInstance() {
         return appInstance;
     }
@@ -77,6 +78,7 @@ public class MyApp extends Application {
     public FlagAddress BTRevSta = new FlagAddress(false);
     public FlagAddress DangerFlag = new FlagAddress(true);
     public FlagAddress BTRevFlag = new FlagAddress(false);
+    protected FlagAddress MuteFlag = new FlagAddress(false);
     public String DevAddress, DevName;
     private String TAG = "BTSta";
     /**
@@ -86,6 +88,7 @@ public class MyApp extends Application {
     RxBluetooth rxBluetooth = new RxBluetooth(this);
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     AtomicInteger readCnt = new AtomicInteger();
+    RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
     //private int i = 0;
     /**
      * ConnectActivity Object
@@ -95,7 +98,7 @@ public class MyApp extends Application {
     /**
      * String
      **/
-    public String SVal, MVal, danger;
+    public String SVal, MVal, danger,PVal,TVal,id;
     private int AllM;
     private int[] StrPosition = new int[5];
 
@@ -115,13 +118,16 @@ public class MyApp extends Application {
     RxBluetoothWrite rxBluetoothWrite = new RxBluetoothWrite();
     String BTSendMsg ;
     private RxTimerUtil rxTimer = new RxTimerUtil();
+    private RxPostTimer rxPostTimer = new RxPostTimer();
     int cnt = 0;
     boolean FState;
+    private PostValue postValue;
     /**
      * SharedBTValue
      */
     private SharedPreferences BTShare;
     private SharedPreferences BTWrData;
+    private SharedPreferences UserSetting;
 
    public void ScanDanger(/*AlertDialog Dia*/){  //Temporarily reserved
        RxDanger rxDanger = new RxDanger();
@@ -153,10 +159,13 @@ public class MyApp extends Application {
 
         BTShare = getSharedPreferences("BTShare",MODE_PRIVATE);
 
+        UserSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
         AllM = BTShare.getInt("Mi",0);
         //inputStream = rxBluetooth.observeConnectionState()
         //ScanDanger();
+        mainActivity = new MainActivity();
 
+        postValue = new PostValue();
     }
 
     /****/
@@ -187,7 +196,7 @@ public class MyApp extends Application {
     Runnable runnable = new Runnable() {
         public void run() {
             //afficher();
-            startCount();
+            //startCount();
 
         }
     };
@@ -229,8 +238,8 @@ public class MyApp extends Application {
         if(a.charAt(0)!='S')return;
         StrBufTmp.replace(0, count + 1, a);
         //Thread.sleep(100);
-        System.out.print("BTValTmp:");
-        System.out.println(BTValTmp);
+        //System.out.print("BTValTmp:");
+        //System.out.println(BTValTmp);
 
     }
 
@@ -246,15 +255,17 @@ public class MyApp extends Application {
                     if(b!=StrPosition.length-1)b++;
                 }
             }
-            System.out.println( BTValTmp.toString()+','+StrPosition[1]+','+StrPosition[2]);
+
+            //System.out.println( BTValTmp.toString()+','+StrPosition[1]+','+StrPosition[2]);
             SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
             MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
-            danger = BTValTmp.toString().substring(BTValTmp.length() - 1, BTValTmp.length()).trim();
-            //PVal = BTValTmp.toString().substring(StrPosition[3] + 1).trim();
-            Log.e("Tmp", BTValTmp.toString());
-            Log.e("S", SVal);
-            Log.e("M", MVal);
-            Log.e("danger", danger);
+            danger = BTValTmp.toString().substring(StrPosition[2], StrPosition[2]+1).trim();
+            TVal = Integer.toString(UserSetting.getInt("postTime",15000)/1000);
+            PVal = UserSetting.getString("TopS","0");
+            //Log.e("Tmp", BTValTmp.toString());
+            //Log.e("S", SVal);
+            //Log.e("M", MVal);
+            //Log.e("danger", danger);
             //Log.e("P", PVal);
             //BTValTmp.delete(0, BTValTmp.length());
         } /*else if (BTValTmp.toString().charAt(0) == 'B') {
@@ -267,7 +278,7 @@ public class MyApp extends Application {
     }
 
     public String getVal(char Select) {
-        if (SVal == null || MVal == null || danger == null)
+        if (SVal == null || MVal == null || danger == null || TVal == null|| PVal == null)
             return null;
         switch (Select) {
             case 'S':
@@ -278,6 +289,10 @@ public class MyApp extends Application {
                 return danger;
             case 'A':
                 return BTValTmp.toString();
+            case 'T':
+                return TVal;
+            case 'P':
+                return PVal;
         }
         return "null";
     }
@@ -295,7 +310,8 @@ public class MyApp extends Application {
                             //System.out.println( BTRevSta.Flag);
                             socket = bluetoothSocket;
                             ReadBT();
-                            TimeTest();
+                            AutoWriteBT();
+
                             Sta.set(true);
                         }, throwable -> {
                             // On error
@@ -319,8 +335,8 @@ public class MyApp extends Application {
                     readCnt.getAndIncrement();
                     BTRevSta.Flag = true;
                     // This will be called every single byte received
-                    System.out.print("Recv byte:");
-                    System.out.println(aByte);
+                    //System.out.print("Recv byte:");
+                    //System.out.println(aByte);
                     BTRevFlag.Flag = true;
                     //SavByte(aByte);
                     //System.out.println(Arrays.toString(buffer));
@@ -337,34 +353,31 @@ public class MyApp extends Application {
     protected void writeBT(String Msg) throws Exception {
         BluetoothConnection blueConn = new BluetoothConnection(socket);
 
-        /*if(FState){
-            String NMsg = Msg.replace('F','N');
-            blueConn.send(NMsg);
-            FState = false;
-            return;
-        }*/
-
-        System.out.println("BTValTmp:" + BTValTmp);
-        System.out.println("buffer:" + Arrays.toString(buffer));
-
+        if(Msg.charAt(0) == 'L' && Msg.charAt(4) == 'T'){
+            StringBuffer A =new StringBuffer();
+            A.append(Msg);
+            A.replace(4,5,"J");
+            System.out.println("change T to J");
+            Msg = A.toString();
+        }
         blueConn.send(Msg); // String
         if(Msg.charAt(0)=='F'){
             String NMsg = Msg.replace('F','N');
+            mainActivity.BTSendMsg.replace(0,1,"N");
             BTWrData.edit().putString("SendMsg",NMsg).apply();
-            System.out.println("chang F to N");
-        }
+            System.out.println("change F to N");
 
+        }
         System.out.println("Now Send:" + Msg);
-        Toast.makeText(this, "Now Send:" + Msg, Toast.LENGTH_SHORT).show();
     }
 
     /**
      * 手機震動
      **/
-    public void setVibrate(int time) {
+   /* public void setVibrate(int time) {
         Vibrator myVibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
         myVibrator.vibrate(time);
-    }
+    }*/
 
     void DangerNow() {
         if (getVal('D') == null) {
@@ -375,7 +388,8 @@ public class MyApp extends Application {
         if (codi.equals("Y")) {
             //setVibrate(1000);
             //DanFlag.Flag = false;
-            if(DangerFlag.Flag)showNotification();
+            boolean notiFlag = UserSetting.getBoolean("noti",false);
+            if(DangerFlag.Flag && !MuteFlag.Flag && notiFlag)showNotification();
             System.out.println(DangerFlag.Flag);
             //mainActivity.Danger_Msg();
             //mediaPlayer.start();
@@ -384,21 +398,25 @@ public class MyApp extends Application {
         }
     }
     private void SharedBTValue(){
-        int MInt = MVal == null?-1:Integer.parseInt(MVal);
+        int MInt;
+        if(MVal == null || MVal.equals("")) MInt = -1;
+        else MInt = Integer.parseInt(MVal)*121;
+        //int MInt = MVal == null?-1:Integer.parseInt(MVal);
         if(MInt!=-1) AllM = MInt + AllM;
         BTShare.edit()
                 .putString("S",SVal)
                 .putString("M",MVal)
                 .putInt("Mi",AllM)
                 .apply();
-        System.out.println("Shared BTval!");
+        //System.out.println("Shared BTval!");
     }
 
 
     /**
-     *
+     * AutoWriteBT
      */
-    public void TimeTest() {
+    public void AutoWriteBT() {
+
         rxTimer.interval(200, new RxTimerUtil.IRxNext() {
             @Override
             public void doNext(Object number) {
@@ -463,7 +481,7 @@ public class MyApp extends Application {
 
                     SharedBTValue();
                 }
-
+                DangerNow();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -492,11 +510,50 @@ public class MyApp extends Application {
         if (disposable[0] != null)
             disposable[0].dispose();
     }
+    /**AutoPost**/
+    public void AutoPostVal() {
+        //MainActivity mainActivity = new MainActivity();
+        SharedPreferences userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
+        boolean PhFlag = userSetting.getBoolean("ph",false);
+        boolean ClFlag = userSetting.getBoolean("cloud",false);
+        if(!PhFlag || !ClFlag){
+            System.out.println("ph is close will return");
+            return;
+        }
+        //SharedPreferences userSetting = mainActivity.userSetting;
+        //int postTime =  mainActivity.postTime;
+        int postTime;
+        postTime = userSetting.getInt("postTime",15000);
+        rxPostTimer.interval(postTime, number -> {
+            //Log.e("home_show_three", "======MainActivity======" + number);
+            int Mile = BTShare.getInt("Mi",0);
+            int preMile = BTShare.getInt("preM",0);
+            String distance = String.valueOf(Mile - preMile);
+            System.out.println("PostTime:" + postTime);
+            getPostVal();
+            System.out.println("Mile:"+Mile);
+            System.out.println("preMile:"+preMile);
+            System.out.println("distance:"+distance);
+            rxOkHttp3.PostVal(id,SVal,distance,TVal,PVal);
+            //rxOkHttp3.displayVal(id,SVal,distance,TVal,PVal);
+            BTShare.edit()
+                    .putInt("preM",Mile)
+                    .apply();
+            //System.out.println(number);
+        });
+
+    }
+    void getPostVal(){
+        id = UserSetting.getString("id",null);
+    }
+
+
     /**notification**/
     public void showNotification() {
         Log.d(TAG, "showNotification: ");
         try {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
                     NOTIFY_REQUEST_ID,
                     intent,
@@ -509,7 +566,7 @@ public class MyApp extends Application {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                     .build();
-            Notification.Action action = new Notification.Action.Builder(0,"確定",pendingIntent).build();
+            //Notification.Action action = new Notification.Action.Builder(0,"確定",pendingIntent).build();
             NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
             Notification.Builder builder = new Notification.Builder(this)
                     .setWhen(System.currentTimeMillis())
@@ -551,4 +608,21 @@ public class MyApp extends Application {
     }
 
 
+}
+class ActionReceiver extends BroadcastReceiver {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (intent != null) {
+            int noti_id = intent.getIntExtra("noti_id", -1);
+
+            if (noti_id > 0) {
+                NotificationManager notificationManager = (NotificationManager) context
+                        .getSystemService(Context.NOTIFICATION_SERVICE);
+
+                notificationManager.cancel(noti_id);
+                System.out.println("cancel notify");
+            }
+        }
+    }
 }

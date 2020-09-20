@@ -74,22 +74,31 @@ public class SettingPage extends AppCompatActivity  {
     public Object getSetting(String Select){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean Cloud = prefs.getBoolean("cloud",false);
-        String NbSet =  prefs.getString("nbIot",null);
+        String NbSet =  prefs.getString("nbIot","null");
+        boolean NbBool = NbSet.equals("nbiot");
+        boolean PhBool = NbSet.equals("phone");
+        boolean NotiBool = prefs.getBoolean("noti",false);
         String userID = prefs.getString("id",null);
         boolean PTimeSw = prefs.getBoolean("develop",false);
-        String  postVal = prefs.getString("postTime",null);
-        int postTime = postVal == null ? -1:Integer.parseInt(postVal);
+        String postVal = prefs.getString("postTime","15000");
+        int postTime = postVal == null ? 15000:Integer.parseInt(postVal);
         System.out.print("posttime:");
         System.out.println(postTime);
         switch (Select){
             case "cloud":
                 return Cloud;
             case "nb":
-                return Cloud ? NbSet : "null";
+                return Cloud && NbBool;
             case "id":
                 return userID;
             case "time":
-                return PTimeSw ? postTime : 0;
+                return PTimeSw ? postTime*1000 : 15000;
+            case "postTimeSw":
+                return PTimeSw;
+            case "ph":
+                return Cloud && PhBool;
+            case "noti":
+                return NotiBool;
             default:
                 return null;
         }
@@ -101,10 +110,12 @@ public class SettingPage extends AppCompatActivity  {
     public void ShareSetting(){ //need keep run
         Setting.edit()
                 .putBoolean("cloud",(Boolean) getSetting("cloud"))
-                .putString("nb",(String) getSetting("nb"))
+                .putBoolean("nb",(Boolean) getSetting("nb"))
+                .putBoolean("postTimeSw",(Boolean) getSetting("postTimeSw"))
+                .putBoolean("ph",(Boolean) getSetting("ph"))
                 .putString("id",(String) getSetting("id"))
-
                 .putInt("postTime",(Integer) getSetting("time"))
+                .putBoolean("noti",(Boolean) getSetting("noti"))
                 .apply();
         System.out.println("Shared!");
     }

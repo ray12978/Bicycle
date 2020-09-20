@@ -53,15 +53,13 @@ import static android.content.ContentValues.TAG;
 public class RxOkHttp3 {
     private String GetVal;
     private LatLng Location;
-    private MyApp MyAppInst = MyApp.getAppInstance();
-    MainActivity mainActivity = new MainActivity();
 
     /**
      * GET
      **/
 
-    protected LatLng getLocation() {
-
+    protected LatLng getLocation(String id) {
+        String url = "http://35.221.236.109:3000/getGps/"+id;
         /**建立連線*/
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
@@ -72,7 +70,8 @@ public class RxOkHttp3 {
                 //.url("http://35.221.236.109:3000/getSetting")
                 //.url("http://35.221.236.109:3000/getSetting/id123")
                 //.url("http://35.221.236.109:3000/getGps/ID123456789ABC")
-                .url("http://35.221.236.109:3000/getGps/ABC123")
+                //.url("http://35.221.236.109:3000/getGps/ABC123")
+                .url(url)
                 //資料庫測試        .url("http://35.221.236.109:3000/api880509")
                 //.url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=1")
 //                .header("Cookie","")//有Cookie需求的話則可用此發送
@@ -112,16 +111,23 @@ public class RxOkHttp3 {
     /**
      * POST
      **/
-    private void PostVal() {
-        String id = (String) mainActivity.getSetting("id","str");
+    void displayVal(String id,String SVal,String MVal,String TVal,String PVal){
+        Log.d(TAG, "id: "+id);
+        Log.d(TAG, "SVal: "+SVal);
+        Log.d(TAG, "MVal: "+MVal);
+        Log.d(TAG, "TVal: "+TVal);
+        Log.d(TAG, "PVal: "+PVal);
+    }
+
+    protected void PostVal(String id,String SVal,String MVal,String TVal,String PVal) {
+        /*String id = (String) mainActivity.getSetting("id","str");
         String SVal = MyAppInst.getVal('S');
         String MVal = MyAppInst.getVal('M');
         String TVal = MyAppInst.getVal('T');
-        String PVal = "";
-        if (SVal == null || MVal == null || TVal == null || PVal == null) {
+        String PVal = MyAppInst.getVal('P');*/
+        if (SVal == null || MVal == null || TVal == null || PVal == null || id == null) {
             return;
         }
-        if (!mainActivity.PostFlag.Flag) return;
         /**建立連線*/
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
@@ -143,10 +149,9 @@ public class RxOkHttp3 {
                 .build();
         /**設置傳送需求*/
         Request request = new Request.Builder()
-                .url("https://jsonplaceholder.typicode.com/posts")
-                //.url("http://35.221.236.109:3000/api880509")//資料庫測試
+                //.url("https://jsonplaceholder.typicode.com/posts")
+                .url("http://35.221.236.109:3000/api880509")//資料庫測試
                 .addHeader("Content-Type", "x-www-form-urlencoded")
-
                 //.url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=2")
                 .post(formBody)
                 .build();
@@ -167,10 +172,6 @@ public class RxOkHttp3 {
                 System.out.println("POST回傳：\n" + response.body().string());
             }
         });
-        SVal = null;
-        MVal = null;
-        TVal = null;
-        PVal = null;
     }
 
     /**

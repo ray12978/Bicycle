@@ -3,20 +3,17 @@ package com.Ray.Bicycle;
 
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
-public class RxTimerUtil {
+public class RxMapTimer {
 
     private static Disposable mDisposable;
     private LatLng Location = new LatLng(24.922582, 121.422590);
@@ -101,7 +98,7 @@ public class RxTimerUtil {
     public void cancel() {
         if (mDisposable != null && !mDisposable.isDisposed()) {
             mDisposable.dispose();
-            Log.e("Sys", "======BT定时器取消======");
+            Log.e("Sys", "======Map定时器取消======");
         }
     }
 

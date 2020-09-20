@@ -2,6 +2,7 @@ package com.Ray.Bicycle;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -74,7 +75,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LatLng RxLocation;
     private LatLng TestLocation = new LatLng(24.922582, 121.422590);
     private boolean SubFlag = false;
-    private RxTimerUtil rxTimer = new RxTimerUtil();
+    private RxMapTimer rxTimer = new RxMapTimer();
+    private SharedPreferences userSetting;
+    private boolean MapReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +92,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("地圖");
-
+        userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
         mapFragment.getMapAsync(this);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setItemIconTintList(null);
@@ -118,6 +121,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onStart() {
+        GetBicycle();
         super.onStart();
     }
 
@@ -134,7 +138,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                Toast.makeText(this, "Share", Toast.LENGTH_SHORT).show();
+                /*if (!BTConnFlag.Flag) {
+                    Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
+                    break;
+                }*/
+                Intent intent3 = new Intent(MapsActivity.this, SettingPage.class);
+                startActivity(intent3);
+                onStop();
                 break;
 
         }
@@ -146,7 +156,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         getMyLocation();
-        TimeTest();
+        MapReady = true;
+        //GetBicycle();
     }
 
 
@@ -317,27 +328,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return data;
     }
 
-    private void TimeTest() {
+    private void GetBicycle() {
 
-        rxTimer.interval(5000, new RxTimerUtil.IRxNext() {
-            @Override
-            public void doNext(Object number) {
-                Log.e("home_show_three", "======MainActivity======" + number);
-                sub();
-                System.out.println(number);
-            }
-        });
+        rxTimer.interval(5000,
+                number -> {
+                    Log.e("home_show_three", "======MainActivity======" + number);
+                    sub();
+                    System.out.println(number);
+                });
 
     }
 
     ObservableOnSubscribe<LatLng> observableOnSubscribe = new ObservableOnSubscribe<LatLng>() {
         @Override
         public void subscribe(ObservableEmitter<LatLng> emitter) {
-            System.out.println("已經訂閱：subscribe，获取发射器");
-            RxLocation = rxOkHttp3.getLocation();
+            System.out.println("Map已經訂閱：subscribe，获取发射器");
+            String id = userSetting.getString("id",null);
+            if(id == null){
+                System.out.println("id null");
+                return;
+            }
+            System.out.println("id:"+id);
+            RxLocation = rxOkHttp3.getLocation(id);
             if (RxLocation != null)
                 emitter.onNext(RxLocation);
-            System.out.println("信號發射：onComplete");
+            System.out.println("Map信號發射：onComplete");
         }
     };
     /**
@@ -345,41 +360,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     Observable<LatLng> observable = Observable.create(observableOnSubscribe);
 
-    final Disposable[] disposable = new Disposable[1];
+    Disposable[] disposable = new Disposable[1];
 
     Observer<LatLng> observer = new Observer<LatLng>() {
         @Override
         public void onSubscribe(Disposable d) {
             disposable[0] = d;
-            System.out.println("已经订阅：onSubscribe，获取解除器");
+            System.out.println("Map已经订阅：onSubscribe，获取解除器");
         }
 
         @Override
         public void onNext(LatLng integer) {
-            System.out.println("信号接收：onNext " + integer);
+            System.out.println("Map信号接收：onNext " + integer);
             SetMark(integer);
 
         }
 
         @Override
         public void onError(Throwable e) {
-            System.out.println("信号接收：onError " + e.getMessage());
+            System.out.println("Map信号接收：onError " + e.getMessage());
             cancel();
         }
 
         @Override
         public void onComplete() {
-            System.out.println("信号接收：onComplete");
+            System.out.println("Map信号接收：onComplete");
         }
     };
 
     public void sub() {
-        System.out.println("開始訂閱：subscribe");
+        System.out.println("Map開始訂閱：subscribe");
         observable.subscribe(observer);
     }
 
     public void cancel() {
-        System.out.println("取消訂閱：unsubscribe");
+        System.out.println("Map取消訂閱：unsubscribe");
         if (disposable[0] != null)
             disposable[0].dispose();
     }
