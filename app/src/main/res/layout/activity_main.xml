@@ -141,13 +141,13 @@
                     android:id="@+id/buzz_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"
-                    android:textSize="20sp"
+                    android:textSize="16sp"
 
                     android:layout_span="1"
                     android:background="@drawable/button_style_off"
                     android:drawableLeft="@drawable/ic_baseline_volume_up_24"
 
-                    android:text="蜂鳴器"
+                    android:text="蜂鳴器靜音"
                     android:textColor="?attr/colorControlNormal" />
             </TableRow>
         </TableLayout>

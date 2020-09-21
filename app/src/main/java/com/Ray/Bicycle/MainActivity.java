@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     //private final UUID uuid = UUID.fromString("8c4102d5-f0f9-4958-806e-7ba5fd54ce7c");
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     // private EditText id;
-    private EditText BTM;
+    //private EditText BTM;
     private String SpeedLimit = "";
     private String address, Name;
     private String UserName;
@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         text_Respond = findViewById(R.id.text_Respond);
         SpeedView = findViewById(R.id.SpeedView);
         MileageView = findViewById(R.id.MileageView);
-        BTM = findViewById(R.id.id2);
+        //BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
         loadingDialog = new LoadingDialog(MainActivity.this);
         /**********Layout***************/

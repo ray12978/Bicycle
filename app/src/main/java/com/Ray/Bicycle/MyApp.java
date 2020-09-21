@@ -469,11 +469,11 @@ public class MyApp extends Application {
 
             try {
                 if(readCnt.get()>=9){
-                    cnt++;
-                    if(cnt%5==0 && cnt!=0){
+                    if(cnt%3==0 && cnt!=0){
                         writeBT(string);
                         cnt=0;
                     }
+                    cnt++;
                     buffer = new byte[256];
                     readCnt = new AtomicInteger();
                     str_process();
