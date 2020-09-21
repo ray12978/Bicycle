@@ -236,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (PostFlag.Flag && nb) BTSendMsg.replace(6, 7, "Y");
         else BTSendMsg.replace(6, 7, "N");
         postTime = userSetting.getInt("postTime", 15000);
+        UpdateBTMsg();
         System.out.print("nb狀態:");
         System.out.println(nb);
         System.out.print("cloud狀態:");

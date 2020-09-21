@@ -69,7 +69,7 @@ public class RxOkHttp3 {
                 //.url("https://jsonplaceholder.typicode.com/posts/1")
                 //.url("http://35.221.236.109:3000/getSetting")
                 //.url("http://35.221.236.109:3000/getSetting/id123")
-                //.url("http://35.221.236.109:3000/getGps/ID123456789ABC")
+                //.url("http://35.221.236.109:3000/getGps/123456789ABC")
                 //.url("http://35.221.236.109:3000/getGps/ABC123")
                 .url(url)
                 //資料庫測試        .url("http://35.221.236.109:3000/api880509")
