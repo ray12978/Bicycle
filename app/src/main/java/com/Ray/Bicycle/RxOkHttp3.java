@@ -180,8 +180,8 @@ public class RxOkHttp3 {
     protected LatLng getJson(String json) throws JSONException {
         JSONArray ary = new JSONArray(json);
         System.out.println("LatLng:");
-        double latitude = Double.parseDouble(ary.getJSONObject(ary.length() - 1).getString("longitude"));
-        double longitude = Double.parseDouble(ary.getJSONObject(ary.length() - 1).getString("latitude"));
+        double latitude = Double.parseDouble(ary.getJSONObject(ary.length() - 1).getString("latitude"));
+        double longitude = Double.parseDouble(ary.getJSONObject(ary.length() - 1).getString("longitude"));
         System.out.println(latitude);
         System.out.println(longitude);
         LatLng locat = new LatLng(latitude, longitude);

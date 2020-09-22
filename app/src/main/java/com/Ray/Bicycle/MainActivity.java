@@ -303,11 +303,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void ButtonListen() {
         /**BT按鈕**/
-        Button btBTSend = findViewById(R.id.btBTSend);
         Button btBTOpen = findViewById(R.id.BTOpen);
         btBTConct = findViewById(R.id.btBTConct);
         Button btBTDiscont = findViewById(R.id.btBTDiscont);
-        Button btClear = findViewById(R.id.btClr);
         /**IO按鈕**/
         Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
@@ -325,15 +323,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent BTListAct = new Intent(MainActivity.this, ConnectActivity.class);
             startActivity(BTListAct);
         });
-        /*btBTSend.setOnClickListener(v -> {
-            try {
-                MyAppInst.writeBT("bbb");
 
-                //Thread.sleep(500);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });*/
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             if (address.equals("null")) {
@@ -358,16 +348,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, 4, 'J');
             UpdateBTMsg();
-            /*try {
-                if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
-                //if(SendFlag.Flag) MyAppInst.writeBT("aaa");
-                Thread.sleep(500);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }*/
-            //loadingDialog.startLoadingDialog();
-            //MyAppInst.str_process();
-            //sendPOST();
+
         });
         btBuzz.setOnClickListener(v -> {
             BTMsg(5, 6, "E", "N", BuzFlag);
@@ -376,17 +357,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, 5, 'N');
             UpdateBTMsg();
-            /*try {
-                if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
-                Thread.sleep(500);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }*/
-            //System.out.println("Buzz:"+ BuzFlag.Flag);
             MyAppInst.DangerFlag.Flag = BuzFlag.Flag;
-            //DanFlag.Flag = BuzFlag.Flag;
-            //MyAppInst.str_process();
-            //sendPOST();
+
         });
         btLck.setOnClickListener(v -> {
             BTMsg(0, 1, "L", "F", LckFlag);
@@ -394,39 +366,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, 0, 'F');
-            UpdateBTMsg();
-            /*try {
-                if (SendFlag.Flag) MyAppInst.writeBT(BTSendMsg.toString());
-                Thread.sleep(500);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }*/
-            //str_process();
+
             if (!LckFlag.Flag) {
                 btBuzz.setEnabled(true);
                 btSpLit.setEnabled(false);
                 btLaser.setEnabled(false);
-                //setVibrate(1000);
-                //Notify();
-                /*new AlertDialog.Builder(MainActivity.this)
-                        .setIcon(R.drawable.ic_baseline_warning_48)
-                        .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
-                        .setPositiveButton("確定", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                VibFlag.Flag = false;
-                            }
-                        })
-                        .show();*/
             } else {
+                boolean preState = BuzFlag.Flag;
+                System.out.println("pre:"+preState);
+                BuzFlag.Flag = false;
+                int BOn = R.drawable.ic_baseline_volume_off_24;
+                int BOff = R.drawable.ic_baseline_volume_up_24;
+                BTSendMsg.replace(5,6,"N");
+                Button_exterior(btBuzz, BOff, BOn, 5, 'N');
+
                 btBuzz.setEnabled(false);
                 btSpLit.setEnabled(true);
                 btLaser.setEnabled(true);
+                BuzFlag.Flag = true;
             }
+            UpdateBTMsg();
+            //System.out.println("NOw:"+BTSendMsg.toString());
         });
         btSpLit.setOnClickListener(v -> {
             if (!BTConnFlag) {
-                //if(address.equals("null")){
                 Toast.makeText(this, "請先連線藍芽", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -437,15 +400,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         .putString("TopS", "0")
                         .apply();
                 SpdFlag.Flag = true;
-                //System.out.println(BTSendMsg);
-                /*try {
-                    MyAppInst.writeBT(BTSendMsg.toString());
-                    Thread.sleep(1000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }*/
-                //MyAppInst.str_process();
-                //sendPOST();
+
             } else {
                 Toast.makeText(this, "請先設定時速", Toast.LENGTH_SHORT).show();
             }
@@ -458,34 +413,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             MyAppInst.MuteFlag.Flag = buttonView.isChecked();
         });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        /*btClear.setOnClickListener(v -> {
-            try {
-                MyAppInst.writeBT("aaa");
-
-                //Thread.sleep(500);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            //MyAppInst.BTValTmp.delete(0, MyAppInst.BTValTmp.length());
-            //Danger_Msg();
-            //MyAppInst.ScanDanger();
-        });*/
-        /*btDisplay.setOnClickListener(v -> {
-            Toast.makeText(this, MyAppInst.getVal('A'), Toast.LENGTH_LONG).show();
-            MyAppInst.str_process();
-            System.out.println("BTTmp:");
-            System.out.println(MyAppInst.getVal('A'));
-            System.out.println("PostFlag:");
-            System.out.println(PostFlag);
-            Log.d(MyAppInst.getVal('A'), "Tmp");
-            Log.d(MyAppInst.getVal('S'), "S");
-            Log.d(MyAppInst.getVal('M'), "M");
-            Log.d(MyAppInst.getVal('T'), "T");
-            Log.d(MyAppInst.getVal('P'), "P");
-            System.out.println("LckFlag:");
-            System.out.println(LckFlag.Flag);
-
-        });*/
 
     }
 

@@ -147,7 +147,7 @@
                     android:background="@drawable/button_style_off"
                     android:drawableLeft="@drawable/ic_baseline_volume_up_24"
 
-                    android:text="蜂鳴器靜音"
+                    android:text="靜音蜂鳴器"
                     android:textColor="?attr/colorControlNormal" />
             </TableRow>
         </TableLayout>

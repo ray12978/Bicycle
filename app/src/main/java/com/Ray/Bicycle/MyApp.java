@@ -99,6 +99,7 @@ public class MyApp extends Application {
      * String
      **/
     public String SVal, MVal, danger,PVal,TVal,id;
+    private String codi;
     private int AllM;
     private int[] StrPosition = new int[5];
 
@@ -384,12 +385,15 @@ public class MyApp extends Application {
             //System.out.println("D is null will be end");
             return;
         }
-        String codi = getVal('D');
+        codi = getVal('D');
         if (codi.equals("Y")) {
             //setVibrate(1000);
             //DanFlag.Flag = false;
             boolean notiFlag = UserSetting.getBoolean("noti",false);
-            if(DangerFlag.Flag && !MuteFlag.Flag && notiFlag)showNotification();
+            if(DangerFlag.Flag && !MuteFlag.Flag && notiFlag){
+                showNotification();
+                codi=null;
+            }
             System.out.println(DangerFlag.Flag);
             //mainActivity.Danger_Msg();
             //mediaPlayer.start();
@@ -469,11 +473,11 @@ public class MyApp extends Application {
 
             try {
                 if(readCnt.get()>=9){
-                    if(cnt%3==0 && cnt!=0){
+                   // if(cnt%3==0 && cnt!=0){
                         writeBT(string);
-                        cnt=0;
-                    }
-                    cnt++;
+                    //    cnt=0;
+                    //}
+                    //cnt++;
                     buffer = new byte[256];
                     readCnt = new AtomicInteger();
                     str_process();
