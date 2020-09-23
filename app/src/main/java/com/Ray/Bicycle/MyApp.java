@@ -170,27 +170,8 @@ public class MyApp extends Application {
     }
 
     /****/
-    public void afficher() {
-        //Toast.makeText(getBaseContext(), dateFormat.format(new Date()), 300).show();
-        handler.postDelayed(runnable,1000);
-    }
 
-    public void startCount(){
-        //count++;
-        //System.out.print("count:");
-        //System.out.println(count);
-        //**//if(BTRevSta.Flag)str_process();
-        //if()
-        DangerNow();
-
-        //Toast.makeText(getBaseContext(), Integer.toString(count), 300).show();
-        handler.postDelayed(runnable,1000);
-        /*if(count>=10){
-            count=0;
-        }*/
-    }
-
-    public void startTimer() {
+    /*public void startTimer() {
         runnable.run();
     }
     Handler handler = new Handler();
@@ -200,7 +181,7 @@ public class MyApp extends Application {
             //startCount();
 
         }
-    };
+    };*/
 
 
     public boolean getBTState() {
@@ -392,7 +373,7 @@ public class MyApp extends Application {
             boolean notiFlag = UserSetting.getBoolean("noti",false);
             if(DangerFlag.Flag && !MuteFlag.Flag && notiFlag){
                 showNotification();
-                codi=null;
+                //codi=null;
             }
             System.out.println(DangerFlag.Flag);
             //mainActivity.Danger_Msg();
@@ -442,7 +423,7 @@ public class MyApp extends Application {
                 if(BTSendMsg == null) return;
                 BTSendMsg = BTWrData.getString("SendMsg", "null");
                 if(BTSendMsg.equals("null")){
-                    System.out.println("Msg null");
+                    //System.out.println("Msg null");
                     return;
                 }
 
@@ -484,8 +465,10 @@ public class MyApp extends Application {
                     BTValTmp.delete(0, BTValTmp.length());
 
                     SharedBTValue();
+
                 }
-                DangerNow();
+                boolean BTConnSta = UserSetting.getBoolean("btsta",false);
+                if(BTConnSta)DangerNow();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -517,9 +500,9 @@ public class MyApp extends Application {
     /**AutoPost**/
     public void AutoPostVal() {
         //MainActivity mainActivity = new MainActivity();
-        SharedPreferences userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
-        boolean PhFlag = userSetting.getBoolean("ph",false);
-        boolean ClFlag = userSetting.getBoolean("cloud",false);
+        //SharedPreferences userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
+        boolean PhFlag = UserSetting.getBoolean("ph",false);
+        boolean ClFlag = UserSetting.getBoolean("cloud",false);
         if(!PhFlag || !ClFlag){
             System.out.println("ph is close will return");
             return;
@@ -527,7 +510,7 @@ public class MyApp extends Application {
         //SharedPreferences userSetting = mainActivity.userSetting;
         //int postTime =  mainActivity.postTime;
         int postTime;
-        postTime = userSetting.getInt("postTime",15000);
+        postTime = UserSetting.getInt("postTime",15000);
         rxPostTimer.interval(postTime, number -> {
             //Log.e("home_show_three", "======MainActivity======" + number);
             int Mile = BTShare.getInt("Mi",0);

@@ -384,6 +384,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 btSpLit.setEnabled(true);
                 btLaser.setEnabled(true);
                 BuzFlag.Flag = true;
+                MyAppInst.DangerFlag.Flag = true;
             }
             UpdateBTMsg();
             //System.out.println("NOw:"+BTSendMsg.toString());
@@ -621,7 +622,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    public AlertDialog Danger_Msg() {
+    /*public AlertDialog Danger_Msg() {
         return new AlertDialog.Builder(MainActivity.this)
                 .setIcon(R.drawable.ic_baseline_warning_48)
                 .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
@@ -632,7 +633,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 })
                 .show();
-    }
+    }*/
 
     /*******************************其他**********************************/
     void Button_exterior(Button btn, int one, int two, int bit, char condi) {
@@ -645,54 +646,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 this.getResources().getDrawable(R.drawable.button_style_off) : this.getResources().getDrawable(R.drawable.button_style_on));
 
         btn.setTextColor(BTSendMsg.charAt(bit) == condi ? 0xFF606060 : 0xFFFFFFFF);
-    }
-
-
-    /*****************************HTTP副程式******************************/
-    private void sendGET() {
-        TextView tvRes = findViewById(R.id.text_Respond);
-        /**建立連線*/
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
-                .build();
-        /**設置傳送需求*/
-        Request request = new Request.Builder()
-                .url("https://jsonplaceholder.typicode.com/posts/1")
-                //.url("http://35.221.236.109:3000/getSetting")
-                // .url("http://35.221.236.109:3000/getSetting/id123")
-                //.url("http://35.221.236.109:3000/getGps/ID123456789ABC")
-                //資料庫測試        .url("http://35.221.236.109:3000/api880509")
-                //.url("https://maker.ifttt.com/trigger/line/with/key/0nl929cYWV-nv9f76AW_O?value1=1")
-//                .header("Cookie","")//有Cookie需求的話則可用此發送
-//                .addHeader("","")//如果API有需要header的則可使用此發送
-                .build();
-        /**設置回傳*/
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                /**如果傳送過程有發生錯誤*/
-                // tvRes.setText(e.getMessage());
-            }
-
-            @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                /**取得回傳*/
-                // GetVal = response.body().string();
-                GetVal = Objects.requireNonNull(response.body()).string();
-                //  tvRes.setText("GET回傳：\n" + GetVal);
-
-                System.out.print("Get:");
-                System.out.print(GetVal);
-                try {
-                    //split(GetVal);
-                    //System.out.print(split(GetVal));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
     }
 
     /**
@@ -764,8 +717,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String Sval = BTReData.getString("S", "0");
             //String Mval = BTReData.getString("M",null);
             int AllM = BTReData.getInt("Mi", 0) / 100;
+            //System.out.println("Sval:"+Sval+','+"AllM:"+AllM);
             if (Sval != null && AllM != 0) {
-                if (preAllM == AllM) return;
+                if (preAllM == AllM && Sval.equals("0")){
+                    emitter.onNext("000"+','+AllM);
+                    return;
+                }
 
 
                 //if(BTSendMsg.equals("null"))System.out.println("BTReData null");
@@ -801,6 +758,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String speed;
             String mileage;
             int intMileage;
+            //System.out.println("St:"+string);
             //if(!string.equals("0")) {
             while (i < string.length()) {
                 if (string.charAt(i) == ',') {
