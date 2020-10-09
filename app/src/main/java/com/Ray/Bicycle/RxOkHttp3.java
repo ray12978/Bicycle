@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -51,9 +52,9 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import static android.content.ContentValues.TAG;
 
 public class RxOkHttp3 {
-    private String GetVal;
+    private String GetVal,FallVal,Fall;
     private LatLng Location;
-
+    private Date date;
     /**
      * GET
      **/
@@ -107,6 +108,48 @@ public class RxOkHttp3 {
         return Location;
 
     }
+    /**get Fall Msg**/
+    protected String getFallMsg(String id){
+        String url = "http://35.221.236.109:3000/getSetting/"+id;
+        /**建立連線*/
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
+                .build();
+        /**設置傳送需求*/
+        Request request = new Request.Builder()
+                .url(url)
+//                .header("Cookie","")//有Cookie需求的話則可用此發送
+//                .addHeader("","")//如果API有需要header的則可使用此發送
+                .build();
+        /**設置回傳*/
+        Call call = client.newCall(request);
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                /**如果傳送過程有發生錯誤*/
+                // tvRes.setText(e.getMessage());
+                System.out.println(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                /**取得回傳*/
+                // GetVal = response.body().string();
+                FallVal = Objects.requireNonNull(response.body()).string();
+                //  tvRes.setText("GET回傳：\n" + GetVal);
+                System.out.print("GetFall:");
+                System.out.print(FallVal);
+                try {
+                    Fall = getFallJson(FallVal);
+                    System.out.println(Fall);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+        return Fall;
+    }
 
     /**
      * POST
@@ -125,9 +168,9 @@ public class RxOkHttp3 {
         String MVal = MyAppInst.getVal('M');
         String TVal = MyAppInst.getVal('T');
         String PVal = MyAppInst.getVal('P');*/
-        if (SVal == null || MVal == null || TVal == null || PVal == null || id == null) {
+        /*if (SVal == null || MVal == null || TVal == null || PVal == null || id == null) {
             return;
-        }
+        }*//**nowtest**/
         /**建立連線*/
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
@@ -136,16 +179,16 @@ public class RxOkHttp3 {
         int topspeed = 0;
 
         FormBody formBody = new FormBody.Builder()
-                /*.add("id", "3")
+                .add("id", id)
                 .add("speed", "1")
                 .add("miliage", "1000")
                 .add("exercise", "300")
-                .add("topspeed", "30")*/
-                .add("id", id)
+                .add("topspeed", "30")/**nowtest**/
+                /*.add("id", id)
                 .add("speed", SVal) //nowSpeed
                 .add("miliage", MVal) //mileage
                 .add("exercise", TVal) //Time
-                .add("topspeed", PVal) //topSpeed
+                .add("topspeed", PVal) //topSpeed*/
                 .build();
         /**設置傳送需求*/
         Request request = new Request.Builder()
@@ -170,6 +213,7 @@ public class RxOkHttp3 {
                 /**取得回傳*/
                 //tvRes.setText("POST回傳：\n" + response.body().string());
                 System.out.println("POST回傳：\n" + response.body().string());
+                System.out.println("id:"+id);
             }
         });
     }
@@ -188,6 +232,16 @@ public class RxOkHttp3 {
         System.out.println(locat);
         System.out.println("a");
         return locat;
+    }
+
+    protected String getFallJson(String json) throws JSONException {
+        JSONArray ary = new JSONArray(json);
+        System.out.println("FallVal:");
+        String FallMsg = ary.getJSONObject(ary.length() - 1).getString("fall");
+        String date = ary.getJSONObject(ary.length() - 1).getString("datetime");
+        System.out.println("Fall:"+FallMsg);
+        System.out.println("date:"+date);
+        return FallMsg;
     }
 
 }

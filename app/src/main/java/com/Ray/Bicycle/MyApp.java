@@ -533,7 +533,11 @@ public class MyApp extends Application {
     void getPostVal(){
         id = UserSetting.getString("id",null);
     }
-
+    /**Get Fall Alert**/
+    protected void getFall(){
+        getPostVal();
+        rxOkHttp3.getFallMsg(id);
+    }
 
     /**notification**/
     public void showNotification() {

@@ -324,6 +324,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(BTListAct);
         });
 
+        /**test btn**/
+        Button testFall = findViewById(R.id.button);
+        testFall.setOnClickListener(v -> {
+            MyAppInst.getFall();
+        });
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             if (address.equals("null")) {
@@ -737,7 +742,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     };
     /**
-     * 创建被观察者，并带上被观察者的订阅
+     * 時速,里程數顯示串流
      */
     Observable<String> observable = Observable.create(observableOnSubscribe);
 

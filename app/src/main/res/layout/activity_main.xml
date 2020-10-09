@@ -31,6 +31,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <Button
+            android:id="@+id/button"
+            android:layout_width="179dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="54dp"
+            android:text="Button"
+            app:layout_constraintBottom_toTopOf="@+id/tableLayout"
+            app:layout_constraintEnd_toStartOf="@+id/NotiMute"
+            app:layout_constraintStart_toStartOf="@+id/tableLayout2"
+            app:layout_constraintTop_toBottomOf="@+id/tableLayout2" />
+
         <Switch
             android:id="@+id/NotiMute"
             android:layout_width="wrap_content"
@@ -87,7 +98,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:stretchColumns="*"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintBottom_toTopOf="@+id/include2">
 
             <TableRow
                 android:layout_width="match_parent"
@@ -100,10 +111,10 @@
                     android:layout_span="1"
                     android:background="@drawable/button_style_off"
                     android:drawableLeft="@drawable/ic_baseline_lock_open_24"
-                    android:textSize="20sp"
-
                     android:text="上鎖模式"
-                    android:textColor="?attr/colorControlNormal" />
+
+                    android:textColor="?attr/colorControlNormal"
+                    android:textSize="20sp" />
 
                 <Button
                     android:id="@+id/las_btn"
@@ -112,10 +123,10 @@
                     android:layout_span="1"
                     android:background="@drawable/button_style_off"
                     android:drawableLeft="@drawable/ic_bike_icon_off_black"
-                    android:textSize="20sp"
-
                     android:text="自動煞車"
-                    android:textColor="?attr/colorControlNormal" />
+
+                    android:textColor="?attr/colorControlNormal"
+                    android:textSize="20sp" />
 
             </TableRow>
 
@@ -141,14 +152,14 @@
                     android:id="@+id/buzz_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="80dp"
-                    android:textSize="16sp"
-
                     android:layout_span="1"
+
                     android:background="@drawable/button_style_off"
                     android:drawableLeft="@drawable/ic_baseline_volume_up_24"
-
                     android:text="靜音蜂鳴器"
-                    android:textColor="?attr/colorControlNormal" />
+
+                    android:textColor="?attr/colorControlNormal"
+                    android:textSize="16sp" />
             </TableRow>
         </TableLayout>
 
@@ -225,6 +236,12 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.66" />
 
+        <include
+            android:id="@+id/include2"
+            layout="@layout/bottom_nav_view"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"></include>
     </androidx.constraintlayout.widget.ConstraintLayout>
     <include layout="@layout/nav_view"/>
 </androidx.drawerlayout.widget.DrawerLayout>
