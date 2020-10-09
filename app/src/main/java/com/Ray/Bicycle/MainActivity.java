@@ -88,7 +88,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private String SpeedLimit = "";
     private String address, Name;
     private String UserName;
-    public StringBuffer BTSendMsg = new StringBuffer("N00NNNN"); //[0]Lock{L,F,N},[1]SpeedTen,[2]SpeedUnit,[3]SpeedConfirm,[4]Laser{T,J,N},[5]Buzzer{E,N},[6]CloudMode{Y,N}
+    public StringBuffer BTSendMsg = new StringBuffer(">N00NNNN"); //[0]StartBit[1]Lock{L,F,N},[2]SpeedTen,[3]SpeedUnit,[4]SpeedConfirm,[5]Laser{T,J,N},[6]Buzzer{E,N},[7]CloudMode{Y,N}
+    private int BTMsgLen = 8;
     public TextView text_Respond, SpeedView, MileageView;
     /**
      * Bluetooth
@@ -233,8 +234,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         id = userSetting.getString("id", "null");
         PostFlag.Flag = userSetting.getBoolean("cloud", false);
         //NbFlag.Flag = nb.equals("phone");
-        if (PostFlag.Flag && nb) BTSendMsg.replace(6, 7, "Y");
-        else BTSendMsg.replace(6, 7, "N");
+        if (PostFlag.Flag && nb) BTSendMsg.replace(BTMsgLen-1, BTMsgLen, "Y");
+        else BTSendMsg.replace(BTMsgLen-1, BTMsgLen, "N");
         postTime = userSetting.getInt("postTime", 15000);
         UpdateBTMsg();
         System.out.print("nb狀態:");
@@ -297,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String BTMsg = BTWrData.getString("SendMsg", "null");
         if (BTMsg.equals("null")) return;
         BTSendMsg = new StringBuffer();
-        BTMsg.substring(0, 8);
+        BTMsg.substring(0, BTMsgLen+1);
         BTSendMsg.append(BTMsg);
     }
 
@@ -347,30 +348,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
-            BTMsg(4, 5, "T", "J", LasFlag);
+            BTMsg(BTMsgLen-3, BTMsgLen-2, "T", "J", LasFlag);
             //addUserId();
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
-            Button_exterior(btLaser, Off, On, 4, 'J');
+            Button_exterior(btLaser, Off, On, BTMsgLen-3, 'J');
             UpdateBTMsg();
 
         });
         btBuzz.setOnClickListener(v -> {
-            BTMsg(5, 6, "E", "N", BuzFlag);
+            BTMsg(BTMsgLen-2, BTMsgLen-1, "E", "N", BuzFlag);
             //addUserId();
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
-            Button_exterior(btBuzz, Off, On, 5, 'N');
+            Button_exterior(btBuzz, Off, On, BTMsgLen-2, 'N');
             UpdateBTMsg();
             MyAppInst.DangerFlag.Flag = BuzFlag.Flag;
 
         });
         btLck.setOnClickListener(v -> {
-            BTMsg(0, 1, "L", "F", LckFlag);
+            BTMsg(BTMsgLen-7, BTMsgLen-6, "L", "F", LckFlag);
             //addUserId();
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
-            Button_exterior(btLck, Off, On, 0, 'F');
+            Button_exterior(btLck, Off, On, BTMsgLen-7, 'F');
 
             if (!LckFlag.Flag) {
                 btBuzz.setEnabled(true);
@@ -382,8 +383,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BuzFlag.Flag = false;
                 int BOn = R.drawable.ic_baseline_volume_off_24;
                 int BOff = R.drawable.ic_baseline_volume_up_24;
-                BTSendMsg.replace(5,6,"N");
-                Button_exterior(btBuzz, BOff, BOn, 5, 'N');
+                BTSendMsg.replace(BTMsgLen-2,BTMsgLen-1,"N");
+                Button_exterior(btBuzz, BOff, BOn, BTMsgLen-2, 'N');
 
                 btBuzz.setEnabled(false);
                 btSpLit.setEnabled(true);
@@ -401,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             if (SpdFlag.Flag) dialog.showDialog();
             if (!SpdFlag.Flag) {
-                BTSendMsg.replace(3, 4, "N");
+                BTSendMsg.replace(BTMsgLen-4, BTMsgLen-3, "N");
                 userSetting.edit()
                         .putString("TopS", "0")
                         .apply();
@@ -412,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
-            Button_exterior(btSpLit, Off, On, 3, 'N');
+            Button_exterior(btSpLit, Off, On, BTMsgLen-4, 'N');
             UpdateBTMsg();
         });
         MuteNotify.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -572,8 +573,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         UserName = id;
         while (UserName.length() < 14) UserName += '@';
-        if (BTSendMsg.length() >= 8) {
-            BTSendMsg.replace(7, 21, UserName);
+        if (BTSendMsg.length() >= BTMsgLen+1) {
+            BTSendMsg.replace(BTMsgLen, BTMsgLen+14, UserName);
         } else {
             BTSendMsg.append(UserName);
         }
@@ -595,18 +596,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(SpLtVal);
             btSpLit.setText(String.format("時速限制:%s", SpLtVal));
             if (SpeedLimit.length() == 1) {
-                BTSendMsg.replace(1, 2, "0");
-                BTSendMsg.replace(2, 3, SpLtVal);
-            } else BTSendMsg.replace(1, 3, SpLtVal);
+                BTSendMsg.replace(BTMsgLen-6, BTMsgLen-5, "0");
+                BTSendMsg.replace(BTMsgLen-5, BTMsgLen-4, SpLtVal);
+            } else BTSendMsg.replace(BTMsgLen-6, BTMsgLen-4, SpLtVal);
             UpdateBTMsg();
             userSetting.edit()
                     .putString("TopS", SpLtVal)
                     .apply();
-            BTMsg(3, 4, "Y", "N", SpdFlag);
+            BTMsg(BTMsgLen-4, BTMsgLen-3, "Y", "N", SpdFlag);
 
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
-            Button_exterior(btSpLit, Off, On, 3, 'N');
+            Button_exterior(btSpLit, Off, On, BTMsgLen-4, 'N');
             System.out.println(BTSendMsg);
             UpdateBTMsg();  //MyAppInst.writeBT(BTSendMsg.toString());
 
@@ -619,7 +620,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //MyAppInst.str_process();
             //sendPOST();
         } else {
-            BTSendMsg.replace(1, 3, "00");
+            BTSendMsg.replace(BTMsgLen-6, BTMsgLen-4, "00");
             userSetting.edit()
                     .putString("TopS", "0")
                     .apply();

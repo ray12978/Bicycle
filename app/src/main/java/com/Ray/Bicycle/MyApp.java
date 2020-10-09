@@ -58,6 +58,7 @@ public class MyApp extends Application {
     public static MyApp appInstance;
 
     public MainActivity mainActivity;
+
     public static synchronized MyApp getAppInstance() {
         return appInstance;
     }
@@ -98,11 +99,11 @@ public class MyApp extends Application {
     /**
      * String
      **/
-    public String SVal, MVal, danger,PVal,TVal,id;
+    public String SVal, MVal, danger, PVal, TVal, id;
     private String codi;
     private int AllM;
     private int[] StrPosition = new int[5];
-
+    private int BTMsgLen = 8;
     /**
      * NOTIFY
      **/
@@ -112,12 +113,11 @@ public class MyApp extends Application {
     /**
      * Timer
      */
-    private int count = 0;
+    private int UnLockCnt = 0;
     /**
      * RxTimer
      */
-    RxBluetoothWrite rxBluetoothWrite = new RxBluetoothWrite();
-    String BTSendMsg ;
+    String BTSendMsg;
     private RxTimerUtil rxTimer = new RxTimerUtil();
     private RxPostTimer rxPostTimer = new RxPostTimer();
     int cnt = 0;
@@ -130,13 +130,13 @@ public class MyApp extends Application {
     private SharedPreferences BTWrData;
     private SharedPreferences UserSetting;
 
-   public void ScanDanger(/*AlertDialog Dia*/){  //Temporarily reserved
-       RxDanger rxDanger = new RxDanger();
+    public void ScanDanger(/*AlertDialog Dia*/) {  //Temporarily reserved
+        RxDanger rxDanger = new RxDanger();
         compositeDisposable.add(rxDanger.RxDangerStream("A")
                 .observeOn(Schedulers.io())
                 .subscribeOn(Schedulers.io())
                 .subscribe(s -> {
-                    if(s.equals("A"))
+                    if (s.equals("A"))
                         System.out.println("recv:A");
                     //Dia.show();
                 }, throwable -> {
@@ -147,6 +147,7 @@ public class MyApp extends Application {
 
 
     }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -158,12 +159,11 @@ public class MyApp extends Application {
         BTWrData = getSharedPreferences("BTMsg", MODE_PRIVATE);
         BTSendMsg = BTWrData.getString("SendMsg", "null");
 
-        BTShare = getSharedPreferences("BTShare",MODE_PRIVATE);
+        BTShare = getSharedPreferences("BTShare", MODE_PRIVATE);
 
-        UserSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
-        AllM = BTShare.getInt("Mi",0);
-        //inputStream = rxBluetooth.observeConnectionState()
-        //ScanDanger();
+        UserSetting = getSharedPreferences("UserSetting", MODE_PRIVATE);
+        AllM = BTShare.getInt("Mi", 0);
+
         mainActivity = new MainActivity();
 
         postValue = new PostValue();
@@ -182,8 +182,6 @@ public class MyApp extends Application {
 
         }
     };*/
-
-
     public boolean getBTState() {
         return socket != null;
     }
@@ -217,7 +215,7 @@ public class MyApp extends Application {
 
         // if (inputStream.available() <= 0)return;
         String a = new String(buffer, 0, count + 1);
-        if(a.charAt(0)!='S')return;
+        if (a.charAt(0) != 'S') return;
         StrBufTmp.replace(0, count + 1, a);
         //Thread.sleep(100);
         //System.out.print("BTValTmp:");
@@ -234,16 +232,16 @@ public class MyApp extends Application {
             for (int i = 0; i < BTValTmp.length(); i++) {
                 if (BTValTmp.toString().getBytes()[i] > 57/* && BTValTmp.toString().charAt(i)!='Y'&& BTValTmp.toString().charAt(i)!='N'*/) {
                     StrPosition[b] = i;
-                    if(b!=StrPosition.length-1)b++;
+                    if (b != StrPosition.length - 1) b++;
                 }
             }
 
             //System.out.println( BTValTmp.toString()+','+StrPosition[1]+','+StrPosition[2]);
             SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
             MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
-            danger = BTValTmp.toString().substring(StrPosition[2], StrPosition[2]+1).trim();
-            TVal = Integer.toString(UserSetting.getInt("postTime",15000)/1000);
-            PVal = UserSetting.getString("TopS","0");
+            danger = BTValTmp.toString().substring(StrPosition[2], StrPosition[2] + 1).trim();
+            TVal = Integer.toString(UserSetting.getInt("postTime", 15000) / 1000);
+            PVal = UserSetting.getString("TopS", "0");
             //Log.e("Tmp", BTValTmp.toString());
             //Log.e("S", SVal);
             //Log.e("M", MVal);
@@ -260,7 +258,7 @@ public class MyApp extends Application {
     }
 
     public String getVal(char Select) {
-        if (SVal == null || MVal == null || danger == null || TVal == null|| PVal == null)
+        if (SVal == null || MVal == null || danger == null || TVal == null || PVal == null)
             return null;
         switch (Select) {
             case 'S':
@@ -335,20 +333,23 @@ public class MyApp extends Application {
     protected void writeBT(String Msg) throws Exception {
         BluetoothConnection blueConn = new BluetoothConnection(socket);
 
-        if(Msg.charAt(0) == 'L' && Msg.charAt(4) == 'T'){
-            StringBuffer A =new StringBuffer();
+        if (Msg.charAt(BTMsgLen - 7) == 'L' && Msg.charAt(BTMsgLen - 3) == 'T') {
+            StringBuffer A = new StringBuffer();
             A.append(Msg);
-            A.replace(4,5,"J");
+            A.replace(BTMsgLen - 3, BTMsgLen - 2, "J");
             System.out.println("change T to J");
             Msg = A.toString();
         }
         blueConn.send(Msg); // String
-        if(Msg.charAt(0)=='F'){
-            String NMsg = Msg.replace('F','N');
-            mainActivity.BTSendMsg.replace(0,1,"N");
-            BTWrData.edit().putString("SendMsg",NMsg).apply();
-            System.out.println("change F to N");
-
+        if (Msg.charAt(BTMsgLen - 7) == 'F') {
+            UnLockCnt++;
+            if (UnLockCnt >= 10) {
+                String NMsg = Msg.replace('F', 'N');
+                mainActivity.BTSendMsg.replace(BTMsgLen - 7, BTMsgLen - 6, "N");
+                BTWrData.edit().putString("SendMsg", NMsg).apply();
+                System.out.println("change F to N");
+                UnLockCnt = 0;
+            }
         }
         System.out.println("Now Send:" + Msg);
     }
@@ -370,8 +371,8 @@ public class MyApp extends Application {
         if (codi.equals("Y")) {
             //setVibrate(1000);
             //DanFlag.Flag = false;
-            boolean notiFlag = UserSetting.getBoolean("noti",false);
-            if(DangerFlag.Flag && !MuteFlag.Flag && notiFlag){
+            boolean notiFlag = UserSetting.getBoolean("noti", false);
+            if (DangerFlag.Flag && !MuteFlag.Flag && notiFlag) {
                 showNotification();
                 //codi=null;
             }
@@ -382,16 +383,17 @@ public class MyApp extends Application {
             //loadingDialog.startLoadingDialog();
         }
     }
-    private void SharedBTValue(){
+
+    private void SharedBTValue() {
         int MInt;
-        if(MVal == null || MVal.equals("")) MInt = -1;
-        else MInt = Integer.parseInt(MVal)*121;
+        if (MVal == null || MVal.equals("")) MInt = -1;
+        else MInt = Integer.parseInt(MVal) * 121;
         //int MInt = MVal == null?-1:Integer.parseInt(MVal);
-        if(MInt!=-1) AllM = MInt + AllM;
+        if (MInt != -1) AllM = MInt + AllM;
         BTShare.edit()
-                .putString("S",SVal)
-                .putString("M",MVal)
-                .putInt("Mi",AllM)
+                .putString("S", SVal)
+                .putString("M", MVal)
+                .putInt("Mi", AllM)
                 .apply();
         //System.out.println("Shared BTval!");
     }
@@ -405,12 +407,13 @@ public class MyApp extends Application {
         rxTimer.interval(200, new RxTimerUtil.IRxNext() {
             @Override
             public void doNext(Object number) {
-               // Log.e("home_show_three", "======MainActivity======" + number);
+                // Log.e("home_show_three", "======MainActivity======" + number);
                 sub();
-               // System.out.println(number);
+                // System.out.println(number);
             }
         });
     }
+
     ObservableOnSubscribe<String> observableOnSubscribe = new ObservableOnSubscribe<String>() {
         @Override
         public void subscribe(ObservableEmitter<String> emitter) {
@@ -418,11 +421,11 @@ public class MyApp extends Application {
             // if (RxLocation != null)
             //    emitter.onNext(RxLocation);
             //
-            if(BTRevFlag.Flag){
+            if (BTRevFlag.Flag) {
 
-                if(BTSendMsg == null) return;
+                if (BTSendMsg == null) return;
                 BTSendMsg = BTWrData.getString("SendMsg", "null");
-                if(BTSendMsg.equals("null")){
+                if (BTSendMsg.equals("null")) {
                     //System.out.println("Msg null");
                     return;
                 }
@@ -449,13 +452,13 @@ public class MyApp extends Application {
 
         @Override
         public void onNext(String string) {
-           // System.out.println("信号接收：onNext " + string);
+            // System.out.println("信号接收：onNext " + string);
             //  SetMark(integer);
 
             try {
-                if(readCnt.get()>=9){
-                   // if(cnt%3==0 && cnt!=0){
-                        writeBT(string);
+                if (readCnt.get() >= 9) {
+                    // if(cnt%3==0 && cnt!=0){
+                    writeBT(string);
                     //    cnt=0;
                     //}
                     //cnt++;
@@ -467,8 +470,8 @@ public class MyApp extends Application {
                     SharedBTValue();
 
                 }
-                boolean BTConnSta = UserSetting.getBoolean("btsta",false);
-                if(BTConnSta)DangerNow();
+                boolean BTConnSta = UserSetting.getBoolean("btsta", false);
+                if (BTConnSta) DangerNow();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -477,7 +480,7 @@ public class MyApp extends Application {
 
         @Override
         public void onError(Throwable e) {
-           // System.out.println("信号接收：onError " + e.getMessage());
+            // System.out.println("信号接收：onError " + e.getMessage());
             cancel();
         }
 
@@ -497,49 +500,58 @@ public class MyApp extends Application {
         if (disposable[0] != null)
             disposable[0].dispose();
     }
-    /**AutoPost**/
+
+    /**
+     * AutoPost
+     **/
     public void AutoPostVal() {
         //MainActivity mainActivity = new MainActivity();
         //SharedPreferences userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
-        boolean PhFlag = UserSetting.getBoolean("ph",false);
-        boolean ClFlag = UserSetting.getBoolean("cloud",false);
-        if(!PhFlag || !ClFlag){
+        boolean PhFlag = UserSetting.getBoolean("ph", false);
+        boolean ClFlag = UserSetting.getBoolean("cloud", false);
+        if (!PhFlag || !ClFlag) {
             System.out.println("ph is close will return");
             return;
         }
         //SharedPreferences userSetting = mainActivity.userSetting;
         //int postTime =  mainActivity.postTime;
         int postTime;
-        postTime = UserSetting.getInt("postTime",15000);
+        postTime = UserSetting.getInt("postTime", 15000);
         rxPostTimer.interval(postTime, number -> {
             //Log.e("home_show_three", "======MainActivity======" + number);
-            int Mile = BTShare.getInt("Mi",0);
-            int preMile = BTShare.getInt("preM",0);
+            int Mile = BTShare.getInt("Mi", 0);
+            int preMile = BTShare.getInt("preM", 0);
             String distance = String.valueOf(Mile - preMile);
             System.out.println("PostTime:" + postTime);
             getPostVal();
-            System.out.println("Mile:"+Mile);
-            System.out.println("preMile:"+preMile);
-            System.out.println("distance:"+distance);
-            rxOkHttp3.PostVal(id,SVal,distance,TVal,PVal);
+            System.out.println("Mile:" + Mile);
+            System.out.println("preMile:" + preMile);
+            System.out.println("distance:" + distance);
+            rxOkHttp3.PostVal(id, SVal, distance, TVal, PVal);
             //rxOkHttp3.displayVal(id,SVal,distance,TVal,PVal);
             BTShare.edit()
-                    .putInt("preM",Mile)
+                    .putInt("preM", Mile)
                     .apply();
             //System.out.println(number);
         });
 
     }
-    void getPostVal(){
-        id = UserSetting.getString("id",null);
+
+    void getPostVal() {
+        id = UserSetting.getString("id", null);
     }
-    /**Get Fall Alert**/
-    protected void getFall(){
+
+    /**
+     * Get Fall Alert
+     **/
+    protected void getFall() {
         getPostVal();
         rxOkHttp3.getFallMsg(id);
     }
 
-    /**notification**/
+    /**
+     * notification
+     **/
     public void showNotification() {
         Log.d(TAG, "showNotification: ");
         try {
@@ -599,21 +611,4 @@ public class MyApp extends Application {
     }
 
 
-}
-class ActionReceiver extends BroadcastReceiver {
-
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        if (intent != null) {
-            int noti_id = intent.getIntExtra("noti_id", -1);
-
-            if (noti_id > 0) {
-                NotificationManager notificationManager = (NotificationManager) context
-                        .getSystemService(Context.NOTIFICATION_SERVICE);
-
-                notificationManager.cancel(noti_id);
-                System.out.println("cancel notify");
-            }
-        }
-    }
 }
