@@ -122,21 +122,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RxBluetooth rxBluetooth = new RxBluetooth(this);
     private RxTimerUtil rxTimer;
     private RxPostTimer rxPostTimer;
-    //RxBluetoothWrite rxBluetoothWrite = new RxBluetoothWrite();
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
-    /**
-     * Http
-     **/
-    private String GetVal;
     /**
      * Setting Val
      **/
-    FlagAddress NbFlag = new FlagAddress(false);
-    //FlagAddress BTConnFlag = new FlagAddress(false);
     boolean BTConnFlag;
     String id;
     boolean nb;
-    boolean cloud;
     public int postTime;
     int preAllM;
     /*******TimePicker*********/
@@ -269,8 +261,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onRespond(String selected) {
                 if (selected.equals("不限制")) selected = "0";
                 num[0] = selected;
-                //System.out.print("number is ");
-                //System.out.println(selected);
             }
 
             @Override
@@ -345,11 +335,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             if (MyAppInst.connDevice(device)) DpBTConnState(true);
             else DpBTConnState(false);
-            //loadingDialog.dismissDialog();
         });
         btLaser.setOnClickListener(v -> {
             BTMsg(BTMsgLen-3, BTMsgLen-2, "T", "J", LasFlag);
-            //addUserId();
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
             Button_exterior(btLaser, Off, On, BTMsgLen-3, 'J');
@@ -358,7 +346,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btBuzz.setOnClickListener(v -> {
             BTMsg(BTMsgLen-2, BTMsgLen-1, "E", "N", BuzFlag);
-            //addUserId();
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
             Button_exterior(btBuzz, Off, On, BTMsgLen-2, 'N');
@@ -368,7 +355,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         btLck.setOnClickListener(v -> {
             BTMsg(BTMsgLen-7, BTMsgLen-6, "L", "F", LckFlag);
-            //addUserId();
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
             Button_exterior(btLck, Off, On, BTMsgLen-7, 'F');
@@ -450,11 +436,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void onBackPressed() {
-        /*if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }*/
         new AlertDialog.Builder(MainActivity.this)
                 .setMessage("要結束應用程式嗎?")
                 .setPositiveButton("確定", new DialogInterface.OnClickListener() {
@@ -479,13 +460,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onResume() {
-
         super.onResume();
-        //reader.start();
-        // readerStop = false;
-//        loadingDialog.dismissDialog();
-        //danger.start();
-
     }
 
     @Override
@@ -493,30 +468,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initEventListeners();
         CheckSetting();
         MyAppInst.AutoPostVal();
-        //addUserId();
         UpdateBTMsg();
         BTReData.edit()
                 .putString("S", "0")
                 .apply();
-
-        //MyAppInst.ScanDanger();
-        /*try {
-            MyAppInst.writeBT(BTSendMsg.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        //();
         BTReData.edit()
                 .putString("S", "0")
                 .apply();
         super.onStop();
     }
-
 
     protected void onDestroy() {
         SharedPreferences BTDetail = getApplicationContext().getSharedPreferences("BTDetail", MODE_PRIVATE);
@@ -609,16 +574,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int Off = R.drawable.ic_speed;
             Button_exterior(btSpLit, Off, On, BTMsgLen-4, 'N');
             System.out.println(BTSendMsg);
-            UpdateBTMsg();  //MyAppInst.writeBT(BTSendMsg.toString());
-
-            /*try {
-
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }*/
-            //MyAppInst.str_process();
-            //sendPOST();
+            UpdateBTMsg();
         } else {
             BTSendMsg.replace(BTMsgLen-6, BTMsgLen-4, "00");
             userSetting.edit()
@@ -663,7 +619,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .subscribeOn(Schedulers.computation())
                 .filter(BtPredicate.in(BluetoothAdapter.STATE_ON))
                 .subscribe(integer -> {
-                    //start.setBackgroundColor(getResources().getColor(R.color.colorActive));
                 }));
 
         compositeDisposable.add(rxBluetooth.observeBluetoothState()
