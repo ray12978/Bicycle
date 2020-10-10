@@ -238,10 +238,8 @@
 
         <include
             android:id="@+id/include2"
-            layout="@layout/bottom_nav_view"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"></include>
+            layout="@layout/bottom_nav_view">
+            </include>
     </androidx.constraintlayout.widget.ConstraintLayout>
     <include layout="@layout/nav_view"/>
 </androidx.drawerlayout.widget.DrawerLayout>

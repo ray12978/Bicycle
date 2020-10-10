@@ -89,20 +89,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("地圖");
+        InitNavi();
         userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
         mapFragment.getMapAsync(this);
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setItemIconTintList(null);
+
+    }
+    private void InitNavi(){
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("地圖");
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
     }
-
     @Override
     protected void onDestroy() {
         if (disposable != null)

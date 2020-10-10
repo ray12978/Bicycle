@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.app.AlertDialog;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.NotificationChannel;
 import android.app.PendingIntent;
@@ -38,6 +37,7 @@ import android.content.DialogInterface;
 
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 import java.util.UUID;
@@ -137,16 +137,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //BTM = findViewById(R.id.id2);
         //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
         loadingDialog = new LoadingDialog(MainActivity.this);
-        /**********Layout***************/
+        /**********Layout Init***************/
         toolbar = findViewById(R.id.toolbar);
         drawer = findViewById(R.id.drawer_layout_Main);
         toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + deviceName, deviceName.equals("尚未選擇裝置") ? "" : MyAppInst.getBTState() ? "已連線" : "未連線"));
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+
+        InitNavi();
+        BottomNavi_init();
         ButtonListen();
         //MyAppInst.startTimer();
         btBTConct.setText(MyAppInst.getBTState() ? "已連線" : "未連線");
@@ -222,7 +219,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .apply();
         BTConnFlag = userSetting.getBoolean("btsta", false);
         btBTConct.setEnabled(!state);
-        //if(state)MyAppInst.AutoPostVal();
     }
 
     void SpeedDialog() {
@@ -379,7 +375,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     }
+    private void BottomNavi_init(){
+        BottomNavigationView bottomNavigationView
+                = (BottomNavigationView) findViewById(R.id.include2);
 
+        bottomNavigationView.getMenu().getItem(0).setChecked(true);
+
+        bottomNavigationView.setOnNavigationItemSelectedListener((item) -> {
+            switch (item.getItemId()) {
+                case R.id.nav1:
+                    break;
+                case R.id.nav2:
+                    Intent intent2 = new Intent(MainActivity.this, Notification.class);
+                    startActivity(intent2);
+                    break;
+            }
+            return true;
+        });
+    }
+    private void InitNavi(){
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+    }
     /***********Navigation*************/
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {

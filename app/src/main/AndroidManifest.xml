@@ -31,7 +31,7 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Activity.Theme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -42,7 +42,7 @@
             android:name=".MapsActivity"
             android:screenOrientation="portrait"
             android:label="@string/title_activity_maps"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Activity.Theme">
 
         </activity>
         <activity
@@ -51,7 +51,12 @@
             android:label="Setting"
             >
         </activity>
+        <activity android:name=".Notification"
+            android:screenOrientation="portrait"
+            android:label="Notification"
+            android:theme="@style/Activity.Theme">
 
+        </activity>
         <service android:name=".BluetoothService"/>
     </application>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
