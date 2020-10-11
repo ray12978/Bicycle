@@ -111,6 +111,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private SharedPreferences BTReData;
     protected SharedPreferences userSetting;
     private Switch MuteNotify;
+    private SharedPreferences FallData;
+    /**
+     * Notification
+     **/
+//    Notification notification = new Notification();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BTReData = getSharedPreferences("BTShare", MODE_PRIVATE);
         userSetting = getSharedPreferences("UserSetting", MODE_PRIVATE);
         ScanFirst();
+        FallData = getSharedPreferences("FallData" , MODE_PRIVATE);
         BTConnFlag = userSetting.getBoolean("btsta", false);
         //context = this;
         /*****************藍牙*************/
@@ -157,8 +163,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //rxBluetoothWrite.TimeTest();
         //MyAppInst.ScanDanger(Danger_Msg());
         //MyAppInst.ScanDanger();
+        //notification.InitFallData();
+        test();
     }
-
+    void test(){
+        int i = 0;
+        while (i<13){
+            //String index = String.valueOf(i);
+            String index = Integer.toString(i);
+            String Fall = "Fall" + index;
+            System.out.println(index);
+            System.out.println(Fall+FallData.getBoolean(Fall,false));
+            i++;
+        }
+    }
     void ScanFirst() {
         SharedPreferences shared = getSharedPreferences("is", MODE_PRIVATE);
         boolean isfer = shared.getBoolean("isfer", true);
@@ -167,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             //第一次進入跳轉
             System.out.println("is First");
             initUserSetting();
+            InitFallData();
             postTime = userSetting.getInt("postTime", 15000);
             System.out.println(postTime);
             editor.putBoolean("isfer", false);
@@ -174,7 +193,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    ;
+    protected void InitFallData(){
+        FallData = getSharedPreferences("FallData" , MODE_PRIVATE);
+        int i = 1;
+        while (i<13){
+            String index = String.valueOf(i);
+            String Fall = "Fall" + index;
+            FallData.edit()
+                    .putBoolean(Fall,false)
+                    .apply();
+            i++;
+        }
+        System.out.println(FallData.getBoolean("11",false));
+    }
 
     void initUserSetting() {
         userSetting.edit()

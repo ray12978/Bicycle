@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +32,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
@@ -109,6 +111,7 @@ public class MyApp extends Application {
      **/
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
     private static final int NOTIFY_REQUEST_ID = 300;
+    com.Ray.Bicycle.Notification notification = new com.Ray.Bicycle.Notification();
     //Context context;
     /**
      * Timer
@@ -129,6 +132,7 @@ public class MyApp extends Application {
     private SharedPreferences BTShare;
     private SharedPreferences BTWrData;
     private SharedPreferences UserSetting;
+    private SharedPreferences FallData;
 
     public void ScanDanger(/*AlertDialog Dia*/) {  //Temporarily reserved
         RxDanger rxDanger = new RxDanger();
@@ -162,6 +166,8 @@ public class MyApp extends Application {
         BTShare = getSharedPreferences("BTShare", MODE_PRIVATE);
 
         UserSetting = getSharedPreferences("UserSetting", MODE_PRIVATE);
+
+        FallData = getSharedPreferences("FallData", MODE_PRIVATE);
         AllM = BTShare.getInt("Mi", 0);
 
         mainActivity = new MainActivity();
@@ -291,7 +297,6 @@ public class MyApp extends Application {
                             socket = bluetoothSocket;
                             ReadBT();
                             AutoWriteBT();
-
                             Sta.set(true);
                         }, throwable -> {
                             // On error
@@ -523,7 +528,7 @@ public class MyApp extends Application {
             int preMile = BTShare.getInt("preM", 0);
             String distance = String.valueOf(Mile - preMile);
             System.out.println("PostTime:" + postTime);
-            getPostVal();
+            getID();
             System.out.println("Mile:" + Mile);
             System.out.println("preMile:" + preMile);
             System.out.println("distance:" + distance);
@@ -532,12 +537,13 @@ public class MyApp extends Application {
             BTShare.edit()
                     .putInt("preM", Mile)
                     .apply();
+            //getFall();
             //System.out.println(number);
         });
 
     }
 
-    void getPostVal() {
+    void getID() {
         id = UserSetting.getString("id", null);
     }
 
@@ -545,8 +551,48 @@ public class MyApp extends Application {
      * Get Fall Alert
      **/
     protected void getFall() {
-        getPostVal();
-        rxOkHttp3.getFallMsg(id);
+        getID();
+        String Fall = rxOkHttp3.getFallMsg(id);
+        Fall = "N";
+        if (Fall.equals("N")) {
+            addData("Fall");
+        }
+    }
+
+    protected void addData(String Select) {
+        Calendar mCal = Calendar.getInstance();
+        CharSequence s = DateFormat.format("yyyy-MM-dd kk:mm:ss", mCal.getTime());
+        if (Select.equals("Fall")) {
+            ScanValue();
+            FallData.edit()
+                    .putBoolean("Fall1", true)
+                    .putString("Date1", s.toString())
+                    .apply();
+        }//else if(Select.equals(""))
+
+    }
+
+    private void ScanValue() {
+        int i = 11;
+        while (i > 0) {
+            boolean Val;
+            String index = Integer.toString(i);
+            String Fall = "Fall" + index;
+            String DateI = "Date" + index;
+            //SharedPreferences a =  getPreferences(MODE_PRIVATE);
+            Val = FallData.getBoolean(Fall, false);
+            //Val = FallData.getBoolean("11",false);
+            if (Val) {
+                String next = "Fall" + (i + 1);
+                String DateNext = "Date" + (i + 1);
+                String date = FallData.getString(DateI, "");
+                FallData.edit()
+                        .putBoolean(next, true)
+                        .putString(DateNext, date)
+                        .apply();
+            }
+            i--;
+        }
     }
 
     /**

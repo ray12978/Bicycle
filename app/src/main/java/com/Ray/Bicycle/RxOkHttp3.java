@@ -142,6 +142,7 @@ public class RxOkHttp3 {
                 try {
                     Fall = getFallJson(FallVal);
                     System.out.println(Fall);
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
