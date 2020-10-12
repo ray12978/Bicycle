@@ -317,6 +317,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Button testFall = findViewById(R.id.button);
         testFall.setOnClickListener(v -> {
             MyAppInst.getFall();
+            MyAppInst.FallNotification();
         });
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();

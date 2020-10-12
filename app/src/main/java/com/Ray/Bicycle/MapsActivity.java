@@ -73,11 +73,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private RxTimerUtil rxTimerUtil = new RxTimerUtil();
     private CompositeDisposable MapCompositeDisposable = new CompositeDisposable();
     private LatLng RxLocation;
-    private LatLng TestLocation = new LatLng(24.922582, 121.422590);
+   // private LatLng TestLocation = new LatLng(24.922582, 121.422590);
     private boolean SubFlag = false;
     private RxMapTimer rxTimer = new RxMapTimer();
     private SharedPreferences userSetting;
     private boolean MapReady = false;
+    //private double a = 25.079597;
+    //private double d = 121.557757;
+    //private LatLng c = new LatLng (a,d);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +125,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onStart() {
+        MapReady = true;
         GetBicycle();
         super.onStart();
     }
@@ -156,8 +160,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        getMyLocation();
         MapReady = true;
+        getMyLocation();
+        //SetMark(c);
         //GetBicycle();
     }
 
@@ -188,15 +193,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     protected void SetMark(LatLng RxLocation) {
+
         System.out.print("Set Mark:");
         System.out.println(RxLocation);
         mMarkerOptions = new MarkerOptions()
                 .position(RxLocation)
+                //.position(c)
                 .title("Destination")
                 .icon(BitmapDescriptorFactory
                         .fromResource(R.drawable.bicycle48p));
         mMap.addMarker(mMarkerOptions);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation, 12));
+        if(MapReady){
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation, 14));
+            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(c, 12));
+            MapReady = false;
+        }
+
     }
 
     private void getMyLocation() {

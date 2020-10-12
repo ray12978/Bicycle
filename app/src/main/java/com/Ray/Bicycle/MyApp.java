@@ -400,6 +400,9 @@ public class MyApp extends Application {
                 .putString("M", MVal)
                 .putInt("Mi", AllM)
                 .apply();
+        System.out.println("Sval:"+SVal);
+        System.out.println("Mval:"+MVal);
+        System.out.println("ALLMval:"+AllM);
         //System.out.println("Shared BTval!");
     }
 
@@ -596,7 +599,7 @@ public class MyApp extends Application {
     }
 
     /**
-     * notification
+     * notification Anti-theft
      **/
     public void showNotification() {
         Log.d(TAG, "showNotification: ");
@@ -620,6 +623,66 @@ public class MyApp extends Application {
             Notification.Builder builder = new Notification.Builder(this)
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle("您的腳踏車發生異常狀況")
+                    .setContentText("請立即前往確認")
+                    .setLights(0xff00ff00, 300, 1000)
+                    .setSmallIcon(R.drawable.ic_baseline_warning_48)
+                    .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
+                    .setDefaults(Notification.DEFAULT_VIBRATE)
+                    .setSound(soundUri, audioAttributes)
+                    .setContentIntent(pendingIntent)
+                    //.addAction(action);
+                    .setAutoCancel(true);
+
+            NotificationChannel channel;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                channel = new NotificationChannel(TEST_NOTIFY_ID
+                        , "Danger Msg"
+                        , NotificationManager.IMPORTANCE_HIGH);
+                channel.enableLights(true);
+                channel.enableVibration(true);
+                channel.shouldShowLights();
+                channel.setLightColor(Color.GREEN);
+                channel.setSound(soundUri, audioAttributes);
+                channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                builder.setChannelId(TEST_NOTIFY_ID);
+
+                manager.createNotificationChannel(channel);
+            } else {
+                builder.setDefaults(Notification.DEFAULT_ALL)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC);
+            }
+            int testNotifyId = 12;
+            manager.notify(testNotifyId,
+                    builder.build());
+        } catch (Exception e) {
+
+        }
+    }
+    /**
+     * notification Fall Alert
+     **/
+    public void FallNotification() {
+        Log.d(TAG, "FallNotification: ");
+        try {
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
+            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
+                    NOTIFY_REQUEST_ID,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+            //PendingIntent MutePend =
+            final Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getApplicationContext().getPackageName() + "/" + R.raw.sound);
+            System.out.println(soundUri);
+            //final Uri soundUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.sound);
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .build();
+            //Notification.Action action = new Notification.Action.Builder(0,"確定",pendingIntent).build();
+            NotificationManager manager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+            Notification.Builder builder = new Notification.Builder(this)
+                    .setWhen(System.currentTimeMillis())
+                    .setContentTitle("偵測到使用者跌倒")
                     .setContentText("請立即前往確認")
                     .setLights(0xff00ff00, 300, 1000)
                     .setSmallIcon(R.drawable.ic_baseline_warning_48)
