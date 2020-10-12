@@ -154,14 +154,15 @@ public class Notification extends AppCompatActivity implements NavigationView.On
             String DateI = "Date" + index;
             System.out.println("Fall:"+Fall);
             System.out.println("DateI:"+DateI);
-            boolean Val = FallData.getBoolean(Fall, false);
-            if (Val) {
+            int Val = FallData.getInt(Fall, 0);
+            if (Val!=0) {
                 String date = FallData.getString(DateI, "");
                 HashMap<String, String> hashMap = new HashMap<>();
-                hashMap.put("Msg", "偵測到使用者跌倒");
+                if(Val==1) hashMap.put("Msg", "偵測到自行車遭竊");
+                if(Val==2) hashMap.put("Msg", "偵測到使用者跌倒");
                 hashMap.put("Date", date);
                 arrayList.add(hashMap);
-                System.out.println("偵測到使用者跌倒:" + date);
+                //System.out.println("偵測到使用者跌倒:" + date);
             }
             i++;
         }
@@ -203,8 +204,12 @@ public class Notification extends AppCompatActivity implements NavigationView.On
             } else {
                 holder.tvId.setBackgroundColor(getColor(R.color.red_GINSYU));
             }*/
-            holder.tvId.setBackgroundColor(getColor(R.color.yellow_YAMABUKI));
-            holder.tvId.setText(arrayList.get(position).get("Msg"));
+            String Msg = arrayList.get(position).get("Msg");
+            String AT = "偵測到自行車遭竊";
+            String Fall = "偵測到使用者跌倒";
+            if(Msg.equals(AT)) holder.tvId.setBackgroundColor(getColor(R.color.red_GINSYU));
+            if(Msg.equals(Fall)) holder.tvId.setBackgroundColor(getColor(R.color.yellow_YAMABUKI));
+            holder.tvId.setText(Msg);
             holder.tvSub1.setText(arrayList.get(position).get("Date"));
             //holder.tvSub2.setText(arrayList.get(position).get("Sub2"));
             //holder.tvAvg.setText(arrayList.get(position).get("Avg"));

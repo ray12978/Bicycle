@@ -40,7 +40,7 @@ import io.reactivex.Scheduler;
 import io.reactivex.annotations.CheckReturnValue;
 import io.reactivex.annotations.SchedulerSupport;
 import io.reactivex.schedulers.Schedulers;
-import kotlin.random.FallbackThreadLocalRandom;
+//import kotlin.random.FallbackThreadLocalRandom;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -148,9 +148,13 @@ public class RxOkHttp3 {
                     }
                     System.out.println(Fall);
                     FallReturn = true;
+                    if(Fall!=null)
+                    callback.onOkHttpResponse(Fall);
+                    else callback.onOkHttpResponse("AA");
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    callback.onOkHttpResponse(e.toString());
                 }
 
             }

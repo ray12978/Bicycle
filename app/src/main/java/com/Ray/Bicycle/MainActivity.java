@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //MyAppInst.ScanDanger(Danger_Msg());
         //MyAppInst.ScanDanger();
         //notification.InitFallData();
-        test();
+        //test();
     }
     void test(){
         int i = 0;
@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String index = Integer.toString(i);
             String Fall = "Fall" + index;
             System.out.println(index);
-            System.out.println(Fall+FallData.getBoolean(Fall,false));
+            System.out.println(Fall+FallData.getInt(Fall,0));
             i++;
         }
     }
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String index = String.valueOf(i);
             String Fall = "Fall" + index;
             FallData.edit()
-                    .putBoolean(Fall,false)
+                    .putInt(Fall,0)
                     .apply();
             i++;
         }

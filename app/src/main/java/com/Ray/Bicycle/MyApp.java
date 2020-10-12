@@ -125,9 +125,11 @@ public class MyApp extends Application {
     private RxPostTimer rxPostTimer = new RxPostTimer();
     private RxFallAlert rxFallAlert = new RxFallAlert();
     int cnt = 0;
-    int preMin = 0;
+    int preATMin = 0;
+    int preFaMin = 0;
     boolean FState;
     private PostValue postValue;
+    private final String[] all = new String[1];
     /**
      * SharedBTValue
      */
@@ -402,9 +404,9 @@ public class MyApp extends Application {
                 .putString("M", MVal)
                 .putInt("Mi", AllM)
                 .apply();
-        System.out.println("Sval:"+SVal);
-        System.out.println("Mval:"+MVal);
-        System.out.println("ALLMval:"+AllM);
+        System.out.println("Sval:" + SVal);
+        System.out.println("Mval:" + MVal);
+        System.out.println("ALLMval:" + AllM);
         //System.out.println("Shared BTval!");
     }
 
@@ -582,53 +584,55 @@ public class MyApp extends Application {
             System.out.println("NB is close will return");
             return;
         }
-        if(!notiFlag || MuteFlag.Flag)return;
+        if (!notiFlag || MuteFlag.Flag) return;
+        //all[0] = "AA";
         getID();
-        final String[] all = new String[1];
-        String Fall;
-        String AT;
+        final String[] Fall = new String[1];
+        final String[] AT = new String[1];
         //all = rxOkHttp3.getFallMsg(id);
         rxOkHttp3.getFallMsg(id, new RxOkHttp3.FallCallback() {
             @Override
             public void onOkHttpResponse(String data) {
-              all[0] = data;
+                all[0] = data;
+                //if (!data.equals("AA")) Callback[0] = true;
+                System.out.println("data:" + all[0]);
+
+                Fall[0] = all[0].substring(0, 1);
+                AT[0] = all[0].substring(1, 2);
+               /* System.out.println("AllMsg:" + all[0]);
+                System.out.println("Fall:" + Fall[0]);
+                System.out.println("AT:" + AT[0]);*/
+                //Fall = "N";
+                /*if (Fall[0].equals("n") || AT[0].equals("u")) {
+                    System.out.println("Fall null return");
+                    //return;
+                }*/
+                if (Fall[0].equals("Y")) {
+                    addData("Fall");
+                    FallNotification();
+                    System.out.println("Fall!");
+                } //else System.out.println("Fall = N return");
+                if (AT[0].equals("Y")) {
+                    addData("AT");
+                    showNotification();
+                    System.out.println("AT!");
+                } //else System.out.println("AT = N return");
             }
 
             @Override
             public void onOkHttpFailure(Exception exception) {
-
+                System.out.println("error:" + exception);
             }
         });
 
+        //all[0] = "NN";
 
-        while (all[0].equals("null")){
-           // all = rxOkHttp3.getFallMsg(id);
-            System.out.println("FallMsg:"+ all[0]);
-        }
-        Fall = all[0].substring(0,1);
-        AT = all[0].substring(1,2);
-        System.out.println("AllMsg:"+ all[0]);
-        System.out.println("Fall:"+Fall);
-        System.out.println("AT:"+AT);
-        //Fall = "N";
-        if(Fall.equals("n")||AT.equals("u")){
-            System.out.println("Fall null return");
-            //return;
-        }
-        if (Fall.equals("N")) {
-            addData("Fall");
-            FallNotification();
-            System.out.println("Fall!");
-        }else System.out.println("Fall = N return");
-        if(AT.equals("N")){
-            showNotification();
-            System.out.println("AT!");
-        }else System.out.println("AT = N return");
     }
+
     /**
      * FallMsg Stream
      **/
-    protected void FallListen(){
+    protected void FallListen() {
         boolean PhFlag = UserSetting.getBoolean("ph", true);
         boolean ClFlag = UserSetting.getBoolean("cloud", false);
         if (PhFlag || !ClFlag) {
@@ -645,41 +649,56 @@ public class MyApp extends Application {
     protected void addData(String type) {
         Calendar mCal = Calendar.getInstance();
         CharSequence s = DateFormat.format("yyyy年MM月dd日 kk:mm:ss", mCal.getTime());
-        CharSequence time = DateFormat.format("mm",mCal.getTime());
+        CharSequence time = DateFormat.format("mm", mCal.getTime());
         String m = time.toString();
-        int min = Integer.parseInt(m);
-        if(min == preMin){
-            System.out.println("Same will return");
-            return;
-        }
-        preMin = min;
+        int ATmin = Integer.parseInt(m);
+        int Famin = Integer.parseInt(m);
+
         System.out.println(time.toString());
-        if (type.equals("Fall")) {
+        if (type.equals("AT")) {
+            if (ATmin == preATMin) {
+                System.out.println("ATm Same will return");
+                return;
+            }
+            preATMin = ATmin;
             ScanValue();
             FallData.edit()
-                    .putBoolean("Fall1", true)
+                    .putInt("Fall1", 1)//0 無訊號/1 AT/2 Fall
                     .putString("Date1", s.toString())
                     .apply();
-        }//else if(Select.equals(""))
+            System.out.println("added AT");
+        } else if (type.equals("Fall")) {
+            if (Famin == preFaMin) {
+                System.out.println("ATm Same will return");
+                return;
+            }
+            preFaMin = Famin;
+            ScanValue();
+            FallData.edit()
+                    .putInt("Fall1", 2)//0 無訊號/1 AT/2 Fall
+                    .putString("Date1", s.toString())
+                    .apply();
+            System.out.println("added Fall");
+        }
 
     }
 
     private void ScanValue() {
         int i = 11;
         while (i > 0) {
-            boolean Val;
+            int Val;
             String index = Integer.toString(i);
-            String Fall = "Fall" + index;
-            String DateI = "Date" + index;
+            String FallIndex = "Fall" + index;
+            String DateIndex = "Date" + index;
             //SharedPreferences a =  getPreferences(MODE_PRIVATE);
-            Val = FallData.getBoolean(Fall, false);
+            Val = FallData.getInt(FallIndex, 0);
             //Val = FallData.getBoolean("11",false);
-            if (Val) {
+            if (Val != 0) {
                 String next = "Fall" + (i + 1);
                 String DateNext = "Date" + (i + 1);
-                String date = FallData.getString(DateI, "");
+                String date = FallData.getString(DateIndex, "");
                 FallData.edit()
-                        .putBoolean(next, true)
+                        .putInt(next, Val)
                         .putString(DateNext, date)
                         .apply();
             }
@@ -695,7 +714,7 @@ public class MyApp extends Application {
         try {
             Calendar mCal = Calendar.getInstance();
             CharSequence s = DateFormat.format("MM月dd日 kk:mm:ss", mCal.getTime());
-            Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+            Intent intent = new Intent(getApplicationContext(), com.Ray.Bicycle.Notification.class);
             intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
                     NOTIFY_REQUEST_ID,
@@ -715,7 +734,7 @@ public class MyApp extends Application {
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle("您的腳踏車發生異常狀況")
                     .setStyle(new Notification.BigTextStyle()
-                            .bigText("請立即前往確認\n"+s))
+                            .bigText("請立即前往確認\n" + s))
                     //.setContentText("請立即前往確認")
                     .setLights(0xff00ff00, 300, 1000)
                     .setSmallIcon(R.drawable.ic_baseline_warning_48)
@@ -751,6 +770,7 @@ public class MyApp extends Application {
 
         }
     }
+
     /**
      * notification Fall Alert
      **/
@@ -779,7 +799,7 @@ public class MyApp extends Application {
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle("偵測到使用者跌倒")
                     .setStyle(new Notification.BigTextStyle()
-                    .bigText("請立即前往確認\n"+s))
+                            .bigText("請立即前往確認\n" + s))
                     //.setContentText()
                     .setLights(0xff00ff00, 300, 1000)
                     .setSmallIcon(R.drawable.ic_baseline_warning_48)
