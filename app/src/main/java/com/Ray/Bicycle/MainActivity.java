@@ -314,11 +314,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         /**test btn**/
-        Button testFall = findViewById(R.id.button);
+        /*Button testFall = findViewById(R.id.button);
         testFall.setOnClickListener(v -> {
-            MyAppInst.getFall();
-            MyAppInst.FallNotification();
-        });
+            //MyAppInst.getFall();
+            //MyAppInst.FallNotification();
+            MyAppInst.showNotification();
+        });*/
         btBTConct.setOnClickListener(v -> {
             //loadingDialog.startLoadingDialog();
             if (address.equals("null")) {
@@ -492,6 +493,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initEventListeners();
         CheckSetting();
         MyAppInst.AutoPostVal();
+        MyAppInst.FallListen();
         UpdateBTMsg();
         BTReData.edit()
                 .putString("S", "0")

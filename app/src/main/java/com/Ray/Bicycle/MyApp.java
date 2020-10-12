@@ -123,7 +123,9 @@ public class MyApp extends Application {
     String BTSendMsg;
     private RxTimerUtil rxTimer = new RxTimerUtil();
     private RxPostTimer rxPostTimer = new RxPostTimer();
+    private RxFallAlert rxFallAlert = new RxFallAlert();
     int cnt = 0;
+    int preMin = 0;
     boolean FState;
     private PostValue postValue;
     /**
@@ -460,23 +462,14 @@ public class MyApp extends Application {
 
         @Override
         public void onNext(String string) {
-            // System.out.println("信号接收：onNext " + string);
-            //  SetMark(integer);
-
             try {
                 if (readCnt.get() >= 9) {
-                    // if(cnt%3==0 && cnt!=0){
                     writeBT(string);
-                    //    cnt=0;
-                    //}
-                    //cnt++;
                     buffer = new byte[256];
                     readCnt = new AtomicInteger();
                     str_process();
                     BTValTmp.delete(0, BTValTmp.length());
-
                     SharedBTValue();
-
                 }
                 boolean BTConnSta = UserSetting.getBoolean("btsta", false);
                 if (BTConnSta) DangerNow();
@@ -521,8 +514,6 @@ public class MyApp extends Application {
             System.out.println("ph is close will return");
             return;
         }
-        //SharedPreferences userSetting = mainActivity.userSetting;
-        //int postTime =  mainActivity.postTime;
         int postTime;
         postTime = UserSetting.getInt("postTime", 15000);
         rxPostTimer.interval(postTime, number -> {
@@ -549,23 +540,121 @@ public class MyApp extends Application {
     void getID() {
         id = UserSetting.getString("id", null);
     }
+    /**
+     * Get AntiTheft Alert
+     **/
+    /*void getAntiTheft(){
+        boolean notiFlag = UserSetting.getBoolean("noti", false);
+        boolean PhFlag = UserSetting.getBoolean("ph", true);
+        boolean ClFlag = UserSetting.getBoolean("cloud", false);
+        if (PhFlag || !ClFlag) {
+            System.out.println("NB is close will return");
+            return;
+        }
+        if(!notiFlag || MuteFlag.Flag)return;
+        getID();
+        String AT;
+        AT = rxOkHttp3.getATMsg(id);
+        while (AT == null){
+            System.out.println("ATMsg:"+AT);
+            AT = rxOkHttp3.getATMsg(id);
+        }
+        System.out.println("ATMsg:"+AT);
+        //Fall = "N";
+        if(AT.equals("null")){
+            System.out.println("AT null return");
+            return;
+        }
+        if (AT.equals("Y")) {
+            showNotification();
+        }
+        else System.out.println("AT = N return");
+    }*/
 
     /**
      * Get Fall Alert
      **/
     protected void getFall() {
+        boolean notiFlag = UserSetting.getBoolean("noti", false);
+        boolean PhFlag = UserSetting.getBoolean("ph", true);
+        boolean ClFlag = UserSetting.getBoolean("cloud", false);
+        if (PhFlag || !ClFlag) {
+            System.out.println("NB is close will return");
+            return;
+        }
+        if(!notiFlag || MuteFlag.Flag)return;
         getID();
-        String Fall = rxOkHttp3.getFallMsg(id);
-        Fall = "N";
+        final String[] all = new String[1];
+        String Fall;
+        String AT;
+        //all = rxOkHttp3.getFallMsg(id);
+        rxOkHttp3.getFallMsg(id, new RxOkHttp3.FallCallback() {
+            @Override
+            public void onOkHttpResponse(String data) {
+              all[0] = data;
+            }
+
+            @Override
+            public void onOkHttpFailure(Exception exception) {
+
+            }
+        });
+
+
+        while (all[0].equals("null")){
+           // all = rxOkHttp3.getFallMsg(id);
+            System.out.println("FallMsg:"+ all[0]);
+        }
+        Fall = all[0].substring(0,1);
+        AT = all[0].substring(1,2);
+        System.out.println("AllMsg:"+ all[0]);
+        System.out.println("Fall:"+Fall);
+        System.out.println("AT:"+AT);
+        //Fall = "N";
+        if(Fall.equals("n")||AT.equals("u")){
+            System.out.println("Fall null return");
+            //return;
+        }
         if (Fall.equals("N")) {
             addData("Fall");
+            FallNotification();
+            System.out.println("Fall!");
+        }else System.out.println("Fall = N return");
+        if(AT.equals("N")){
+            showNotification();
+            System.out.println("AT!");
+        }else System.out.println("AT = N return");
+    }
+    /**
+     * FallMsg Stream
+     **/
+    protected void FallListen(){
+        boolean PhFlag = UserSetting.getBoolean("ph", true);
+        boolean ClFlag = UserSetting.getBoolean("cloud", false);
+        if (PhFlag || !ClFlag) {
+            System.out.println("NB is close will return");
+            return;
         }
+        rxFallAlert.interval(3000, number -> {
+            //Log.e("home_show_three", "======MainActivity======" + number);
+            getFall();
+            //getAntiTheft();
+        });
     }
 
-    protected void addData(String Select) {
+    protected void addData(String type) {
         Calendar mCal = Calendar.getInstance();
-        CharSequence s = DateFormat.format("yyyy-MM-dd kk:mm:ss", mCal.getTime());
-        if (Select.equals("Fall")) {
+        CharSequence s = DateFormat.format("yyyy年MM月dd日 kk:mm:ss", mCal.getTime());
+        CharSequence time = DateFormat.format("mm",mCal.getTime());
+        String m = time.toString();
+        int min = Integer.parseInt(m);
+        if(min == preMin){
+            System.out.println("Same will return");
+            return;
+        }
+        preMin = min;
+        System.out.println(time.toString());
+        if (type.equals("Fall")) {
             ScanValue();
             FallData.edit()
                     .putBoolean("Fall1", true)
@@ -604,7 +693,9 @@ public class MyApp extends Application {
     public void showNotification() {
         Log.d(TAG, "showNotification: ");
         try {
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            Calendar mCal = Calendar.getInstance();
+            CharSequence s = DateFormat.format("MM月dd日 kk:mm:ss", mCal.getTime());
+            Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
             intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
                     NOTIFY_REQUEST_ID,
@@ -623,7 +714,9 @@ public class MyApp extends Application {
             Notification.Builder builder = new Notification.Builder(this)
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle("您的腳踏車發生異常狀況")
-                    .setContentText("請立即前往確認")
+                    .setStyle(new Notification.BigTextStyle()
+                            .bigText("請立即前往確認\n"+s))
+                    //.setContentText("請立即前往確認")
                     .setLights(0xff00ff00, 300, 1000)
                     .setSmallIcon(R.drawable.ic_baseline_warning_48)
                     .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
@@ -651,7 +744,7 @@ public class MyApp extends Application {
                 builder.setDefaults(Notification.DEFAULT_ALL)
                         .setVisibility(Notification.VISIBILITY_PUBLIC);
             }
-            int testNotifyId = 12;
+            int testNotifyId = 13;
             manager.notify(testNotifyId,
                     builder.build());
         } catch (Exception e) {
@@ -664,7 +757,9 @@ public class MyApp extends Application {
     public void FallNotification() {
         Log.d(TAG, "FallNotification: ");
         try {
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            Calendar mCal = Calendar.getInstance();
+            CharSequence s = DateFormat.format("MM月dd日 kk:mm:ss", mCal.getTime());
+            Intent intent = new Intent(getApplicationContext(), com.Ray.Bicycle.Notification.class);
             intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
                     NOTIFY_REQUEST_ID,
@@ -683,7 +778,9 @@ public class MyApp extends Application {
             Notification.Builder builder = new Notification.Builder(this)
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle("偵測到使用者跌倒")
-                    .setContentText("請立即前往確認")
+                    .setStyle(new Notification.BigTextStyle()
+                    .bigText("請立即前往確認\n"+s))
+                    //.setContentText()
                     .setLights(0xff00ff00, 300, 1000)
                     .setSmallIcon(R.drawable.ic_baseline_warning_48)
                     .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)

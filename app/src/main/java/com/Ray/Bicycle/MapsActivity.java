@@ -87,7 +87,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_main2);
+        setContentView(R.layout.activity_maps);
         drawer = findViewById(R.id.drawer_layout);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -95,6 +95,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         InitNavi();
         userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
         mapFragment.getMapAsync(this);
+        ButtonListen();
 
     }
     private void InitNavi(){
@@ -106,6 +107,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+    }
+    private void ButtonListen(){
+        FloatingActionButton NowGet = findViewById(R.id.getBicycleFAB);
+        NowGet.setOnClickListener(v -> NowGetBicycle());
+    }
+    private void NowGetBicycle(){
+        String id = userSetting.getString("id",null);
+        if(id == null){
+            Toast.makeText(this,"請先設定使用者名稱",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        RxLocation = rxOkHttp3.getLocation(id);
+        if(RxLocation == null){
+            Toast.makeText(this,"取得定位失敗",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        SetMark(RxLocation,true);
     }
     @Override
     protected void onDestroy() {
@@ -192,7 +210,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return true;
     }
 
-    protected void SetMark(LatLng RxLocation) {
+    protected void SetMark(LatLng RxLocation,boolean Move) {
 
         System.out.print("Set Mark:");
         System.out.println(RxLocation);
@@ -203,7 +221,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .icon(BitmapDescriptorFactory
                         .fromResource(R.drawable.bicycle48p));
         mMap.addMarker(mMarkerOptions);
-        if(MapReady){
+        if(MapReady || Move){
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation, 14));
             //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(c, 12));
             MapReady = false;
@@ -385,7 +403,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onNext(LatLng integer) {
             System.out.println("Map信号接收：onNext " + integer);
-            SetMark(integer);
+            SetMark(integer,false);
 
         }
 

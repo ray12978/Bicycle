@@ -203,13 +203,15 @@ public class Notification extends AppCompatActivity implements NavigationView.On
             } else {
                 holder.tvId.setBackgroundColor(getColor(R.color.red_GINSYU));
             }*/
-            holder.tvId.setBackgroundColor(getColor(R.color.green_TOKIWA));
+            holder.tvId.setBackgroundColor(getColor(R.color.yellow_YAMABUKI));
             holder.tvId.setText(arrayList.get(position).get("Msg"));
             holder.tvSub1.setText(arrayList.get(position).get("Date"));
             //holder.tvSub2.setText(arrayList.get(position).get("Sub2"));
             //holder.tvAvg.setText(arrayList.get(position).get("Avg"));
 
             holder.mView.setOnClickListener((v) -> {
+                Intent intent = new Intent(Notification.this, MapsActivity.class);
+                startActivity(intent);
                 //Toast.makeText(getBaseContext(), holder.tvAvg.getText(), Toast.LENGTH_SHORT).show();
             });
 

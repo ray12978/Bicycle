@@ -31,17 +31,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/button"
-            android:layout_width="179dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="54dp"
-            android:text="Button"
-            app:layout_constraintBottom_toTopOf="@+id/tableLayout"
-            app:layout_constraintEnd_toStartOf="@+id/NotiMute"
-            app:layout_constraintStart_toStartOf="@+id/tableLayout2"
-            app:layout_constraintTop_toBottomOf="@+id/tableLayout2" />
-
         <Switch
             android:id="@+id/NotiMute"
             android:layout_width="wrap_content"
