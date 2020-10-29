@@ -1,6 +1,8 @@
 package com.Ray.Bicycle;
 
 import android.Manifest;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -8,9 +10,11 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -19,7 +23,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.navigation.ui.AppBarConfiguration;
 
@@ -57,7 +64,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-
+//request Permission
+import com.hjq.permissions.OnPermission;
+import com.hjq.permissions.Permission;
+import com.hjq.permissions.XXPermissions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -73,14 +83,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private RxTimerUtil rxTimerUtil = new RxTimerUtil();
     private CompositeDisposable MapCompositeDisposable = new CompositeDisposable();
     private LatLng RxLocation;
-   // private LatLng TestLocation = new LatLng(24.922582, 121.422590);
+    // private LatLng TestLocation = new LatLng(24.922582, 121.422590);
     private boolean SubFlag = false;
     private RxMapTimer rxTimer = new RxMapTimer();
     private SharedPreferences userSetting;
     private boolean MapReady = false;
+    boolean isGPSEnabled = false;
+    // flag for network status
+    boolean isNetworkEnabled = false;
+    // flag for GPS status
+    boolean canGetLocation = false;
+    Location location; // location
+    double latitude; // latitude
+    double longitude; // longitude
+    LatLng Mylatlng;
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+    // The minimum time between updates in milliseconds
+    private static final long MIN_TIME_BW_UPDATES = 200 * 10 * 1; // 2 seconds
+    private Context mContext = MapsActivity.this;
     //private double a = 25.079597;
     //private double d = 121.557757;
     //private LatLng c = new LatLng (a,d);
+    private FloatingActionButton GetBicycle;
+    private FloatingActionButton GetSelf;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,12 +118,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         InitNavi();
-        userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
+        userSetting = getSharedPreferences("UserSetting", MODE_PRIVATE);
         mapFragment.getMapAsync(this);
         ButtonListen();
 
     }
-    private void InitNavi(){
+
+    private void InitNavi() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("地圖");
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -108,23 +134,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         drawer.addDrawerListener(toggle);
         toggle.syncState();
     }
-    private void ButtonListen(){
-        FloatingActionButton NowGet = findViewById(R.id.getBicycleFAB);
-        NowGet.setOnClickListener(v -> NowGetBicycle());
+
+    private void ButtonListen() {
+        GetBicycle = findViewById(R.id.getBicycleFAB);
+        GetSelf = findViewById(R.id.getMyLoc);
+        GetBicycle.setOnClickListener(v -> NowGetLoc(UpdateBicycle()));
+        GetSelf.setOnClickListener(v -> GetMyself());
     }
-    private void NowGetBicycle(){
-        String id = userSetting.getString("id",null);
-        if(id == null){
-            Toast.makeText(this,"請先設定使用者名稱",Toast.LENGTH_SHORT).show();
-            return;
+
+    private LatLng UpdateBicycle() {
+        String id = userSetting.getString("id", null);
+        if (id == null) {
+            Toast.makeText(this, "請先設定使用者名稱", Toast.LENGTH_SHORT).show();
+            return null;
         }
         RxLocation = rxOkHttp3.getLocation(id);
-        if(RxLocation == null){
-            Toast.makeText(this,"取得定位失敗",Toast.LENGTH_SHORT).show();
+        return RxLocation;
+    }
+
+    private void NowGetLoc(LatLng location) {
+
+        if (location == null) {
+            Toast.makeText(this, "取得定位失敗", Toast.LENGTH_SHORT).show();
             return;
         }
-        SetMark(RxLocation,true);
+        SetMark(location, true);
     }
+
+    private void GetMyself() {
+        //getMyLocation();
+        System.out.println(getMyLatLng());
+        //System.out.println(mOrigin);
+        if (mOrigin == null) return;
+        if (getMyLatLng() == null) return;
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mOrigin, 16));
+    }
+
     @Override
     protected void onDestroy() {
         if (disposable != null)
@@ -210,7 +255,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return true;
     }
 
-    protected void SetMark(LatLng RxLocation,boolean Move) {
+    protected void SetMark(LatLng RxLocation, boolean Move) {
 
         System.out.print("Set Mark:");
         System.out.println(RxLocation);
@@ -221,14 +266,110 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .icon(BitmapDescriptorFactory
                         .fromResource(R.drawable.bicycle48p));
         mMap.addMarker(mMarkerOptions);
-        if(MapReady || Move){
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation, 14));
+        if (MapReady || Move) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(RxLocation, 17));
             //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(c, 12));
             MapReady = false;
         }
 
     }
 
+    public Location getLocation() {
+        try {
+            mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);// getting GPS status
+            isGPSEnabled = mLocationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+// getting network status
+            isNetworkEnabled = mLocationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            if (!isGPSEnabled && !isNetworkEnabled) {
+                // no network provider is enabled
+                // Log.e(“Network-GPS”, “Disable”);
+            } else {
+                this.canGetLocation = true;
+                // First get location from Network Provider
+                if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED) {
+                    if (isNetworkEnabled) {
+                        mLocationManager.requestLocationUpdates(
+                                LocationManager.NETWORK_PROVIDER,
+                                MIN_TIME_BW_UPDATES,
+                                MIN_DISTANCE_CHANGE_FOR_UPDATES, mLocationListener);
+                        // Log.e(“Network”, “Network”);
+                        if (mLocationManager != null) {
+                            location = mLocationManager
+                                    .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                            if (location != null) {
+                                latitude = location.getLatitude();
+                                longitude = location.getLongitude();
+                            }
+                        }
+                    } else
+                        // if GPS Enabled get lat/long using GPS Services
+                        if (isGPSEnabled) {
+                            if (location == null) {
+                                mLocationManager.requestLocationUpdates(
+                                        LocationManager.GPS_PROVIDER,
+                                        MIN_TIME_BW_UPDATES,
+                                        MIN_DISTANCE_CHANGE_FOR_UPDATES, mLocationListener);
+                                //Log.e(“GPS Enabled”, “GPS Enabled”);
+                                if (mLocationManager != null) {
+                                    location = mLocationManager
+                                            .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                    if (location != null) {
+                                        latitude = location.getLatitude();
+                                        longitude = location.getLongitude();
+                                    }
+                                }
+                            }
+                        }else{
+                            System.out.println("no gps");
+                            requestPermissions(new String[]{
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                            },100);
+                            Intent locationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivityForResult(locationIntent, 2);
+                        }
+                }else{
+                    System.out.println("no permissions");
+                    requestPermissions(new String[]{
+                            android.Manifest.permission.ACCESS_FINE_LOCATION
+                    }, 100);
+
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return location;
+    }
+    public LatLng getMyLatLng(){
+        if(getLocation() != null){
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+            Mylatlng = new LatLng(latitude,longitude);
+        }else{
+            System.out.println("Open GPS");
+           // if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(MapsActivity.this, "android.permission.ACCESS_COARSE_LOCATION")) {
+                ActivityCompat.requestPermissions(MapsActivity.this, new String[]{"android.permission.ACCESS_COARSE_LOCATION"}, 0);
+            XXPermissions.with(this)
+                    .permission(Permission.ACCESS_FINE_LOCATION)
+                    .request(new OnPermission() {
+                        @Override
+                        public void hasPermission(List<String> granted, boolean all) {
+                            if(all)Toast.makeText(getApplicationContext(),"定位權限取得成功",Toast.LENGTH_SHORT);
+                        }
+
+                        @Override
+                        public void noPermission(List<String> denied, boolean never) {
+                            if(never)Toast.makeText(getApplicationContext(),"被永久拒絕",Toast.LENGTH_SHORT);
+                            else Toast.makeText(getApplicationContext(),"取得權限失敗",Toast.LENGTH_SHORT);
+                        }
+                    });
+                //return null;
+            //}
+        }
+        return Mylatlng;
+    }
     private void getMyLocation() {
         // Getting LocationManager object from System Service LOCATION_SERVICE
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -237,39 +378,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationChanged(Location location) {
                 mOrigin = new LatLng(location.getLatitude(), location.getLongitude());
                 //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mOrigin,12));
-                if (mOrigin != null && mDestination != null)
-                    drawRoute();
+                System.out.println("Location is changed");
+                System.out.println(mOrigin);
+                //if (mOrigin != null && mDestination != null)
+                    //drawRoute();
             }
 
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
-
+                Log.d("LocMsg","StatusChanged");
             }
 
             @Override
             public void onProviderEnabled(String provider) {
+                Log.d("LocMsg","onProviderEnabled");
 
             }
 
             @Override
             public void onProviderDisabled(String provider) {
-
+                Log.d("LocMsg","onProviderDisabled");
+                openGPS(mContext);
+                GetSelf
             }
         };
 
         int currentApiVersion = Build.VERSION.SDK_INT;
         if (currentApiVersion >= Build.VERSION_CODES.M) {
-
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED) {
+            String[] PERMISSIONS = {android.Manifest.permission.ACCESS_COARSE_LOCATION,android.Manifest.permission.ACCESS_FINE_LOCATION};
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_DENIED &&
+                    checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_DENIED) {
                 mMap.setMyLocationEnabled(true);
                 mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 0, mLocationListener);
-
+                Location location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if(location != null){
+                    double latitude = location.getLatitude();
+                    double longitude = location.getLongitude();
+                    mOrigin = new LatLng(latitude,longitude);
+                    System.out.println("MyLocation is updated");
+                }
                 mMap.setOnMapLongClickListener(latLng -> {
                     mDestination = latLng;
                     //mMap.clear();
                     //mMarkerOptions = new MarkerOptions().position(mDestination).title("Destination");
-                    mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination");
-                    mMap.addMarker(mMarkerOptions);
+                    //mMarkerOptions = new MarkerOptions().position(RxLocation).title("Destination");
+                    //mMap.addMarker(mMarkerOptions);
                     if (mOrigin != null && mDestination != null)
                         drawRoute();
                 });
@@ -278,10 +431,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 requestPermissions(new String[]{
                         android.Manifest.permission.ACCESS_FINE_LOCATION
                 }, 100);
+                ActivityCompat.requestPermissions((FragmentActivity) mContext, PERMISSIONS, 112 );
+                Intent locationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(locationIntent, 2);
             }
         }
     }
 
+    public static final void openGPS(Context context) {
+        Intent GPSIntent = new Intent();
+        GPSIntent.setClassName("com.android.settings",
+                "com.android.settings.widget.SettingsAppWidgetProvider");
+        GPSIntent.addCategory("android.intent.category.ALTERNATIVE");
+        GPSIntent.setData(Uri.parse("custom:3"));
+        try {
+            PendingIntent.getBroadcast(context, 0, GPSIntent, 0).send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void drawRoute() {
 
@@ -373,7 +541,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ObservableOnSubscribe<LatLng> observableOnSubscribe = new ObservableOnSubscribe<LatLng>() {
         @Override
         public void subscribe(ObservableEmitter<LatLng> emitter) {
-            System.out.println("Map已經訂閱：subscribe，获取发射器");
+            //System.out.println("Map已經訂閱：subscribe，获取发射器");
             String id = userSetting.getString("id",null);
             if(id == null){
                 System.out.println("id null");
@@ -397,7 +565,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onSubscribe(Disposable d) {
             disposable[0] = d;
-            System.out.println("Map已经订阅：onSubscribe，获取解除器");
+            //System.out.println("Map已经订阅：onSubscribe，获取解除器");
         }
 
         @Override
@@ -420,7 +588,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     public void sub() {
-        System.out.println("Map開始訂閱：subscribe");
+        //System.out.println("Map開始訂閱：subscribe");
         observable.subscribe(observer);
     }
 
