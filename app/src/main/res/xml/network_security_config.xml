@@ -3,9 +3,9 @@
 
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">35.221.236.109:3000</domain>
-        <domain includeSubdomains="true">35.221.236.109</domain>
-        <domain includeSubdomains="true">35.221.236.109:3000/api88050</domain>
+        <domain includeSubdomains="true">35.229.164.35:3000</domain>
+        <domain includeSubdomains="true">35.229.164.35</domain>
+        <domain includeSubdomains="true">35.229.164.35:3000/api88050</domain>
     </domain-config>
 
 </network-security-config>

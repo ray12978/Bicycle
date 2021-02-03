@@ -1,10 +1,12 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Util;
 
 import android.content.SharedPreferences;
 
+import com.Ray.Bicycle.Activity.MainActivity;
+import com.Ray.Bicycle.RxJava.RxTimerUtil;
+
 import androidx.appcompat.app.AppCompatActivity;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;

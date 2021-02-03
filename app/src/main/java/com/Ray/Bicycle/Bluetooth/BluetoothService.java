@@ -1,4 +1,4 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Bluetooth;
 
 import android.app.Service;
 import android.bluetooth.BluetoothDevice;

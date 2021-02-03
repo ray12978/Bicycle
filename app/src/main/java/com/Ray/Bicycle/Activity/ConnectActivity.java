@@ -1,4 +1,4 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Activity;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -32,12 +32,6 @@ import com.Ray.Bicycle.R;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 
 public class ConnectActivity extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;

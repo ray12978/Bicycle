@@ -1,22 +1,20 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Component;
 
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.NumberPicker;
 import android.app.AlertDialog;
 
-import java.text.SimpleDateFormat;
+import com.Ray.Bicycle.R;
+
 import java.util.Date;
 
 public class TimePickerDialog {
     private Activity activity;
     /**使InterFace可以被類別使用*/
-    OnDialogRespond onDialogRespond;
+    public OnDialogRespond onDialogRespond;
 
     public TimePickerDialog(Activity activity) {
         this.activity = activity;
@@ -71,7 +69,7 @@ public class TimePickerDialog {
         }));
     }
     /**設置Interface，使取到的直可以被回傳*/
-    interface OnDialogRespond{
+    public interface OnDialogRespond{
         void onRespond(String selected);
         void onResult(boolean ans) throws Exception;
     }

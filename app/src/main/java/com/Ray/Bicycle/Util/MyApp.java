@@ -1,58 +1,51 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Vibrator;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.Toast;
 
+import com.Ray.Bicycle.Activity.ConnectActivity;
+import com.Ray.Bicycle.Activity.MainActivity;
+import com.Ray.Bicycle.R;
+import com.Ray.Bicycle.RxJava.RxFallAlert;
+import com.Ray.Bicycle.RxJava.RxOkHttp3;
+import com.Ray.Bicycle.RxJava.RxPostTimer;
+import com.Ray.Bicycle.RxJava.RxTimerUtil;
 import com.github.ivbaranov.rxbluetooth.BluetoothConnection;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
-import com.google.android.datatransport.runtime.scheduling.jobscheduling.SchedulerConfig;
 
 import org.jetbrains.annotations.NotNull;
-import org.reactivestreams.Subscription;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Calendar;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class MyApp extends Application {
@@ -81,7 +74,7 @@ public class MyApp extends Application {
     public FlagAddress BTRevSta = new FlagAddress(false);
     public FlagAddress DangerFlag = new FlagAddress(true);
     public FlagAddress BTRevFlag = new FlagAddress(false);
-    protected FlagAddress MuteFlag = new FlagAddress(false);
+    public FlagAddress MuteFlag = new FlagAddress(false);
     public String DevAddress, DevName;
     private String TAG = "BTSta";
     /**
@@ -111,7 +104,7 @@ public class MyApp extends Application {
      **/
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
     private static final int NOTIFY_REQUEST_ID = 300;
-    com.Ray.Bicycle.Notification notification = new com.Ray.Bicycle.Notification();
+    com.Ray.Bicycle.Activity.Notification notification = new com.Ray.Bicycle.Activity.Notification();
     //Context context;
     /**
      * Timer
@@ -138,24 +131,6 @@ public class MyApp extends Application {
     private SharedPreferences UserSetting;
     private SharedPreferences FallData;
 
-    public void ScanDanger(/*AlertDialog Dia*/) {  //Temporarily reserved
-        RxDanger rxDanger = new RxDanger();
-        compositeDisposable.add(rxDanger.RxDangerStream("A")
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io())
-                .subscribe(s -> {
-                    if (s.equals("A"))
-                        System.out.println("recv:A");
-                    //Dia.show();
-                }, throwable -> {
-                    //BTRevSta.Flag = false;
-                    // Error occured
-                    System.out.println("Recv Danger Error");
-                }));
-
-
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -179,19 +154,6 @@ public class MyApp extends Application {
         postValue = new PostValue();
     }
 
-    /****/
-
-    /*public void startTimer() {
-        runnable.run();
-    }
-    Handler handler = new Handler();
-    Runnable runnable = new Runnable() {
-        public void run() {
-            //afficher();
-            //startCount();
-
-        }
-    };*/
     public boolean getBTState() {
         return socket != null;
     }
@@ -223,14 +185,9 @@ public class MyApp extends Application {
     public void Save_Val(@NotNull StringBuffer StrBufTmp, int count) {
         if (buffer == null) return;
 
-        // if (inputStream.available() <= 0)return;
         String a = new String(buffer, 0, count + 1);
         if (a.charAt(0) != 'S') return;
         StrBufTmp.replace(0, count + 1, a);
-        //Thread.sleep(100);
-        //System.out.print("BTValTmp:");
-        //System.out.println(BTValTmp);
-
     }
 
     public void str_process() {
@@ -245,26 +202,13 @@ public class MyApp extends Application {
                     if (b != StrPosition.length - 1) b++;
                 }
             }
-
             //System.out.println( BTValTmp.toString()+','+StrPosition[1]+','+StrPosition[2]);
             SVal = BTValTmp.toString().substring(StrPosition[0] + 1, StrPosition[1]).trim();
             MVal = BTValTmp.toString().substring(StrPosition[1] + 1, StrPosition[2]).trim();
             danger = BTValTmp.toString().substring(StrPosition[2], StrPosition[2] + 1).trim();
             TVal = Integer.toString(UserSetting.getInt("postTime", 15000) / 1000);
             PVal = UserSetting.getString("TopS", "0");
-            //Log.e("Tmp", BTValTmp.toString());
-            //Log.e("S", SVal);
-            //Log.e("M", MVal);
-            //Log.e("danger", danger);
-            //Log.e("P", PVal);
-            //BTValTmp.delete(0, BTValTmp.length());
-        } /*else if (BTValTmp.toString().charAt(0) == 'B') {
-            String Status = BTValTmp.toString().substring(1, 2).trim();
-            BTValTmp.delete(0, BTValTmp.length());
-            DanFlag.Flag = Status.equals("1");
-            System.out.println(DanFlag.Flag);
-            //if (DanFlag.Flag) Danger_Msg();
-        }*/
+        }
     }
 
     public String getVal(char Select) {
@@ -288,7 +232,7 @@ public class MyApp extends Application {
     }
 
 
-    protected boolean connDevice(BluetoothDevice device) {
+    public boolean connDevice(BluetoothDevice device) {
         AtomicBoolean Sta = new AtomicBoolean(false);
         compositeDisposable.add(rxBluetooth.connectAsClient(device, serialPortUUID)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -382,7 +326,7 @@ public class MyApp extends Application {
             //DanFlag.Flag = false;
             boolean notiFlag = UserSetting.getBoolean("noti", false);
             if (DangerFlag.Flag && !MuteFlag.Flag && notiFlag) {
-                showNotification();
+                ATNotification();
                 //codi=null;
             }
             System.out.println(DangerFlag.Flag);
@@ -614,7 +558,7 @@ public class MyApp extends Application {
                 } //else System.out.println("Fall = N return");
                 if (AT[0].equals("Y")) {
                     addData("AT");
-                    showNotification();
+                    ATNotification();
                     System.out.println("AT!");
                 } //else System.out.println("AT = N return");
             }
@@ -632,7 +576,7 @@ public class MyApp extends Application {
     /**
      * FallMsg Stream
      **/
-    protected void FallListen() {
+    public void FallListen() {
         boolean PhFlag = UserSetting.getBoolean("ph", true);
         boolean ClFlag = UserSetting.getBoolean("cloud", false);
         if (PhFlag || !ClFlag) {
@@ -709,12 +653,12 @@ public class MyApp extends Application {
     /**
      * notification Anti-theft
      **/
-    public void showNotification() {
+    public void ATNotification() {
         Log.d(TAG, "showNotification: ");
         try {
             Calendar mCal = Calendar.getInstance();
             CharSequence s = DateFormat.format("MM月dd日 kk:mm:ss", mCal.getTime());
-            Intent intent = new Intent(getApplicationContext(), com.Ray.Bicycle.Notification.class);
+            Intent intent = new Intent(getApplicationContext(), com.Ray.Bicycle.Activity.Notification.class);
             intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
                     NOTIFY_REQUEST_ID,
@@ -779,7 +723,7 @@ public class MyApp extends Application {
         try {
             Calendar mCal = Calendar.getInstance();
             CharSequence s = DateFormat.format("MM月dd日 kk:mm:ss", mCal.getTime());
-            Intent intent = new Intent(getApplicationContext(), com.Ray.Bicycle.Notification.class);
+            Intent intent = new Intent(getApplicationContext(), com.Ray.Bicycle.Activity.Notification.class);
             intent.putExtra("noti_id", NOTIFY_REQUEST_ID);
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),
                     NOTIFY_REQUEST_ID,

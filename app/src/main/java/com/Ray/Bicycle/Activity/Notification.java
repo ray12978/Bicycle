@@ -1,32 +1,27 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.appcompat.widget.Toolbar;
-
+import com.Ray.Bicycle.R;
+import com.Ray.Bicycle.View.BottomNavigation;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Random;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.preference.Preference;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,12 +35,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
     ArrayList<HashMap<String, String>> arrayList = new ArrayList<>();
     private SharedPreferences FallData;
 
-
-    // Context context;
-    /*public Notification(Context context) {
-        this.context = context;
-    }*/
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setContentView(R.layout.notification_page);
@@ -53,7 +42,7 @@ public class Notification extends AppCompatActivity implements NavigationView.On
 
         //Layout Init
         System.out.println("Created");
-        BottomNavi_init();
+        BottomNavInit();
         InitNavi();
         FallData = getSharedPreferences("FallData",MODE_PRIVATE);
         //InitFallData();
@@ -77,24 +66,10 @@ public class Notification extends AppCompatActivity implements NavigationView.On
 
         });
     }//onCreate
-
-    private void BottomNavi_init() {
-        BottomNavigationView bottomNavigationView
-                = findViewById(R.id.include2);
-
-        bottomNavigationView.getMenu().getItem(1).setChecked(true);
-
-        bottomNavigationView.setOnNavigationItemSelectedListener((item) -> {
-            switch (item.getItemId()) {
-                case R.id.nav1:
-                    Intent intent2 = new Intent(Notification.this, MainActivity.class);
-                    startActivity(intent2);
-                    break;
-                case R.id.nav2:
-                    break;
-            }
-            return true;
-        });
+    private void BottomNavInit() {
+        BottomNavigationView MyBtmNav = findViewById(R.id.include2);
+        BottomNavigation BtmNav = new BottomNavigation(this, MyBtmNav,1);
+        BtmNav.init();
     }
 
     private void InitNavi() {
@@ -136,17 +111,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
     }
 
     private void makeData() {
-        /*for (int i = 0;i<30;i++){
-            HashMap<String,String> hashMap = new HashMap<>();
-            hashMap.put("Id","座號："+String.format("%02d",i+1));
-            hashMap.put("Sub1",String.valueOf(new Random().nextInt(80) + 20));
-            hashMap.put("Sub2",String.valueOf(new Random().nextInt(80) + 20));
-            hashMap.put("Avg",String.valueOf(
-                    (Integer.parseInt(hashMap.get("Sub1"))
-                            +Integer.parseInt(hashMap.get("Sub2")))/2));
-
-            arrayList.add(hashMap);
-        }*/
         int i = 1;
         while (i < 13) {
             String index = Integer.toString(i);
@@ -162,7 +126,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
                 if(Val==2) hashMap.put("Msg", "偵測到使用者跌倒");
                 hashMap.put("Date", date);
                 arrayList.add(hashMap);
-                //System.out.println("偵測到使用者跌倒:" + date);
             }
             i++;
         }
@@ -194,16 +157,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            /*int avgS = Integer.parseInt(arrayList.get(position).get("Avg"));
-            if (avgS >= 80) {
-                holder.tvId.setBackgroundColor(getColor(R.color.green_TOKIWA));
-            } else if (avgS < 80 && avgS >= 60) {
-                holder.tvId.setBackgroundColor(getColor(R.color.blue_RURI));
-            } else if (avgS < 60 && avgS >= 40) {
-                holder.tvId.setBackgroundColor(getColor(R.color.yellow_YAMABUKI));
-            } else {
-                holder.tvId.setBackgroundColor(getColor(R.color.red_GINSYU));
-            }*/
             String Msg = arrayList.get(position).get("Msg");
             String AT = "偵測到自行車遭竊";
             String Fall = "偵測到使用者跌倒";
@@ -211,8 +164,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
             if(Msg.equals(Fall)) holder.tvId.setBackgroundColor(getColor(R.color.yellow_YAMABUKI));
             holder.tvId.setText(Msg);
             holder.tvSub1.setText(arrayList.get(position).get("Date"));
-            //holder.tvSub2.setText(arrayList.get(position).get("Sub2"));
-            //holder.tvAvg.setText(arrayList.get(position).get("Avg"));
 
             holder.mView.setOnClickListener((v) -> {
                 Intent intent = new Intent(Notification.this, MapsActivity.class);

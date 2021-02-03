@@ -1,4 +1,4 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Model;
 
 import com.google.android.gms.maps.model.LatLng;
 

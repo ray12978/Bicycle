@@ -34,4 +34,8 @@
     <string name="attachment_summary_on">Automatically download attachments for incoming emails
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="NavTitle2">通知</string>
+    <string name="NavTitle1">首頁</string>
+    <string name="NavTitle3">儀表板</string>
+    <string name="NavTitle4">設定</string>
 </resources>

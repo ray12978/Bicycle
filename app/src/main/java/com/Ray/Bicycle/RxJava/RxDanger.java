@@ -1,4 +1,4 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.RxJava;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;

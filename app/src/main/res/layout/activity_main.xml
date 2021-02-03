@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    tools:context=".Activity.MainActivity">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -19,17 +19,21 @@
             android:padding="10dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="TextView" />
 
     </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </TableLayout>
 
         <Switch
             android:id="@+id/NotiMute"
@@ -46,35 +50,45 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:stretchColumns="*"
+            android:padding="30dp"
             app:layout_constraintBottom_toTopOf="@+id/tableLayout"
             app:layout_constraintTop_toBottomOf="@+id/btBTConct">
 
             <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_marginBottom="10dp"
+                >
 
-                <TextView
-                    android:id="@+id/SpeedView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="現在時速:"
-                    android:textSize="30sp" />
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+
+                    <TextView
+                        android:id="@+id/SpeedView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="現在時速:"
+                        android:textSize="30sp" />
+                </androidx.cardview.widget.CardView>
+
             </TableRow>
 
             <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <TableRow
-                android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/MileageView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="總里程數:"
-                    android:textSize="30sp" />
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/MileageView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="總里程數:"
+                        android:textSize="30sp" />
+                </androidx.cardview.widget.CardView>
 
 
             </TableRow>
@@ -230,5 +244,6 @@
             layout="@layout/bottom_nav_view">
             </include>
     </androidx.constraintlayout.widget.ConstraintLayout>
-    <include layout="@layout/nav_view"/>
+
+    <include layout="@layout/nav_view" />
 </androidx.drawerlayout.widget.DrawerLayout>

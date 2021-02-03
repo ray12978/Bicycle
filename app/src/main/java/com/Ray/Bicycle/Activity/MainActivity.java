@@ -1,26 +1,12 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Activity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.media.AudioAttributes;
-import android.net.Uri;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
-import android.app.NotificationChannel;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,27 +19,37 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.DialogInterface;
 
+import com.Ray.Bicycle.Util.FlagAddress;
+import com.Ray.Bicycle.Component.LoadingDialog;
+import com.Ray.Bicycle.Util.MyApp;
+import com.Ray.Bicycle.R;
+import com.Ray.Bicycle.RxJava.RxPostTimer;
+import com.Ray.Bicycle.RxJava.RxTimerUtil;
+import com.Ray.Bicycle.Component.TimePickerDialog;
+import com.Ray.Bicycle.View.BottomNavigation;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
-import java.util.UUID;
-
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
-
-/**rxJava**/
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+
+/**
+ * rxJava
+ **/
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private String SpeedLimit = "";
@@ -109,13 +105,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      **/
     private SharedPreferences BTWrData;
     private SharedPreferences BTReData;
-    protected SharedPreferences userSetting;
+    public SharedPreferences userSetting;
     private Switch MuteNotify;
     private SharedPreferences FallData;
-    /**
-     * Notification
-     **/
-//    Notification notification = new Notification();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + deviceName, deviceName.equals("尚未選擇裝置") ? "" : MyAppInst.getBTState() ? "已連線" : "未連線"));
 
         InitNavi();
-        BottomNavi_init();
+        BottomNavInit();
         ButtonListen();
         //MyAppInst.startTimer();
         btBTConct.setText(MyAppInst.getBTState() ? "已連線" : "未連線");
@@ -166,17 +158,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //notification.InitFallData();
         //test();
     }
-    void test(){
-        int i = 0;
-        while (i<13){
-            //String index = String.valueOf(i);
-            String index = Integer.toString(i);
-            String Fall = "Fall" + index;
-            System.out.println(index);
-            System.out.println(Fall+FallData.getInt(Fall,0));
-            i++;
-        }
-    }
+
     void ScanFirst() {
         SharedPreferences shared = getSharedPreferences("is", MODE_PRIVATE);
         boolean isfer = shared.getBoolean("isfer", true);
@@ -313,15 +295,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(BTListAct);
         });
 
-        /**test btn**/
-        /*Button testFall = findViewById(R.id.button);
-        testFall.setOnClickListener(v -> {
-            //MyAppInst.getFall();
-            //MyAppInst.FallNotification();
-            MyAppInst.showNotification();
-        });*/
         btBTConct.setOnClickListener(v -> {
-            //loadingDialog.startLoadingDialog();
             if (address.equals("null")) {
                 Toast.makeText(this, "藍芽連線失敗，請先設定藍芽", Toast.LENGTH_SHORT).show();
                 return;
@@ -408,7 +382,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     }
-    private void BottomNavi_init(){
+
+    private void BottomNavInit() {
+        BottomNavigationView MyBtmNav = findViewById(R.id.include2);
+        BottomNavigation BtmNav = new BottomNavigation(this, MyBtmNav,0);
+        BtmNav.init();
+    }
+    /*private void BottomNavi_init(){
         BottomNavigationView bottomNavigationView
                 = (BottomNavigationView) findViewById(R.id.include2);
 
@@ -425,7 +405,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             return true;
         });
-    }
+    }*/
     private void InitNavi(){
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -610,19 +590,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    /*public AlertDialog Danger_Msg() {
-        return new AlertDialog.Builder(MainActivity.this)
-                .setIcon(R.drawable.ic_baseline_warning_48)
-                .setTitle("警告：您的腳踏車發生異狀,請立即確認狀況")
-                .setPositiveButton("確定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                })
-                .show();
-    }*/
-
     /*******************************其他**********************************/
     void Button_exterior(Button btn, int one, int two, int bit, char condi) {
         if (id.length() == 0 || !BTConnFlag) return;
@@ -697,10 +664,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     ObservableOnSubscribe<String> observableOnSubscribe = new ObservableOnSubscribe<String>() {
         @Override
         public void subscribe(ObservableEmitter<String> emitter) {
-            //System.out.println("SVMV已經訂閱：subscribe，获取发射器");
-            // if (RxLocation != null)
-            //    emitter.onNext(RxLocation);
-            //
             String Sval = BTReData.getString("S", "0");
             //String Mval = BTReData.getString("M",null);
             int AllM = BTReData.getInt("Mi", 0) / 100;
@@ -710,7 +673,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     emitter.onNext("000"+','+AllM);
                     return;
                 }
-
 
                 //if(BTSendMsg.equals("null"))System.out.println("BTReData null");
                 emitter.onNext(Sval + ',' + AllM);

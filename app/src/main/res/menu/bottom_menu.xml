@@ -2,12 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
 
-    <item android:title="首頁"
+    <item android:title="@string/NavTitle1"
         android:icon="@drawable/ic_home"
         android:id="@+id/nav1"
         />
-    <item android:title="通知"
+    <item android:title="@string/NavTitle2"
         android:id="@+id/nav2"
         android:icon="@drawable/ic_baseline_notifications_24"
+        />
+    <item android:title="@string/NavTitle3"
+        android:id="@+id/nav3"
+        android:icon="@drawable/drawable_dashboard"
         />
 </menu>

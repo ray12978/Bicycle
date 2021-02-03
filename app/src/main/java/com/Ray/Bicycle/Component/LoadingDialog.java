@@ -1,14 +1,15 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Component;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.view.LayoutInflater;
+
+import com.Ray.Bicycle.R;
 
 public class LoadingDialog {
     Activity activity;
     AlertDialog dialog;
 
-    LoadingDialog(Activity myActivity){
+    public LoadingDialog(Activity myActivity){
         activity = myActivity;
     }
     void startLoadingDialog(){

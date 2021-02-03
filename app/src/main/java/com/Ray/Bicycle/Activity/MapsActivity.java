@@ -1,4 +1,4 @@
-package com.Ray.Bicycle;
+package com.Ray.Bicycle.Activity;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -19,22 +19,15 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.navigation.ui.AppBarConfiguration;
-
+import com.Ray.Bicycle.Model.DirectionsJSONParser;
+import com.Ray.Bicycle.R;
+import com.Ray.Bicycle.RxJava.RxMapTimer;
+import com.Ray.Bicycle.RxJava.RxOkHttp3;
+import com.Ray.Bicycle.RxJava.RxTimerUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -54,20 +47,20 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentActivity;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-//request Permission
-import com.hjq.permissions.OnPermission;
-import com.hjq.permissions.Permission;
-import com.hjq.permissions.XXPermissions;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -83,7 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private RxTimerUtil rxTimerUtil = new RxTimerUtil();
     private CompositeDisposable MapCompositeDisposable = new CompositeDisposable();
     private LatLng RxLocation;
-    // private LatLng TestLocation = new LatLng(24.922582, 121.422590);
+    private LatLng TestLocation = new LatLng(25.119844, 121.465519);
     private boolean SubFlag = false;
     private RxMapTimer rxTimer = new RxMapTimer();
     private SharedPreferences userSetting;
@@ -99,7 +92,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LatLng Mylatlng;
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 200 * 10 * 1; // 2 seconds
+    private static final long MIN_TIME_BW_UPDATES = 200 * 10; // 2 seconds
     private Context mContext = MapsActivity.this;
     //private double a = 25.079597;
     //private double d = 121.557757;
@@ -351,22 +344,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             System.out.println("Open GPS");
            // if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(MapsActivity.this, "android.permission.ACCESS_COARSE_LOCATION")) {
                 ActivityCompat.requestPermissions(MapsActivity.this, new String[]{"android.permission.ACCESS_COARSE_LOCATION"}, 0);
-            XXPermissions.with(this)
-                    .permission(Permission.ACCESS_FINE_LOCATION)
-                    .request(new OnPermission() {
-                        @Override
-                        public void hasPermission(List<String> granted, boolean all) {
-                            if(all)Toast.makeText(getApplicationContext(),"定位權限取得成功",Toast.LENGTH_SHORT);
-                        }
-
-                        @Override
-                        public void noPermission(List<String> denied, boolean never) {
-                            if(never)Toast.makeText(getApplicationContext(),"被永久拒絕",Toast.LENGTH_SHORT);
-                            else Toast.makeText(getApplicationContext(),"取得權限失敗",Toast.LENGTH_SHORT);
-                        }
-                    });
-                //return null;
-            //}
         }
         return Mylatlng;
     }
@@ -549,6 +526,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             System.out.println("id:"+id);
             RxLocation = rxOkHttp3.getLocation(id);
+            //RxLocation = TestLocation;
             if (RxLocation != null)
                 emitter.onNext(RxLocation);
             System.out.println("Map信號發射：onComplete");
