@@ -373,10 +373,6 @@ public class MyApp extends Application {
     ObservableOnSubscribe<String> observableOnSubscribe = new ObservableOnSubscribe<String>() {
         @Override
         public void subscribe(ObservableEmitter<String> emitter) {
-            //System.out.println("已經訂閱：subscribe，获取发射器");
-            // if (RxLocation != null)
-            //    emitter.onNext(RxLocation);
-            //
             if (BTRevFlag.Flag) {
 
                 if (BTSendMsg == null) return;
@@ -452,8 +448,6 @@ public class MyApp extends Application {
      * AutoPost
      **/
     public void AutoPostVal() {
-        //MainActivity mainActivity = new MainActivity();
-        //SharedPreferences userSetting = getSharedPreferences("UserSetting" , MODE_PRIVATE);
         boolean PhFlag = UserSetting.getBoolean("ph", false);
         boolean ClFlag = UserSetting.getBoolean("cloud", false);
         if (!PhFlag || !ClFlag) {

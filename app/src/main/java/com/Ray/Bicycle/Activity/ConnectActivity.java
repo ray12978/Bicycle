@@ -40,7 +40,6 @@ public class ConnectActivity extends AppCompatActivity {
     public BluetoothDevice BTDevice;
     private RecyclerViewAdapter recyclerViewAdapter;
     public boolean isConnected = false;
-    private Toolbar toolbar;
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {

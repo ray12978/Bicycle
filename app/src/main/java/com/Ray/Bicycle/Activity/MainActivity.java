@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BTReData = getSharedPreferences("BTShare", MODE_PRIVATE);
         userSetting = getSharedPreferences("UserSetting", MODE_PRIVATE);
         ScanFirst();
-        FallData = getSharedPreferences("FallData" , MODE_PRIVATE);
+        FallData = getSharedPreferences("FallData", MODE_PRIVATE);
         BTConnFlag = userSetting.getBoolean("btsta", false);
         //context = this;
         /*****************藍牙*************/
@@ -175,18 +175,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    protected void InitFallData(){
-        FallData = getSharedPreferences("FallData" , MODE_PRIVATE);
+    protected void InitFallData() {
+        FallData = getSharedPreferences("FallData", MODE_PRIVATE);
         int i = 1;
-        while (i<13){
+        while (i < 13) {
             String index = String.valueOf(i);
             String Fall = "Fall" + index;
             FallData.edit()
-                    .putInt(Fall,0)
+                    .putInt(Fall, 0)
                     .apply();
             i++;
         }
-        System.out.println(FallData.getBoolean("11",false));
+        System.out.println(FallData.getBoolean("11", false));
     }
 
     void initUserSetting() {
@@ -207,8 +207,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         id = userSetting.getString("id", "null");
         PostFlag.Flag = userSetting.getBoolean("cloud", false);
         //NbFlag.Flag = nb.equals("phone");
-        if (PostFlag.Flag && nb) BTSendMsg.replace(BTMsgLen-1, BTMsgLen, "Y");
-        else BTSendMsg.replace(BTMsgLen-1, BTMsgLen, "N");
+        if (PostFlag.Flag && nb) BTSendMsg.replace(BTMsgLen - 1, BTMsgLen, "Y");
+        else BTSendMsg.replace(BTMsgLen - 1, BTMsgLen, "N");
         postTime = userSetting.getInt("postTime", 15000);
         UpdateBTMsg();
         System.out.print("nb狀態:");
@@ -223,10 +223,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void DpBTConnState(boolean state) {
-        btBTConct.setText(state ? "已連線" : "未連線");
-        toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name, Name.equals("尚未選擇裝置") ?
-                "" : state ? "已連線" : "未連線"));
-        //BTConnFlag = state;
+        if (state) {
+            btBTConct.setText("已連線");
+            toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name,
+                    Name.equals("尚未選擇裝置") ?
+                            "" : "已連線"));
+        } else {
+            btBTConct.setText("未連線");
+            toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name,
+                    Name.equals("尚未選擇裝置") ?
+                            "" : "未連線"));
+        }
+
         userSetting.edit()
                 .putBoolean("btsta", state)
                 .apply();
@@ -268,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String BTMsg = BTWrData.getString("SendMsg", "null");
         if (BTMsg.equals("null")) return;
         BTSendMsg = new StringBuffer();
-        BTMsg.substring(0, BTMsgLen+1);
+        BTMsg.substring(0, BTMsgLen + 1);
         BTSendMsg.append(BTMsg);
     }
 
@@ -311,27 +319,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             else DpBTConnState(false);
         });
         btLaser.setOnClickListener(v -> {
-            BTMsg(BTMsgLen-3, BTMsgLen-2, "T", "J", LasFlag);
+            BTMsg(BTMsgLen - 3, BTMsgLen - 2, "T", "J", LasFlag);
             int On = R.drawable.bike_open_white_48dp;
             int Off = R.drawable.ic_bike_icon_off_black;
-            Button_exterior(btLaser, Off, On, BTMsgLen-3, 'J');
+            Button_exterior(btLaser, Off, On, BTMsgLen - 3, 'J');
             UpdateBTMsg();
 
         });
         btBuzz.setOnClickListener(v -> {
-            BTMsg(BTMsgLen-2, BTMsgLen-1, "E", "N", BuzFlag);
+            BTMsg(BTMsgLen - 2, BTMsgLen - 1, "E", "N", BuzFlag);
             int On = R.drawable.ic_baseline_volume_off_24;
             int Off = R.drawable.ic_baseline_volume_up_24;
-            Button_exterior(btBuzz, Off, On, BTMsgLen-2, 'N');
+            Button_exterior(btBuzz, Off, On, BTMsgLen - 2, 'N');
             UpdateBTMsg();
             MyAppInst.DangerFlag.Flag = BuzFlag.Flag;
 
         });
         btLck.setOnClickListener(v -> {
-            BTMsg(BTMsgLen-7, BTMsgLen-6, "L", "F", LckFlag);
+            BTMsg(BTMsgLen - 7, BTMsgLen - 6, "L", "F", LckFlag);
             int On = R.drawable.ic_baseline_lock_24;
             int Off = R.drawable.ic_baseline_lock_open_24;
-            Button_exterior(btLck, Off, On, BTMsgLen-7, 'F');
+            Button_exterior(btLck, Off, On, BTMsgLen - 7, 'F');
 
             if (!LckFlag.Flag) {
                 btBuzz.setEnabled(true);
@@ -339,12 +347,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 btLaser.setEnabled(false);
             } else {
                 boolean preState = BuzFlag.Flag;
-                System.out.println("pre:"+preState);
+                System.out.println("pre:" + preState);
                 BuzFlag.Flag = false;
                 int BOn = R.drawable.ic_baseline_volume_off_24;
                 int BOff = R.drawable.ic_baseline_volume_up_24;
-                BTSendMsg.replace(BTMsgLen-2,BTMsgLen-1,"N");
-                Button_exterior(btBuzz, BOff, BOn, BTMsgLen-2, 'N');
+                BTSendMsg.replace(BTMsgLen - 2, BTMsgLen - 1, "N");
+                Button_exterior(btBuzz, BOff, BOn, BTMsgLen - 2, 'N');
 
                 btBuzz.setEnabled(false);
                 btSpLit.setEnabled(true);
@@ -362,7 +370,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             if (SpdFlag.Flag) dialog.showDialog();
             if (!SpdFlag.Flag) {
-                BTSendMsg.replace(BTMsgLen-4, BTMsgLen-3, "N");
+                BTSendMsg.replace(BTMsgLen - 4, BTMsgLen - 3, "N");
                 userSetting.edit()
                         .putString("TopS", "0")
                         .apply();
@@ -373,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
-            Button_exterior(btSpLit, Off, On, BTMsgLen-4, 'N');
+            Button_exterior(btSpLit, Off, On, BTMsgLen - 4, 'N');
             UpdateBTMsg();
         });
         MuteNotify.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -385,9 +393,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void BottomNavInit() {
         BottomNavigationView MyBtmNav = findViewById(R.id.include2);
-        BottomNavigation BtmNav = new BottomNavigation(this, MyBtmNav,0);
+        BottomNavigation BtmNav = new BottomNavigation(this, MyBtmNav, 0);
         BtmNav.init();
     }
+
     /*private void BottomNavi_init(){
         BottomNavigationView bottomNavigationView
                 = (BottomNavigationView) findViewById(R.id.include2);
@@ -406,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         });
     }*/
-    private void InitNavi(){
+    private void InitNavi() {
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
@@ -414,6 +423,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.addDrawerListener(toggle);
         toggle.syncState();
     }
+
     /***********Navigation*************/
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -544,8 +554,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         UserName = id;
         while (UserName.length() < 14) UserName += '@';
-        if (BTSendMsg.length() >= BTMsgLen+1) {
-            BTSendMsg.replace(BTMsgLen, BTMsgLen+14, UserName);
+        if (BTSendMsg.length() >= BTMsgLen + 1) {
+            BTSendMsg.replace(BTMsgLen, BTMsgLen + 14, UserName);
         } else {
             BTSendMsg.append(UserName);
         }
@@ -567,22 +577,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             System.out.println(SpLtVal);
             btSpLit.setText(String.format("時速限制:%s", SpLtVal));
             if (SpeedLimit.length() == 1) {
-                BTSendMsg.replace(BTMsgLen-6, BTMsgLen-5, "0");
-                BTSendMsg.replace(BTMsgLen-5, BTMsgLen-4, SpLtVal);
-            } else BTSendMsg.replace(BTMsgLen-6, BTMsgLen-4, SpLtVal);
+                BTSendMsg.replace(BTMsgLen - 6, BTMsgLen - 5, "0");
+                BTSendMsg.replace(BTMsgLen - 5, BTMsgLen - 4, SpLtVal);
+            } else BTSendMsg.replace(BTMsgLen - 6, BTMsgLen - 4, SpLtVal);
             UpdateBTMsg();
             userSetting.edit()
                     .putString("TopS", SpLtVal)
                     .apply();
-            BTMsg(BTMsgLen-4, BTMsgLen-3, "Y", "N", SpdFlag);
+            BTMsg(BTMsgLen - 4, BTMsgLen - 3, "Y", "N", SpdFlag);
 
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
-            Button_exterior(btSpLit, Off, On, BTMsgLen-4, 'N');
+            Button_exterior(btSpLit, Off, On, BTMsgLen - 4, 'N');
             System.out.println(BTSendMsg);
             UpdateBTMsg();
         } else {
-            BTSendMsg.replace(BTMsgLen-6, BTMsgLen-4, "00");
+            BTSendMsg.replace(BTMsgLen - 6, BTMsgLen - 4, "00");
             userSetting.edit()
                     .putString("TopS", "0")
                     .apply();
@@ -669,8 +679,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int AllM = BTReData.getInt("Mi", 0) / 100;
             //System.out.println("Sval:"+Sval+','+"AllM:"+AllM);
             if (Sval != null && AllM != 0) {
-                if (preAllM == AllM && Sval.equals("0")){
-                    emitter.onNext("000"+','+AllM);
+                if (preAllM == AllM && Sval.equals("0")) {
+                    emitter.onNext("000" + ',' + AllM);
                     return;
                 }
 
@@ -726,97 +736,95 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!string.equals("0")) {
                 speed = string.substring(pos[1], pos[0]);
                 mileage = string.substring(pos[0] + 1);
-            }else {
+            } else {
                 speed = "0";
                 mileage = "0";
             }
             intMileage = Integer.parseInt(mileage);
             if (intMileage / 1000 != 0) {
-                    StringBuffer mile = new StringBuffer();
-                    mile.append(mileage);
-                    mile.insert(mile.length() - 3, '.');
-                    MileageView.setText(String.format("總里程數:%s公里", mile));
-                } else {
-                    MileageView.setText(String.format("總里程數:%s公尺", mileage));
-                }
-
-                // System.out.println(speed);
-                // System.out.println(mileage);
-                SpeedView.setText(String.format("現在時速:%skm/h", speed));
-
-
+                StringBuffer mile = new StringBuffer();
+                mile.append(mileage);
+                mile.insert(mile.length() - 3, '.');
+                MileageView.setText(String.format("總里程數:%s公里", mile));
+            } else {
+                MileageView.setText(String.format("總里程數:%s公尺", mileage));
             }
 
-            @Override
-            public void onError (Throwable e){
-                //System.out.println("SVMV信号接收：onError " + e.getMessage());
-                cancel();
-            }
+            // System.out.println(speed);
+            // System.out.println(mileage);
+            SpeedView.setText(String.format("現在時速:%skm/h", speed));
 
-            @Override
-            public void onComplete () {
-                //System.out.println("SVMV信号接收：onComplete");
-            }
+
         }
 
-        ;
-
-        public void sub() {
-            //System.out.println("SVMV開始訂閱：subscribe");
-            observable.subscribe(observer);
-        }
-
-        public void cancel() {
-            // System.out.println("SVMV取消訂閱：unsubscribe");
-            if (disposable[0] != null)
-                disposable[0].dispose();
-        }
-
-        /**
-         * hide keyboard
-         **/
         @Override
-        public boolean dispatchTouchEvent(MotionEvent ev) {
-            if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-                // 獲得當前得到焦點的View，一般情況下就是EditText（特殊情況就是軌跡求或者實體案件會移動焦點）
-                View v = getCurrentFocus();
-                if (isShouldHideInput(v, ev)) {
-                    hideSoftInput(v.getWindowToken());
-                }
-            }
-            return super.dispatchTouchEvent(ev);
+        public void onError(Throwable e) {
+            //System.out.println("SVMV信号接收：onError " + e.getMessage());
+            cancel();
         }
 
-        private void hideSoftInput(IBinder token) {
-            if (token != null) {
-                InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                im.hideSoftInputFromWindow(token,
-                        InputMethodManager.HIDE_NOT_ALWAYS);
+        @Override
+        public void onComplete() {
+            //System.out.println("SVMV信号接收：onComplete");
+        }
+    };
+
+    public void sub() {
+        //System.out.println("SVMV開始訂閱：subscribe");
+        observable.subscribe(observer);
+    }
+
+    public void cancel() {
+        // System.out.println("SVMV取消訂閱：unsubscribe");
+        if (disposable[0] != null)
+            disposable[0].dispose();
+    }
+
+    /**
+     * hide keyboard
+     **/
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            // 獲得當前得到焦點的View，一般情況下就是EditText（特殊情況就是軌跡求或者實體案件會移動焦點）
+            View v = getCurrentFocus();
+            if (isShouldHideInput(v, ev)) {
+                hideSoftInput(v.getWindowToken());
             }
         }
+        return super.dispatchTouchEvent(ev);
+    }
 
-        /**
-         * 根據EditText所在座標和用戶點擊的座標相對比，來判斷是否隱藏鍵盤，因爲當用戶點擊EditText時沒必要隱藏
-         *
-         * @param v
-         * @param event
-         * @return
-         */
-        private boolean isShouldHideInput(View v, MotionEvent event) {
-            if (v != null && (v instanceof EditText)) {
-                int[] l = {0, 0};
-                v.getLocationInWindow(l);
-                int left = l[0], top = l[1], bottom = top + v.getHeight(), right = left
-                        + v.getWidth();
-                if (event.getX() > left && event.getX() < right
-                        && event.getY() > top && event.getY() < bottom) {
-                    // 點擊EditText的事件，忽略它。
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            // 如果焦點不是EditText則忽略，這個發生在視圖剛繪製完，第一個焦點不在EditView上，和用戶用軌跡球選擇其他的焦點
-            return false;
+    private void hideSoftInput(IBinder token) {
+        if (token != null) {
+            InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(token,
+                    InputMethodManager.HIDE_NOT_ALWAYS);
         }
     }
+
+    /**
+     * 根據EditText所在座標和用戶點擊的座標相對比，來判斷是否隱藏鍵盤，因爲當用戶點擊EditText時沒必要隱藏
+     *
+     * @param v
+     * @param event
+     * @return
+     */
+    private boolean isShouldHideInput(View v, MotionEvent event) {
+        if (v != null && (v instanceof EditText)) {
+            int[] l = {0, 0};
+            v.getLocationInWindow(l);
+            int left = l[0], top = l[1], bottom = top + v.getHeight(), right = left
+                    + v.getWidth();
+            if (event.getX() > left && event.getX() < right
+                    && event.getY() > top && event.getY() < bottom) {
+                // 點擊EditText的事件，忽略它。
+                return false;
+            } else {
+                return true;
+            }
+        }
+        // 如果焦點不是EditText則忽略，這個發生在視圖剛繪製完，第一個焦點不在EditView上，和用戶用軌跡球選擇其他的焦點
+        return false;
+    }
+}
