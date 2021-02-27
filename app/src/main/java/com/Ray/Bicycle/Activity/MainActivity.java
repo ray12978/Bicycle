@@ -617,21 +617,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      * RxJava
      **/
     protected void initEventListeners() {
-        compositeDisposable.add(rxBluetooth.observeBluetoothState()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.computation())
-                .filter(BtPredicate.in(BluetoothAdapter.STATE_ON))
-                .subscribe(integer -> {
-                }));
-
-        compositeDisposable.add(rxBluetooth.observeBluetoothState()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.computation())
-                .filter(BtPredicate.in(BluetoothAdapter.STATE_OFF, BluetoothAdapter.STATE_TURNING_OFF,
-                        BluetoothAdapter.STATE_TURNING_ON))
-                .subscribe(integer -> {
-                    // start.setBackgroundColor(getResources().getColor(R.color.colorInactive));
-                }));
         /**
          * get bluetooth Connection State
          */
