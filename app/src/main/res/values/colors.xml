@@ -8,4 +8,18 @@
     <color name="blue_RURI">#005CAF</color>
     <color name="yellow_YAMABUKI">#FFB11B</color>
     <color name="red_GINSYU">#C73E3A</color>
+    <color name="purple_200">#FFA5DEE4</color>
+    <color name="purple_500">#FFA5DEE4</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="blue_700">#192E5B</color>
+    <color name="blue_500">#1D65A6</color>
+    <color name="blue_200">#2EA9DF</color>
+    <color name="yellow_500">#F2A104</color>
+    <color name="red_500">#CB1B45</color>
+    <color name="red_200">#EB7A77</color>
+    <color name="red_100">#FEDFE1</color>
 </resources>

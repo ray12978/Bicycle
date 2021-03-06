@@ -9,6 +9,11 @@
             android:title="首頁"
             />
         <item
+            android:id="@+id/nav_sel_device"
+            android:icon="@drawable/drawable_bluetooth_white"
+            android:title="選擇藍芽裝置"
+            />
+        <item
             android:id="@+id/nav_map"
             android:icon="@drawable/ic_map"
             android:title="地圖" />

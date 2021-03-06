@@ -35,6 +35,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONObject;
 
@@ -131,33 +132,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void ButtonListen() {
         GetBicycle = findViewById(R.id.getBicycleFAB);
         GetSelf = findViewById(R.id.getMyLoc);
-        GetBicycle.setOnClickListener(v -> NowGetLoc(UpdateBicycle()));
+        GetBicycle.setOnClickListener(v -> {
+            LatLng latLng = UpdateBicycle();
+            if(latLng != null) SetMark(latLng, true);
+        });
         GetSelf.setOnClickListener(v -> GetMyself());
     }
 
     private LatLng UpdateBicycle() {
         String id = userSetting.getString("id", null);
         if (id == null) {
-            Toast.makeText(this, "請先設定使用者名稱", Toast.LENGTH_SHORT).show();
+            makeSnack("請先設定使用者名稱");
             return null;
         }
         RxLocation = rxOkHttp3.getLocation(id);
         return RxLocation;
     }
 
-    private void NowGetLoc(LatLng location) {
-
-        if (location == null) {
-            Toast.makeText(this, "取得定位失敗", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        SetMark(location, true);
-    }
-
     private void GetMyself() {
-        //getMyLocation();
-        System.out.println(getMyLatLng());
-        //System.out.println(mOrigin);
         if (mOrigin == null) return;
         if (getMyLatLng() == null) return;
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mOrigin, 16));
@@ -230,6 +222,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (requestCode == 100) {
             if (!verifyAllPermissions(grantResults)) {
                 Toast.makeText(getApplicationContext(), "No sufficient permissions", Toast.LENGTH_LONG).show();
+                makeSnack("沒有足夠的權限");
             } else {
                 getMyLocation();
             }
@@ -265,6 +258,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             MapReady = false;
         }
 
+    }
+
+    private void makeSnack(String msg) {
+        Snackbar snackbar = Snackbar.make(drawer, msg, Snackbar.LENGTH_LONG)
+                .setAction("OK", view -> Log.i("SNACKBAR", "OK"));
+        snackbar.show();
     }
 
     public Location getLocation() {
@@ -675,7 +674,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mPolyline = mMap.addPolyline(lineOptions);
 
             } else
-                Toast.makeText(getApplicationContext(), "No route is found", Toast.LENGTH_LONG).show();
+            makeSnack("沒有找到路線");
         }
     }
 

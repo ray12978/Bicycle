@@ -17,9 +17,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.text.format.DateFormat;
 import android.util.Log;
-import android.widget.Button;
 
-import com.Ray.Bicycle.Activity.ConnectActivity;
 import com.Ray.Bicycle.Activity.MainActivity;
 import com.Ray.Bicycle.R;
 import com.Ray.Bicycle.RxJava.RxFallAlert;
@@ -54,6 +52,7 @@ public class MyApp extends Application {
 
     public MainActivity mainActivity;
 
+    public static boolean isConnected;
     public static synchronized MyApp getAppInstance() {
         return appInstance;
     }
@@ -62,10 +61,6 @@ public class MyApp extends Application {
     /***Bluetooth***/
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     public StringBuffer BTValTmp = new StringBuffer();
-
-    public synchronized StringBuffer getBTVal() {
-        return BTValTmp;
-    }
 
     private BluetoothSocket socket;
     public InputStream inputStream = null;
@@ -77,19 +72,11 @@ public class MyApp extends Application {
     public FlagAddress MuteFlag = new FlagAddress(false);
     public String DevAddress, DevName;
     private String TAG = "BTSta";
-    /**
-     * RxBluetooth
-     **/
-    BluetoothConnection blueConn;
     RxBluetooth rxBluetooth = new RxBluetooth(this);
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
     AtomicInteger readCnt = new AtomicInteger();
     RxOkHttp3 rxOkHttp3 = new RxOkHttp3();
-    //private int i = 0;
-    /**
-     * ConnectActivity Object
-     **/
-    ConnectActivity ConnAct = new ConnectActivity();
+
 
     /**
      * String
@@ -99,17 +86,18 @@ public class MyApp extends Application {
     private int AllM;
     private int[] StrPosition = new int[5];
     private int BTMsgLen = 8;
+
     /**
      * NOTIFY
      **/
     private static final String TEST_NOTIFY_ID = "Bicycle_Danger_1";
     private static final int NOTIFY_REQUEST_ID = 300;
-    com.Ray.Bicycle.Activity.Notification notification = new com.Ray.Bicycle.Activity.Notification();
-    //Context context;
+
     /**
      * Timer
      */
     private int UnLockCnt = 0;
+
     /**
      * RxTimer
      */
@@ -123,6 +111,7 @@ public class MyApp extends Application {
     boolean FState;
     private PostValue postValue;
     private final String[] all = new String[1];
+
     /**
      * SharedBTValue
      */
@@ -130,6 +119,11 @@ public class MyApp extends Application {
     private SharedPreferences BTWrData;
     private SharedPreferences UserSetting;
     private SharedPreferences FallData;
+
+    /**
+     * Interface
+     */
+    public OnConnectedDevice onConnectedDevice;
 
     @Override
     public void onCreate() {
@@ -158,12 +152,18 @@ public class MyApp extends Application {
         return socket != null;
     }
 
+    public static boolean getConnected() {
+        return isConnected;
+    }
 
+    public static void isDisconnected() {
+        isConnected = false;
+    }
     /**
      * BlueTooth
      **/
 
-    public void disconnect(Button BTBut) {
+    public void disconnect() {
         if (socket == null) return;
 
         try {
@@ -171,7 +171,7 @@ public class MyApp extends Application {
             socket = null;
             inputStream = null;
             outputStream = null;
-            BTBut.setText("未連線");
+            isConnected = false;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -232,28 +232,32 @@ public class MyApp extends Application {
     }
 
 
-    public boolean connDevice(BluetoothDevice device) {
-        AtomicBoolean Sta = new AtomicBoolean(false);
+    public void connDevice(BluetoothDevice device) {
         compositeDisposable.add(rxBluetooth.connectAsClient(device, serialPortUUID)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         bluetoothSocket -> {
-                            // Connected to bluetooth device, do anything with the socket
                             System.out.println("conned");
-                            //System.out.println( BTRevSta.Flag);
+                            isConnected = true;
                             socket = bluetoothSocket;
+                            try {
+                                onConnectedDevice.OnConnected(true);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                             ReadBT();
                             AutoWriteBT();
-                            Sta.set(true);
                         }, throwable -> {
                             // On error
+                            try {
+                                onConnectedDevice.OnConnected(false);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            isConnected = false;
                             System.out.println("error");
-                            Sta.set(false);
-                            //System.out.println(ConnAct.getDevice().getName());
-                            //System.out.println(ConnAct.getDevice().getAddress());
                         }));
-        return Sta.get();
     }
 
     private void ReadBT() throws Exception {
@@ -322,18 +326,10 @@ public class MyApp extends Application {
         }
         codi = getVal('D');
         if (codi.equals("Y")) {
-            //setVibrate(1000);
-            //DanFlag.Flag = false;
             boolean notiFlag = UserSetting.getBoolean("noti", false);
             if (DangerFlag.Flag && !MuteFlag.Flag && notiFlag) {
                 ATNotification();
-                //codi=null;
             }
-            System.out.println(DangerFlag.Flag);
-            //mainActivity.Danger_Msg();
-            //mediaPlayer.start();
-            //if(Alert.Flag)Danger_Msg();
-            //loadingDialog.startLoadingDialog();
         }
     }
 
@@ -341,7 +337,6 @@ public class MyApp extends Application {
         int MInt;
         if (MVal == null || MVal.equals("")) MInt = -1;
         else MInt = Integer.parseInt(MVal) * 121;
-        //int MInt = MVal == null?-1:Integer.parseInt(MVal);
         if (MInt != -1) AllM = MInt + AllM;
         BTShare.edit()
                 .putString("S", SVal)
@@ -773,6 +768,7 @@ public class MyApp extends Application {
 
         }
     }
-
-
+    public interface OnConnectedDevice {
+        void OnConnected(boolean ans) throws Exception;
+    }
 }

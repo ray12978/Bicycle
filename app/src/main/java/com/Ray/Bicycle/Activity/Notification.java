@@ -97,10 +97,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                /*if (!BTConnFlag.Flag) {
-                    Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
-                    break;
-                }*/
                 Intent intent3 = new Intent(Notification.this, SettingPage.class);
                 startActivity(intent3);
                 onStop();
@@ -168,7 +164,6 @@ public class Notification extends AppCompatActivity implements NavigationView.On
             holder.mView.setOnClickListener((v) -> {
                 Intent intent = new Intent(Notification.this, MapsActivity.class);
                 startActivity(intent);
-                //Toast.makeText(getBaseContext(), holder.tvAvg.getText(), Toast.LENGTH_SHORT).show();
             });
 
         }

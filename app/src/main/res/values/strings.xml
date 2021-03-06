@@ -29,7 +29,11 @@
     <string name="Cloud_title">啟用上傳功能</string>
     <string name="notify_title">啟用警報功能</string>
     <string name="develop_title">啟用進階選項</string>
-    <string name="_title">Sync email periodically</string>
+    <string name="_title">車聯網腳踏車防護系統</string>
+    <string name="device_text">車聯網腳踏車</string>
+    <string name="bluetooth_conn_failed_text">藍芽連線失敗</string>
+    <string name="device_select_not_yet_text">尚未選擇裝置</string>
+    <string name="bluetooth_not_open">藍芽尚未開啟</string>
     <string name="attachment_title">Download incoming attachments</string>
     <string name="attachment_summary_on">Automatically download attachments for incoming emails
     </string>
@@ -38,4 +42,12 @@
     <string name="NavTitle1">首頁</string>
     <string name="NavTitle3">儀表板</string>
     <string name="NavTitle4">設定</string>
+
+    <string name="unknown_device_text">不支援的裝置</string>
+
+    <string name="top_appbar_item1">藍芽連線</string>
+    <string name="top_appbar_item2">切斷藍芽連線</string>
+    <string name="device_connected">藍芽已連線</string>
+    <string name="device_not_connected">藍芽尚未連線</string>
+    <string name="select_correct_device_first_text">請先選擇欲連線裝置</string>
 </resources>

@@ -16,9 +16,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Switch;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.Ray.Bicycle.Util.FlagAddress;
 import com.Ray.Bicycle.Component.LoadingDialog;
@@ -30,8 +29,11 @@ import com.Ray.Bicycle.Component.TimePickerDialog;
 import com.Ray.Bicycle.View.BottomNavigation;
 import com.github.ivbaranov.rxbluetooth.RxBluetooth;
 import com.github.ivbaranov.rxbluetooth.predicates.BtPredicate;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -53,20 +55,21 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private String SpeedLimit = "";
-    private String address, Name;
+    private String BTAddress, BTName;
     private String UserName;
     public StringBuffer BTSendMsg = new StringBuffer(">N00NNNN"); //[0]StartBit[1]Lock{L,F,N},[2]SpeedTen,[3]SpeedUnit,[4]SpeedConfirm,[5]Laser{T,J,N},[6]Buzzer{E,N},[7]CloudMode{Y,N}
     private int BTMsgLen = 8;
-    public TextView text_Respond, SpeedView, MileageView;
+
     /**
      * Bluetooth
      **/
     private BluetoothAdapter bluetoothAdapter;
-    public Button btBTConct, btSpLit;
+    public Button btSpLit;
+
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
-
     public LoadingDialog loadingDialog;
+
     /******************ButtonFlag********************/
     FlagAddress SendFlag = new FlagAddress(false);
     FlagAddress MsgBtFlag = new FlagAddress(true);
@@ -76,13 +79,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FlagAddress SpdFlag = new FlagAddress(true);
     FlagAddress DanFlag = new FlagAddress(false);
     FlagAddress PostFlag = new FlagAddress(false);
+
     /*******************Layout***********************/
     private DrawerLayout drawer;
     private Toolbar toolbar;
+    private MaterialToolbar materialToolbar;
+    public TextView text_Respond, SpeedView, MileageView;
+    private TextView BTInfoText, BTStaText;
+    private ImageView BTLight;
+
     /**
      * Application
      **/
     private MyApp MyAppInst = MyApp.getAppInstance();
+
     /**
      * RxJava
      **/
@@ -90,89 +100,121 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private RxTimerUtil rxTimer;
     private RxPostTimer rxPostTimer;
     private CompositeDisposable compositeDisposable = new CompositeDisposable();
+
     /**
      * Setting Val
      **/
-    boolean BTConnFlag;
     String id;
     boolean nb;
     public int postTime;
     int preAllM;
+
     /*******TimePicker*********/
     private TimePickerDialog dialog = new TimePickerDialog(this);
+
     /**
      * Shared
      **/
     private SharedPreferences BTWrData;
     private SharedPreferences BTReData;
     public SharedPreferences userSetting;
-    private Switch MuteNotify;
     private SharedPreferences FallData;
+
+    public MainActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main2); //test
         super.onCreate(savedInstanceState);
+        Initialize();
+        InitToolbar();
+        InitNavi();
+        BottomNavInit();
+        ButtonListen();
+        CheckSetting();
+        SpeedDialog();
+        UpdateBTMsg();
+        TimeTest();
+        initBTSta();
+        setBTInfoText(BTName);
+    }
+
+    private void Initialize() {
+
+        /**************View Bind***************/
+        BTStaText = findViewById(R.id.BTStaTV);
+        BTInfoText = findViewById(R.id.BTInfoTV);
+        BTLight = findViewById(R.id.BTStaLight);
+        text_Respond = findViewById(R.id.text_Respond);
+        SpeedView = findViewById(R.id.SpeedView);
+        MileageView = findViewById(R.id.MileageView);
+
         /***********SharedPreference***************/
         BTWrData = getSharedPreferences("BTMsg", MODE_PRIVATE);
         BTReData = getSharedPreferences("BTShare", MODE_PRIVATE);
         userSetting = getSharedPreferences("UserSetting", MODE_PRIVATE);
         ScanFirst();
         FallData = getSharedPreferences("FallData", MODE_PRIVATE);
-        BTConnFlag = userSetting.getBoolean("btsta", false);
-        //context = this;
+
         /*****************藍牙*************/
         final String deviceName = getSharedPreferences("BTDetail", MODE_PRIVATE)
-                .getString("Name", "尚未選擇裝置");
+                .getString("Name", getString(R.string.device_select_not_yet_text));
         final String deviceAddress = getSharedPreferences("BTDetail", MODE_PRIVATE)
                 .getString("Address", "null");
-        address = deviceAddress;
-        Name = deviceName;
-        text_Respond = findViewById(R.id.text_Respond);
-        SpeedView = findViewById(R.id.SpeedView);
-        MileageView = findViewById(R.id.MileageView);
-        //BTM = findViewById(R.id.id2);
-        //SpeedLimit = findViewById(R.id.edit_SpeedLimit);
-        loadingDialog = new LoadingDialog(MainActivity.this);
-        /**********Layout Init***************/
-        toolbar = findViewById(R.id.toolbar);
-        drawer = findViewById(R.id.drawer_layout_Main);
-        toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + deviceName, deviceName.equals("尚未選擇裝置") ? "" : MyAppInst.getBTState() ? "已連線" : "未連線"));
+        BTAddress = deviceAddress;
+        BTName = deviceName;
 
-        InitNavi();
-        BottomNavInit();
-        ButtonListen();
-        //MyAppInst.startTimer();
-        btBTConct.setText(MyAppInst.getBTState() ? "已連線" : "未連線");
+        loadingDialog = new LoadingDialog(MainActivity.this);
 
         rxTimer = new RxTimerUtil();
         rxPostTimer = new RxPostTimer();
-        CheckSetting();
-        SpeedDialog();
-        UpdateBTMsg();
-        TimeTest();
-        //rxBluetoothWrite.TimeTest();
-        //MyAppInst.ScanDanger(Danger_Msg());
-        //MyAppInst.ScanDanger();
-        //notification.InitFallData();
-        //test();
+
+
     }
+
 
     void ScanFirst() {
         SharedPreferences shared = getSharedPreferences("is", MODE_PRIVATE);
-        boolean isfer = shared.getBoolean("isfer", true);
+        boolean isFirst = shared.getBoolean("isFirst", true);
         SharedPreferences.Editor editor = shared.edit();
-        if (isfer) {
+        if (isFirst) {
             //第一次進入跳轉
             System.out.println("is First");
             initUserSetting();
             InitFallData();
             postTime = userSetting.getInt("postTime", 15000);
             System.out.println(postTime);
-            editor.putBoolean("isfer", false);
+            editor.putBoolean("isFirst", false);
             editor.apply();
         }
+    }
+
+    private void InitToolbar() {
+        materialToolbar = findViewById(R.id.toolbar);
+        drawer = findViewById(R.id.drawer_layout_Main);
+
+        materialToolbar.setOnMenuItemClickListener(item -> {
+            int ID = item.getItemId();
+            if (ID == R.id.ConnBT) {
+                if (!bluetoothAdapter.isEnabled()) {
+                    Intent intentBluetoothEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivity(intentBluetoothEnable);
+                }
+                if (BTAddress.equals("") || BTAddress.equals("null")) {
+                    makeSnack(getString(R.string.select_correct_device_first_text));
+                    return false;
+                }
+                if (!MyApp.getConnected()) {
+                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(BTAddress);
+                    MyAppInst.connDevice(device);
+                }
+
+            } else if (ID == R.id.DisconnBT)
+                if (MyApp.getConnected()) MyAppInst.disconnect();
+
+            return false;
+        });
     }
 
     protected void InitFallData() {
@@ -199,47 +241,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void CheckSetting() {
-        //rxTimer.cancel();
         rxPostTimer.cancel();
-        //MyAppInst.CancelPost();
         nb = userSetting.getBoolean("nb", false);
-        //nb = (String) getSetting("nb","str");
         id = userSetting.getString("id", "null");
         PostFlag.Flag = userSetting.getBoolean("cloud", false);
-        //NbFlag.Flag = nb.equals("phone");
         if (PostFlag.Flag && nb) BTSendMsg.replace(BTMsgLen - 1, BTMsgLen, "Y");
         else BTSendMsg.replace(BTMsgLen - 1, BTMsgLen, "N");
         postTime = userSetting.getInt("postTime", 15000);
         UpdateBTMsg();
-        System.out.print("nb狀態:");
+        /*System.out.print("nb狀態:");
         System.out.println(nb);
         System.out.print("cloud狀態:");
-        //System.out.println(NbFlag.Flag);
         System.out.println(PostFlag.Flag);
         System.out.print("id:");
         System.out.println(id);
         System.out.print("PostTime:");
-        System.out.println(postTime);
+        System.out.println(postTime);*/
     }
 
-    public void DpBTConnState(boolean state) {
-        if (state) {
-            btBTConct.setText("已連線");
-            toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name,
-                    Name.equals("尚未選擇裝置") ?
-                            "" : "已連線"));
+    private void setBTInfoText(@NonNull String BTname) {
+        if (BTname.equals("Bicycle")) {
+            BTInfoText.setText(R.string.device_text);
         } else {
-            btBTConct.setText("未連線");
-            toolbar.setTitle(String.format("%s %s", "藍芽裝置：" + Name,
-                    Name.equals("尚未選擇裝置") ?
-                            "" : "未連線"));
+            BTInfoText.setText(R.string.unknown_device_text);
         }
-
-        userSetting.edit()
-                .putBoolean("btsta", state)
-                .apply();
-        BTConnFlag = userSetting.getBoolean("btsta", false);
-        btBTConct.setEnabled(!state);
     }
 
     void SpeedDialog() {
@@ -264,6 +289,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         };
     }
 
+    private void makeSnack(String msg) {
+        Snackbar snackbar = Snackbar.make(SpeedView, msg, Snackbar.LENGTH_LONG)
+                .setAction("OK", view -> Log.i("SNACKBAR", "OK"));
+        snackbar.show();
+    }
+
     void UpdateBTMsg() {
         if (addUserId()) BTWrData.edit()
                 //.clear()
@@ -281,43 +312,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void ButtonListen() {
-        /**BT按鈕**/
-        Button btBTOpen = findViewById(R.id.BTOpen);
-        btBTConct = findViewById(R.id.btBTConct);
-        Button btBTDiscont = findViewById(R.id.btBTDiscont);
         /**IO按鈕**/
         Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
         Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
         Button btLck = findViewById(R.id.lck_btn); //上鎖按鈕
+
         /**Switch**/
-        MuteNotify = findViewById(R.id.NotiMute);
+        SwitchMaterial muteNotify = findViewById(R.id.NotiMute);
+
         /**HTTP按鈕**/
         btSpLit = findViewById(R.id.SpLit_btn);
-        btBTDiscont.setOnClickListener((view) -> {
-            MyAppInst.disconnect(btBTConct);
-        });
         btBuzz.setEnabled(false);
+
         /**藍牙按鈕動作**/
-        btBTOpen.setOnClickListener(v -> {
-            Intent BTListAct = new Intent(MainActivity.this, ConnectActivity.class);
-            startActivity(BTListAct);
-        });
-
-        btBTConct.setOnClickListener(v -> {
-            if (address.equals("null")) {
-                Toast.makeText(this, "藍芽連線失敗，請先設定藍芽", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
-            if (!bluetoothAdapter.isEnabled()) {
-                Intent intentBluetoothEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivity(intentBluetoothEnable);
-                return;
-            }
-
-            if (MyAppInst.connDevice(device)) DpBTConnState(true);
-            else DpBTConnState(false);
-        });
         btLaser.setOnClickListener(v -> {
             BTMsg(BTMsgLen - 3, BTMsgLen - 2, "T", "J", LasFlag);
             int On = R.drawable.bike_open_white_48dp;
@@ -361,11 +368,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 MyAppInst.DangerFlag.Flag = true;
             }
             UpdateBTMsg();
-            //System.out.println("NOw:"+BTSendMsg.toString());
         });
         btSpLit.setOnClickListener(v -> {
-            if (!BTConnFlag) {
-                Toast.makeText(this, "請先連線藍芽", Toast.LENGTH_SHORT).show();
+            if (!MyApp.getConnected()) {
+                makeSnack("請先連線藍芽");
                 return;
             }
             if (SpdFlag.Flag) dialog.showDialog();
@@ -377,18 +383,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 SpdFlag.Flag = true;
 
             } else {
-                Toast.makeText(this, "請先設定時速", Toast.LENGTH_SHORT).show();
+                makeSnack("請先設定時速");
             }
             int On = R.drawable.ic_speed_white;
             int Off = R.drawable.ic_speed;
             Button_exterior(btSpLit, Off, On, BTMsgLen - 4, 'N');
             UpdateBTMsg();
         });
-        MuteNotify.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        muteNotify.setOnCheckedChangeListener((buttonView, isChecked) -> {
             MyAppInst.MuteFlag.Flag = buttonView.isChecked();
         });
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+    }
+
+    private void getBTStatus() {
+        MyAppInst.onConnectedDevice = connected -> {
+            if (!connected) makeSnack(getString(R.string.bluetooth_conn_failed_text));
+        };
     }
 
     private void BottomNavInit() {
@@ -397,28 +409,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BtmNav.init();
     }
 
-    /*private void BottomNavi_init(){
-        BottomNavigationView bottomNavigationView
-                = (BottomNavigationView) findViewById(R.id.include2);
-
-        bottomNavigationView.getMenu().getItem(0).setChecked(true);
-
-        bottomNavigationView.setOnNavigationItemSelectedListener((item) -> {
-            switch (item.getItemId()) {
-                case R.id.nav1:
-                    break;
-                case R.id.nav2:
-                    Intent intent2 = new Intent(MainActivity.this, Notification.class);
-                    startActivity(intent2);
-                    break;
-            }
-            return true;
-        });
-    }*/
     private void InitNavi() {
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, materialToolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
@@ -437,13 +431,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                /*if (!BTConnFlag.Flag) {
-                    Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
-                    break;
-                }*/
                 Intent intent3 = new Intent(MainActivity.this, SettingPage.class);
                 startActivity(intent3);
                 onStop();
+                break;
+            case R.id.nav_sel_device:
+                Intent BTListAct = new Intent(MainActivity.this, ConnectActivity.class);
+                startActivity(BTListAct);
                 break;
         }
         //drawer.closeDrawer(GravityCompat.START);
@@ -480,6 +474,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onStart() {
+        getBTStatus();
         initEventListeners();
         CheckSetting();
         MyAppInst.AutoPostVal();
@@ -522,12 +517,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         UpdateBTStrBuf();
         MsgBtFlag.Flag = true;
         if (id.length() == 0) {
-            Toast.makeText(this, "使用者名稱設定失敗，請先輸入id", Toast.LENGTH_SHORT).show();
+            makeSnack("使用者名稱設定失敗，請先輸入id");
             SendFlag.Flag = false;
             return;
         }
-        if (!BTConnFlag) {
-            Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
+        if (!MyApp.getConnected()) {
+            makeSnack("藍芽連線失敗，請先連線藍芽");
             SendFlag.Flag = false;
             return;
         }
@@ -549,7 +544,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private boolean addUserId() {
         if (id.equals("null")) {
-            Toast.makeText(this, "請先設定ID,設定>>設定使用者id", Toast.LENGTH_SHORT).show();
+            makeSnack("請先設定ID,設定>>設定使用者id");
             return false;
         }
         UserName = id;
@@ -566,8 +561,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //String SpeedLimit = "" ;
         UpdateBTStrBuf();
         String SpLtVal;
-        if (!BTConnFlag) {
-            Toast.makeText(this, "請先連線藍芽", Toast.LENGTH_SHORT).show();
+        if (!MyApp.getConnected()) {
+            makeSnack("請先連線藍芽");
             return;
         }
 
@@ -602,15 +597,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     /*******************************其他**********************************/
     void Button_exterior(Button btn, int one, int two, int bit, char condi) {
-        if (id.length() == 0 || !BTConnFlag) return;
+        if (id.length() == 0 || !MyApp.getConnected()) return;
         btn.setCompoundDrawablesWithIntrinsicBounds(BTSendMsg.charAt(bit) == condi ?
                 one : two, 0, 0, 0);
-        /*btn.setBackgroundColor(BTSendMsg.charAt(bit) == condi ?
-                0xFFD0D0D0 : 0xFF1A64D4);*/
         btn.setBackground(BTSendMsg.charAt(bit) == condi ?
                 this.getResources().getDrawable(R.drawable.button_style_off) : this.getResources().getDrawable(R.drawable.button_style_on));
 
         btn.setTextColor(BTSendMsg.charAt(bit) == condi ? 0xFF606060 : 0xFFFFFFFF);
+    }
+
+    private void initBTSta() {
+        if (MyApp.getConnected()) {
+            BTStaText.setText(R.string.device_connected);
+            BTLight.setImageResource(R.drawable.drawable_circle);
+        } else {
+            BTStaText.setText(R.string.device_not_connected);
+            BTLight.setImageResource(R.drawable.drawable_circle_gray);
+        }
+    }
+
+    private void setBTSta(boolean connected) {
+        if (connected) {
+            BTStaText.setText(R.string.device_connected);
+            MyApp.isConnected = true;
+            BTLight.setImageResource(R.drawable.drawable_circle);
+            System.out.println("connected");
+        }
+        if (!connected) {
+            BTStaText.setText(R.string.device_not_connected);
+            MyApp.isConnected = false;
+            BTLight.setImageResource(R.drawable.drawable_circle_gray);
+            System.out.println("not connected");
+            MyApp.isDisconnected();
+        }
     }
 
     /**
@@ -627,21 +646,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     switch (event.getAction()) {
                         case BluetoothDevice.ACTION_ACL_CONNECTED:
                             Log.e(TAG, "Device is connected");
-                            DpBTConnState(true);
+                            //DpBTConnState(true);
+                            setBTSta(true);
                             break;
                         case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                             Log.e(TAG, "Device is disconnected");
-                            DpBTConnState(false);
+                            //DpBTConnState(false);
+                            setBTSta(false);
                             break;
                         case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
                             Log.e(TAG, "Device is Requested disconnected");
                             break;
                         default:
                             Log.e(TAG, "None Device");
-                            DpBTConnState(false);
+                            //DpBTConnState(false);
+                            setBTSta(false);
                             break;
 
                     }
+                }));
+        compositeDisposable.add(rxBluetooth.observeBluetoothState()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.computation())
+                .filter(BtPredicate.in(BluetoothAdapter.STATE_ON))
+                .subscribe(integer -> initBTSta()));
+        compositeDisposable.add(rxBluetooth.observeBluetoothState()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.computation())
+                .filter(BtPredicate.in(BluetoothAdapter.STATE_OFF))
+                .subscribe(integer -> {
+                    setBTSta(false);
+                    BTStaText.setText(R.string.bluetooth_not_open);
                 }));
     }
 
