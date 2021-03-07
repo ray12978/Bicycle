@@ -20,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.Ray.Bicycle.Util.FlagAddress;
-import com.Ray.Bicycle.Component.LoadingDialog;
 import com.Ray.Bicycle.Util.MyApp;
 import com.Ray.Bicycle.R;
 import com.Ray.Bicycle.RxJava.RxPostTimer;
@@ -68,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
-    public LoadingDialog loadingDialog;
 
     /******************ButtonFlag********************/
     FlagAddress SendFlag = new FlagAddress(false);
@@ -84,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer;
     private Toolbar toolbar;
     private MaterialToolbar materialToolbar;
-    public TextView text_Respond, SpeedView, MileageView;
+    public TextView text_Respond, SpeedView, MileageView, MileUnitTV;
     private TextView BTInfoText, BTStaText;
     private ImageView BTLight;
 
@@ -125,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setContentView(R.layout.activity_main2); //test
+        setContentView(R.layout.activity_main); //test
         super.onCreate(savedInstanceState);
         Initialize();
         InitToolbar();
@@ -149,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         text_Respond = findViewById(R.id.text_Respond);
         SpeedView = findViewById(R.id.SpeedView);
         MileageView = findViewById(R.id.MileageView);
-
+        MileUnitTV = findViewById(R.id.MileUnit);
         /***********SharedPreference***************/
         BTWrData = getSharedPreferences("BTMsg", MODE_PRIVATE);
         BTReData = getSharedPreferences("BTShare", MODE_PRIVATE);
@@ -165,7 +163,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         BTAddress = deviceAddress;
         BTName = deviceName;
 
-        loadingDialog = new LoadingDialog(MainActivity.this);
 
         rxTimer = new RxTimerUtil();
         rxPostTimer = new RxPostTimer();
@@ -262,10 +259,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void setBTInfoText(@NonNull String BTname) {
         if (BTname.equals("Bicycle")) {
             BTInfoText.setText(R.string.device_text);
+        } else if (BTname.equals(getString(R.string.device_select_not_yet_text))) {
+            BTInfoText.setText(R.string.device_select_not_yet_text);
         } else {
             BTInfoText.setText(R.string.unknown_device_text);
         }
     }
+
 
     void SpeedDialog() {
         final String[] num = new String[1];
@@ -423,20 +423,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.nav_home:
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
                 break;
             case R.id.nav_map:
-                Intent intent2 = new Intent(MainActivity.this, MapsActivity.class);
+                Intent intent2 = new Intent(this, MapsActivity.class);
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                Intent intent3 = new Intent(MainActivity.this, SettingPage.class);
+                Intent intent3 = new Intent(this, SettingPage.class);
                 startActivity(intent3);
                 onStop();
                 break;
             case R.id.nav_sel_device:
-                Intent BTListAct = new Intent(MainActivity.this, ConnectActivity.class);
+                Intent BTListAct = new Intent(this, ConnectActivity.class);
                 startActivity(BTListAct);
                 break;
         }
@@ -464,7 +464,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onPause();
         //readerStop = true;
         DanFlag.Flag = false;
-        //loadingDialog.startLoadingDialog();
     }
 
     @Override
@@ -765,15 +764,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 StringBuffer mile = new StringBuffer();
                 mile.append(mileage);
                 mile.insert(mile.length() - 3, '.');
-                MileageView.setText(String.format("總里程數:%s公里", mile));
+                //MileageView.setText(String.format("總里程數:%s公里", mile));
+                MileageView.setText(mile);
+                MileUnitTV.setText(R.string.kilo_text);
             } else {
-                MileageView.setText(String.format("總里程數:%s公尺", mileage));
+                //MileageView.setText(String.format("總里程數:%s公尺", mileage));
+                MileageView.setText(mileage);
+                MileUnitTV.setText(R.string.meter_text);
             }
 
             // System.out.println(speed);
             // System.out.println(mileage);
-            SpeedView.setText(String.format("現在時速:%skm/h", speed));
-
+            //SpeedView.setText(String.format("現在時速:%skm/h", speed));
+            SpeedView.setText(speed);
 
         }
 

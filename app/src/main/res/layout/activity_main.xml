@@ -7,6 +7,9 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".Activity.MainActivity">
+
+
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -26,75 +29,131 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TableLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="@string/speed_unit"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="@+id/SpeedView"
+            app:layout_constraintStart_toEndOf="@+id/SpeedView"
+            app:layout_constraintTop_toTopOf="@+id/SpeedView" />
 
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </TableLayout>
+        <TextView
+            android:id="@+id/MileUnit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="@string/meter_text"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="@+id/MileageView"
+            app:layout_constraintStart_toEndOf="@+id/MileageView"
+            app:layout_constraintTop_toTopOf="@+id/MileageView" />
 
-        <Switch
+
+
+        <ImageView
+            android:id="@+id/BTStaLight"
+            android:layout_width="14dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/BTInfoTV"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/BTInfoTV"
+            app:srcCompat="@drawable/drawable_circle_gray" />
+
+        <TextView
+            android:id="@+id/BTInfoTV"
+            android:layout_width="180sp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="50dp"
+            android:layout_marginTop="16dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
+
+        <View
+            style="@style/Divider"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/BTInfoTV" />
+        <TextView
+            android:id="@+id/BTStaTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="@+id/BTInfoTV"
+            app:layout_constraintStart_toEndOf="@+id/BTInfoTV"
+            app:layout_constraintTop_toTopOf="@+id/BTInfoTV" />
+
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/NotiMute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="30dp"
             android:text="靜音手機警報"
+            android:textColor="@color/colorPrimaryDark"
             android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/tableLayout"
-            app:layout_constraintEnd_toEndOf="@+id/tableLayout2"
-            app:layout_constraintTop_toBottomOf="@+id/tableLayout2" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <TableLayout
-            android:id="@+id/tableLayout2"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:stretchColumns="*"
-            android:padding="30dp"
-            app:layout_constraintBottom_toTopOf="@+id/tableLayout"
-            app:layout_constraintTop_toBottomOf="@+id/btBTConct">
+        <TextView
+            android:id="@+id/SpeedTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="130dp"
+            android:text="現在時速:"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/appBarLayout" />
 
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="10dp"
-                >
+        <TextView
+            android:id="@+id/SpeedView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="0"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="@+id/SpeedTitle"
+            app:layout_constraintStart_toEndOf="@+id/SpeedTitle"
+            app:layout_constraintTop_toTopOf="@+id/SpeedTitle" />
 
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" >
+        <TextView
+            android:id="@+id/MileageTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="40dp"
+            android:text="總里程數:"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/SpeedView" />
 
-                    <TextView
-                        android:id="@+id/SpeedView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="現在時速:"
-                        android:textSize="30sp" />
-                </androidx.cardview.widget.CardView>
-
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <androidx.cardview.widget.CardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:id="@+id/MileageView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="總里程數:"
-                        android:textSize="30sp" />
-                </androidx.cardview.widget.CardView>
-
-
-            </TableRow>
-
-
-        </TableLayout>
+        <TextView
+            android:id="@+id/MileageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="0"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="@+id/MileageTitle"
+            app:layout_constraintStart_toEndOf="@+id/MileageTitle"
+            app:layout_constraintTop_toTopOf="@+id/MileageTitle" />
 
         <TableLayout
             android:id="@+id/tableLayout"
@@ -166,83 +225,33 @@
             </TableRow>
         </TableLayout>
 
-        <include
-            android:id="@+id/include"
-            layout="@layout/appbar" />
-
-        <Button
-            android:id="@+id/BTOpen"
-            android:layout_width="0dp"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorOff"
-            android:drawableTop="@drawable/ic_baseline_bluetooth_24"
-            android:text="開啟藍芽"
-            android:textColor="?attr/colorControlNormal"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@id/btBTDiscont"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/include" />
-
-        <Button
-            android:id="@+id/btBTDiscont"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/colorOff"
-            android:drawableTop="@drawable/ic_baseline_bluetooth_disabled_24"
-            android:text="中斷連線"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toRightOf="@id/BTOpen"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/include" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                app:menu="@menu/top_app_bar"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/colorPrimary"
+                app:title="@string/_title"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:navigationIcon="@drawable/drawable_menu" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.8523316" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_end="386dp" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/btnline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_begin="562dp" />
-
-        <Button
-            android:id="@+id/btBTConct"
-            android:layout_width="0dp"
-            android:layout_height="70dp"
-            android:text="未連線"
-            app:layout_constraintEnd_toStartOf="@+id/btBTDiscont"
-            app:layout_constraintStart_toEndOf="@+id/BTOpen"
-            app:layout_constraintTop_toBottomOf="@+id/include" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.33" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.66" />
+        </com.google.android.material.appbar.AppBarLayout>
 
         <include
             android:id="@+id/include2"
-            layout="@layout/bottom_nav_view">
-            </include>
+            layout="@layout/bottom_nav_view"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <include layout="@layout/nav_view" />

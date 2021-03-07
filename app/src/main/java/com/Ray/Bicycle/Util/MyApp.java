@@ -408,8 +408,7 @@ public class MyApp extends Application {
                     BTValTmp.delete(0, BTValTmp.length());
                     SharedBTValue();
                 }
-                boolean BTConnSta = UserSetting.getBoolean("btsta", false);
-                if (BTConnSta) DangerNow();
+                if (isConnected) DangerNow();
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -101,6 +101,10 @@ public class Notification extends AppCompatActivity implements NavigationView.On
                 startActivity(intent3);
                 onStop();
                 break;
+            case R.id.nav_sel_device:
+                Intent BTListAct = new Intent(this, ConnectActivity.class);
+                startActivity(BTListAct);
+                break;
         }
         //drawer.closeDrawer(GravityCompat.START);
         return true;

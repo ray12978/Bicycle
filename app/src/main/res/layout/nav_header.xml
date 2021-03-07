@@ -9,15 +9,15 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <ImageView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
         android:src="@drawable/ic_cycling"
         android:layout_marginLeft="10dp"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="8dp"
-        android:text="智能自行車"
-        android:textSize="30dp"
+        android:text="@string/app_name"
+        android:textSize="24sp"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 </LinearLayout>

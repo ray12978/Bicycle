@@ -23,7 +23,7 @@
             android:layout_marginBottom="32dp"
             android:clickable="true"
             android:src="@drawable/bicycle48p"
-            app:backgroundTint="#4f5d73"
+            app:backgroundTint="@color/gray_500"
             app:layout_constraintBottom_toBottomOf="@+id/map"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -37,9 +37,10 @@
             android:layout_marginBottom="100dp"
             android:clickable="true"
             android:src="@drawable/ic_baseline_gps_fixed_24"
-            app:backgroundTint="#4f5d73"
+            app:backgroundTint="@color/gray_500"
             app:layout_constraintBottom_toBottomOf="@+id/map"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+             />
 
         <fragment
             android:id="@+id/map"

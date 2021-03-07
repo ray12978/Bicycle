@@ -183,23 +183,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.nav_home:
-                Intent intent = new Intent(MapsActivity.this, MainActivity.class);
+                Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
                 break;
             case R.id.nav_map:
-                Intent intent2 = new Intent(MapsActivity.this, MapsActivity.class);
+                Intent intent2 = new Intent(this, MapsActivity.class);
                 startActivity(intent2);
                 break;
             case R.id.nav_share:
-                /*if (!BTConnFlag.Flag) {
-                    Toast.makeText(this, "藍芽連線失敗，請先連線藍芽", Toast.LENGTH_SHORT).show();
-                    break;
-                }*/
-                Intent intent3 = new Intent(MapsActivity.this, SettingPage.class);
+                Intent intent3 = new Intent(this, SettingPage.class);
                 startActivity(intent3);
                 onStop();
                 break;
-
+            case R.id.nav_sel_device:
+                Intent BTListAct = new Intent(this, ConnectActivity.class);
+                startActivity(BTListAct);
+                break;
         }
         //drawer.closeDrawer(GravityCompat.START);
         return true;
