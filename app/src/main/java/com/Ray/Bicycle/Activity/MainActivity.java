@@ -39,6 +39,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -63,8 +64,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      * Bluetooth
      **/
     private BluetoothAdapter bluetoothAdapter;
-    public Button btSpLit;
-
+    private Button btSpLit;
+    private Button btLaser; //雷射按鈕
+    private Button btBuzz; //蜂鳴器按鈕
+    private Button btLck; //上鎖按鈕
     /*********************Notify*********************/
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -237,6 +240,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .apply();
     }
 
+    void initButton() {
+        int LasOn = R.drawable.bike_open_white_48dp;
+        int LasOff = R.drawable.ic_bike_icon_off_black;
+        Button_exterior(btLaser, LasOff, LasOn, BTMsgLen - 3, 'J');
+
+        int On = R.drawable.ic_baseline_volume_off_24;
+        int Off = R.drawable.ic_baseline_volume_up_24;
+        Button_exterior(btBuzz, Off, On, BTMsgLen - 2, 'N');
+
+        int BuzzOn = R.drawable.ic_baseline_volume_off_24;
+        int BuzzOff = R.drawable.ic_baseline_volume_up_24;
+        Button_exterior(btBuzz, BuzzOff, BuzzOn, BTMsgLen - 2, 'N');
+
+        int LockOn = R.drawable.ic_baseline_lock_24;
+        int LockOff = R.drawable.ic_baseline_lock_open_24;
+        Button_exterior(btLck, LockOff, LockOn, BTMsgLen - 7, 'F');
+    }
+
     private void CheckSetting() {
         rxPostTimer.cancel();
         nb = userSetting.getBoolean("nb", false);
@@ -313,9 +334,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void ButtonListen() {
         /**IO按鈕**/
-        Button btLaser = findViewById(R.id.las_btn); //雷射按鈕
-        Button btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
-        Button btLck = findViewById(R.id.lck_btn); //上鎖按鈕
+        btLaser = findViewById(R.id.las_btn); //雷射按鈕
+        btBuzz = findViewById(R.id.buzz_btn); //蜂鳴器按鈕
+        btLck = findViewById(R.id.lck_btn); //上鎖按鈕
 
         /**Switch**/
         SwitchMaterial muteNotify = findViewById(R.id.NotiMute);
